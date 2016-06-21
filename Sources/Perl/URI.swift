@@ -4,11 +4,11 @@ final class URI : PerlObjectType {
 	init(_ sv: PerlSV) { self.sv = sv }
 
 	convenience init(_ str: String) throws {
-		self.init(try URI.call(method: "new", args: str) as PerlSV)
+		self.init(try URI.call(method: "new", str) as PerlSV)
 	}
 
 	convenience init(_ str: String, scheme: String) throws {
-		self.init(try URI.call(method: "new", args: str, scheme) as PerlSV)
+		self.init(try URI.call(method: "new", str, scheme) as PerlSV)
 	}
 
 	convenience init(copyOf uri: URI) {
@@ -16,17 +16,17 @@ final class URI : PerlObjectType {
 	}
 
 	var scheme: String? { return try! call(method: "scheme") }
-	func scheme(_ scheme: String) throws -> String? { return try call(method: "scheme", args: scheme) }
+	func scheme(_ scheme: String) throws -> String? { return try call(method: "scheme", scheme) }
 
 	var path: String {
 		get { return try! call(method: "path") }
-		set { try! call(method: "path", args: newValue) as Void }
+		set { try! call(method: "path", newValue) as Void }
 	}
 
 	var asString: String { return try! call(method: "as_string") }
 
-	func abs(base: String) -> String { return try! call(method: "abs", args: base) }
-	func rel(base: String) -> String { return try! call(method: "rel", args: base) }
+	func abs(base: String) -> String { return try! call(method: "abs", base) }
+	func rel(base: String) -> String { return try! call(method: "rel", base) }
 
 	var secure: Bool { return try! call(method: "secure") }
 }

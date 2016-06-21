@@ -1,21 +1,30 @@
-import CPerl
-
 final class PerlAV : PerlSVProtocol {
-	typealias Struct = av
-	typealias Pointer = UnsafeMutablePointer<av>
-	let pointer: Pointer
+	typealias Struct = UnsafeAV
+	typealias Pointer = UnsafeAvPointer
+	let unsafeCollection: UnsafeAvCollection
 
-	internal init (noinc p: Pointer) {
-		pointer = p
+	var pointer: Pointer { return unsafeCollection.av }
+	var perl: UnsafeInterpreterPointer { return unsafeCollection.perl }
+
+	convenience init() {
+		self.init(perl: UnsafeInterpreter.current)
 	}
 
-	init (_ p: Pointer) {
-		pointer = p
-		refcntInc()
+	init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		unsafeCollection = perl.pointee.newAV().pointee.collection(perl: perl)
+	}
+
+	init(_ p: Pointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		unsafeCollection = p.pointee.collection(perl: perl)
+		pointer.pointee.refcntInc()
 	}
 
 	deinit {
-		refcntDec()
+		pointer.pointee.refcntDec(perl: perl)
+	}
+
+	func value<T : PerlSVConvertible>() throws -> [T] {
+		return try map { try T.cast(from: $0.pointer) }
 	}
 }
 
@@ -27,15 +36,11 @@ extension PerlAV : RandomAccessCollection {
 	typealias Indices = CountableRange<Int>
 
 	var startIndex: Int { return 0 }
-	var endIndex: Int { return av_top_index(pointer) + 1 }
+	var endIndex: Int { return unsafeCollection.endIndex }
 
 	subscript (i: Int) -> PerlSV {
-		get { return PerlSV(av_fetch(pointer, i, 0)!.pointee!) }
-		set {
-			if av_store(pointer, i, newValue.pointer) != nil {
-				newValue.refcntInc()
-			}
-		}
+		get { return PerlSV(unsafeCollection[i], perl: unsafeCollection.perl) }
+		set { unsafeCollection.store(i, newValue: newValue.pointer)?.pointee.refcntInc() }
 	}
 }
 
@@ -49,12 +54,8 @@ extension PerlAV {
 }
 
 extension PerlAV : RangeReplaceableCollection {
-	convenience init() {
-		self.init(noinc: newAV())
-	}
-
 	func extend(to count: Int) {
-		av_extend(pointer, count - 1)
+		unsafeCollection.extend(to: count)
 	}
 
 	func extend(by count: Int) {
@@ -88,12 +89,12 @@ extension PerlAV : RangeReplaceableCollection {
 		putBack()*/
 	}
 
-	func append(_ x: Iterator.Element) {
-		av_push(pointer, x.pointer)
+	func append(_ sv: Element) {
+		unsafeCollection.append(sv.pointer) // FIXME refcnt?
 	}
 
-	func removeFirst() -> Iterator.Element {
-		return PerlSV(av_shift(pointer))
+	func removeFirst() -> Element {
+		return PerlSV(unsafeCollection.removeFirst()) // FIXME refcnt?
 	}
 }
 
@@ -103,14 +104,22 @@ extension PerlAV: ArrayLiteralConvertible {
 	}
 }
 
-extension Array where Element : PerlSVConvertible {
+extension Array where Element : PerlSVConvertibleThrowing {
 	init(_ av: PerlAV) throws {
-		self = try av.map { try Element.fromPerlSV($0) }
+		self = try av.unsafeCollection.map { try Element.cast(from: $0) }
+	}
+
+	init(_ sv: PerlSV) throws {
+		try self.init(PerlAV(sv))
 	}
 }
 
 extension Array where Element : PerlSVConvertibleNonThrowing {
 	init(_ av: PerlAV) {
-		self = av.map { Element.fromPerlSV($0) }
+		self = av.unsafeCollection.map { Element.cast(from: $0) }
+	}
+
+	init(_ sv: PerlSV) throws {
+		try self.init(PerlAV(sv))
 	}
 }

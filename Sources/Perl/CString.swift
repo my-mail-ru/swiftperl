@@ -1,8 +1,10 @@
 extension String {
 	init(cString: UnsafePointer<CChar>, withLength length: Int) {
-		self = String.decodeCString(UnsafePointer(cString), withLength: length, as: UTF8.self, repairingInvalidCodeUnits: true)!.result
+//		self = String.decodeCString(UnsafePointer(cString), withLength: length, as: UTF8.self, repairingInvalidCodeUnits: true)!.result
+		self = String._fromWellFormedCodeUnitSequence(UTF8.self, input: UnsafeBufferPointer(start: UnsafePointer<UInt8>(cString), count: length))
 	}
 
+/*	@_specialize(UTF8)
 	@warn_unused_result
 	static func decodeCString<Encoding: UnicodeCodec>(
 		_ cString: UnsafePointer<Encoding.CodeUnit>?, withLength length: Int,
@@ -28,11 +30,10 @@ extension String {
 					hadError = true
 			}
 		}
-	}
+	}*/
 
 	func withCStringWithLength<Result>(_ f: @noescape (UnsafePointer<CChar>, Int) throws -> Result) rethrows -> Result {
-		return try self.nulTerminatedUTF8.withUnsafeBufferPointer {
-			try f(UnsafePointer($0.baseAddress!), $0.count - 1)
-		}
+		let array = ContiguousArray<UTF8.CodeUnit>(self.utf8)
+		return try array.withUnsafeBufferPointer { try f(UnsafePointer($0.baseAddress!), $0.count) }
 	}
 }

@@ -8,7 +8,7 @@ final class PerlTestMouse: PerlObjectType {
 	}
 	var `attr_rw`: String {
 		get { return try! call(method: "attr_rw") }
-		set { try! call(method: "attr_rw", args: newValue) as Void }
+		set { try! call(method: "attr_rw", newValue) as Void }
 	}
 	var `maybe`: Int? {
 		get { return try! call(method: "maybe") }
@@ -29,9 +29,11 @@ final class PerlTestMouse: PerlObjectType {
 
 extension PerlTestMouse {
 	func doSomething(_ v1: Int, _ v2: String) throws -> String {
-		return try call(method: "do_something", args: v1, v2)
+		return try call(method: "do_something", v1, v2)
 	}
+	/* TODO:
 	var `listOfStrings`: [String] {
 		get { return try! call(method: "list") }
 	}
+	*/
 }

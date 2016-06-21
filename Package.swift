@@ -4,7 +4,8 @@ let package = Package(
 	name: "SwiftPerl",
 	targets: [
 		Target(name: "CPerl"),
-		Target(name: "Perl", dependencies: [.Target(name: "CPerl")])
+		Target(name: "CPerlCoro"),
+		Target(name: "Perl", dependencies: [.Target(name: "CPerl"), .Target(name: "CPerlCoro")])
 	]
 )
 

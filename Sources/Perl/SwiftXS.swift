@@ -1,19 +1,19 @@
 import CPerl
 
-var objects = [Int: PerlMappedClass]()
 var perlInterpreter: PerlInterpreter!
 
 @_cdecl("boot_SwiftXS")
 func boot(_ p: PerlInterpreter.Pointer) {
+	try! PerlCoro.initialize()
 	print("OK")
-	_ = PerlCV(name: "Swift::test") {
-		(args) in
-		print("args: \(args.map(String.init))")
-		return [PerlSV(MyTest())]
+	PerlCV(name: "Swift::test") {
+		(stack: UnsafeXSubStack) in
+		print("args: \(stack.args.map(String.init))")
+		let result = PerlSV(MyTest()).newUnsafeSvPointer(perl: stack.perl)
+		stack.xsReturn(CollectionOfOne(result))
 	}
-	let myTestClass = PerlClass("Swift::Perl.MyTest", swiftClass: MyTest.self)
-	myTestClass.createXSub("test") {
-		(args) in
+	MyTest.createPerlMethod("test") {
+		(args: ContiguousArray<PerlSV>) -> ContiguousArray<PerlSV> in
 //		let slf: MyTest = try! args[0].value()
 //		slf.test(value: args[1].value())
 //		slf.test2(value: try! args[2].value() as PerlTestMouse)
@@ -23,34 +23,34 @@ func boot(_ p: PerlInterpreter.Pointer) {
 		return [101, "Строченька", nil, true, false, [8, [], "string"], ["key": "value", "k2": 34]]
 //		return [[[1]]]
 	}
-	myTestClass.createXSub("test2") {
+	MyTest.createPerlMethod("test2") {
 		(str: String) throws -> Int in
 		throw PerlError.died(PerlSV("Throwing from Swift"))
 	}
 	URI.loadModule()
-	myTestClass.createXSub("test3") {
+	MyTest.createPerlMethod("test3") {
 		(self: MyTest, str: String, ptm: PerlTestMouse) throws -> Int in
 		print("\(self): \(ptm)")
 		let uri = try URI("/test/uri")
 		print("uri: \(uri.asString), \(uri.abs(base: "http://base.url")), \(uri.secure), \(URI(copyOf: uri))")
 		return 88
 	}
-	_ = PerlCV(name: "Swift::test_die") {
-		(args) in
+	PerlCV(name: "Swift::test_die") {
+		(stack: UnsafeXSubStack) -> Void in
 		do {
-			try PerlInterpreter.call(sub: "main::die_now")
+			try stack.perl.pointee.call(sub: "main::die_now")
 		} catch PerlError.died(let err) {
-			print("Perl died: \(err.string)")
+			print("Perl died: \(err.value() as String)")
 		} catch {
 			print("Other error")
 		}
 		print("DONE")
-		return []
 	}
 	PerlInterpreter.register(PerlTestMouse)
 }
 
 final class MyTest : PerlMappedClass {
+	static var perlClassName = "Swift::Perl.MyTest"
 	var property = 15
 	static var staticProperty = 500
 
@@ -73,15 +73,15 @@ final class MyTest : PerlMappedClass {
 		value.attr_rw = "Строка"
 		print("array: \(value.list.count)")
 		for v in value.list {
-			print("value: \(v.string)")
+			print("value: \(v.value() as String)")
 		}
 		for (k, v) in value.hash {
-			print("key: \(k), value: \(v.string)")
+			print("key: \(k), value: \(v.value() as String)")
 		}
-		print("key3: \(value.hash["key3"]!.string)")
+		print("key3: \(value.hash["key3"]!.value() as String)")
 		print("do_something: \(try! value.doSomething(15, "more + "))")
 		print("list: \(value.list)")
-		print("listOfStrings: \(value.listOfStrings)")
+//		print("listOfStrings: \(value.listOfStrings)")
 //		try! value.call(method: "unknown", args: 1, 2, "String")
 	}
 }

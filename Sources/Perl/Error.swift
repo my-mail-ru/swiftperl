@@ -10,3 +10,14 @@ enum PerlError : ErrorProtocol {
 	case unsupportedPerlClass(_: PerlSV)
 	case unexpectedPerlClass(_: PerlSV)
 }
+
+extension PerlError : CustomDebugStringConvertible {
+	var debugDescription: String {
+		switch self {
+			case died(let sv):
+				return "PerlError: \(String(sv))"
+			default:
+				return "\(self)"
+		}
+	}
+}
