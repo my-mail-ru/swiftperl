@@ -1,0 +1,16 @@
+module CPerl [system] {
+	header "/usr/lib/x86_64-linux-gnu/perl/5.20/CORE/EXTERN.h"
+	header "/usr/lib/x86_64-linux-gnu/perl/5.20/CORE/perl.h"
+	link "perl"
+	export *
+
+	explicit module XSUB {
+		header "/usr/lib/x86_64-linux-gnu/perl/5.20/CORE/XSUB.h"
+		export *
+	}
+
+	module macro {
+		header "macro.h"
+		link "CPerl"
+	}
+}
