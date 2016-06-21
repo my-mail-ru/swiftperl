@@ -1,5 +1,19 @@
 import XCTest
 @testable import Perl
+@testable import PerlCoro
+
+class EmbeddedTestCase : XCTestCase {
+	var perl: PerlInterpreter!
+
+	override func setUp() {
+		perl = PerlInterpreter()
+		UnsafeInterpreter.current = perl.pointer
+	}
+
+	override func tearDown() {
+		perl = nil
+	}
+}
 
 class CoroTests : EmbeddedTestCase {
 	static var allTests: [(String, (CoroTests) -> () throws -> Void)] {

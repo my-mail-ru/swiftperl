@@ -1,10 +1,9 @@
-import CPerl
+@testable import Perl
 
 var perlInterpreter: PerlInterpreter!
 
-@_cdecl("boot_SwiftXS")
+@_cdecl("boot_SampleXS")
 func boot(_ p: PerlInterpreter.Pointer) {
-	try! PerlCoro.initialize()
 	print("OK")
 	PerlCV(name: "Swift::test") {
 		(stack: UnsafeXSubStack) in
@@ -26,14 +25,6 @@ func boot(_ p: PerlInterpreter.Pointer) {
 	MyTest.createPerlMethod("test2") {
 		(str: String) throws -> Int in
 		throw PerlError.died(PerlSV("Throwing from Swift"))
-	}
-	URI.loadModule()
-	MyTest.createPerlMethod("test3") {
-		(self: MyTest, str: String, ptm: PerlTestMouse) throws -> Int in
-		print("\(self): \(ptm)")
-		let uri = try URI("/test/uri")
-		print("uri: \(uri.asString), \(uri.abs(base: "http://base.url")), \(uri.secure), \(URI(copyOf: uri))")
-		return 88
 	}
 	PerlCV(name: "Swift::test_die") {
 		(stack: UnsafeXSubStack) -> Void in
@@ -84,4 +75,44 @@ final class MyTest : PerlMappedClass {
 //		print("listOfStrings: \(value.listOfStrings)")
 //		try! value.call(method: "unknown", args: 1, 2, "String")
 	}
+}
+
+final class PerlTestMouse: PerlObjectType {
+	static let perlClassName = "TestMouse"
+	let sv: PerlSV
+	init(_ sv: PerlSV) { self.sv = sv }
+
+	var `attr_ro`: Int {
+		get { return try! call(method: "attr_ro") }
+	}
+	var `attr_rw`: String {
+		get { return try! call(method: "attr_rw") }
+		set { try! call(method: "attr_rw", newValue) as Void }
+	}
+	var `maybe`: Int? {
+		get { return try! call(method: "maybe") }
+	}
+	var `class`: String {
+		get { return try! call(method: "class") }
+	}
+	var `maybe_class`: String? {
+		get { return try! call(method: "maybe_class") }
+	}
+	var `list`: PerlAV {
+		get { return try! call(method: "list") }
+	}
+	var `hash`: PerlHV {
+		get { return try! call(method: "hash") }
+	}
+}
+
+extension PerlTestMouse {
+	func doSomething(_ v1: Int, _ v2: String) throws -> String {
+		return try call(method: "do_something", v1, v2)
+	}
+	/* TODO:
+	var `listOfStrings`: [String] {
+		get { return try! call(method: "list") }
+	}
+	*/
 }

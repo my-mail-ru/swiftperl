@@ -1,4 +1,5 @@
 import CPerlCoro
+@testable import Perl
 
 // TODO generic on function argument
 final class PerlCoro : PerlObjectType {

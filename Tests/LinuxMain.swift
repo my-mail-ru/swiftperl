@@ -1,6 +1,7 @@
 import XCTest
 
 @testable import PerlTestSuite
+@testable import PerlCoroTestSuite
 
 var tests = [XCTestCaseEntry]()
 tests += [testCase(EmbedTests.allTests)]

@@ -15,5 +15,5 @@ It was never used in production and runs without modification on Ubunty 15.10 on
 ## Getting Started
 
 	./gybme
-	swift build
+	swift build -Xcc -isystem/usr/lib/x86_64-linux-gnu/perl/5.20/CORE -Xcc -isystem/usr/lib/x86_64-linux-gnu/perl5/5.20/Coro -Xcc -D_GNU_SOURCE -Xcc -DPERL_NO_GET_CONTEXT
 	swift test
