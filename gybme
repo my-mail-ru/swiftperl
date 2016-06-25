@@ -9,7 +9,7 @@ if [ ! -d .build/gyb ]; then
 	echo "\t[done]"
 fi
 
-for f in Sources/Perl/Call.swift; do
+for f in Sources/Perl/Call.swift Sources/Perl/CV.swift; do
 	echo -n $f
 	.build/gyb/gyb $f.gyb > $f
 	echo "\t[done]"
