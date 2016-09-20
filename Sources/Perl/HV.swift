@@ -85,7 +85,7 @@ extension PerlHV {
 	}
 }
 
-extension PerlHV : DictionaryLiteralConvertible {
+extension PerlHV : ExpressibleByDictionaryLiteral {
 	convenience init(dictionaryLiteral elements: (Key, Value)...) {
 		self.init(elements)
 	}

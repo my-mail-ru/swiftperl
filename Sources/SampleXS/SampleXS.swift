@@ -37,7 +37,7 @@ func boot(_ p: PerlInterpreter.Pointer) {
 		}
 		print("DONE")
 	}
-	PerlInterpreter.register(PerlTestMouse)
+	PerlInterpreter.register(PerlTestMouse.self)
 }
 
 final class MyTest : PerlMappedClass {

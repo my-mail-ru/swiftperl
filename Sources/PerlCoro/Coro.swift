@@ -7,7 +7,7 @@ final class PerlCoro : PerlObjectType {
 	let sv: PerlSV
 	init(_ sv: PerlSV) { self.sv = sv }
 
-	enum Error : ErrorProtocol {
+	enum CoroError : Error {
 		case coroApiNotFound
 		case coroApiVersionMismatch(used: (ver: Int32, rev: Int32), compiled: (ver: Int32, rev: Int32))
 	}
@@ -19,11 +19,11 @@ final class PerlCoro : PerlObjectType {
 		self.perl = perl
 		perl.pointee.loadModule("Coro")
 		guard let sv = perl.pointee.getSV("Coro::API") else {
-			throw PerlCoro.Error.coroApiNotFound
+			throw PerlCoro.CoroError.coroApiNotFound
 		}
 		coroApi = UnsafeMutablePointer<CoroAPI>(bitPattern: Int(sv))
 		guard coroApi.pointee.ver == CORO_API_VERSION && coroApi.pointee.rev >= CORO_API_REVISION else {
-			throw PerlCoro.Error.coroApiVersionMismatch(
+			throw PerlCoro.CoroError.coroApiVersionMismatch(
 				used: (ver: coroApi.pointee.ver, rev: coroApi.pointee.rev),
 				compiled: (ver: CORO_API_VERSION, rev: CORO_API_REVISION)
 			)

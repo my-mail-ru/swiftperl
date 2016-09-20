@@ -60,7 +60,7 @@ extension UnsafeSV {
 	mutating func value() throws -> UnsafeAvPointer {
 		switch type {
 			case .array:
-				return UnsafeAvPointer(forceUnsafeMutablePointer(&self))
+				return UnsafeMutableRawPointer(&self).bindMemory(to: UnsafeAV.self, capacity: 1)
 			case .scalar:
 				if let v = refValue {
 					return try v.pointee.value()
@@ -75,7 +75,7 @@ extension UnsafeSV {
 	mutating func value() throws -> UnsafeHvPointer {
 		switch type {
 			case .hash:
-				return UnsafeHvPointer(forceUnsafeMutablePointer(&self))
+				return UnsafeMutableRawPointer(&self).bindMemory(to: UnsafeHV.self, capacity: 1)
 			case .scalar:
 				if let v = refValue {
 					return try v.pointee.value()
@@ -90,7 +90,7 @@ extension UnsafeSV {
 	mutating func value() throws -> UnsafeCvPointer {
 		switch type {
 			case .code:
-				return UnsafeCvPointer(forceUnsafeMutablePointer(&self))
+				return UnsafeMutableRawPointer(&self).bindMemory(to: UnsafeCV.self, capacity: 1)
 			case .scalar:
 				if let v = refValue {
 					return try v.pointee.value()
@@ -125,7 +125,7 @@ extension UnsafeSV {
 			throw PerlError.notSwiftObject(self.value())
 		}
 		let iv = perl.pointee.SvIV(sv)
-		let u = Unmanaged<AnyObject>.fromOpaque(OpaquePointer(bitPattern: iv)!)
+		let u = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(bitPattern: iv)!)
 		let any = u.takeUnretainedValue()
 		guard let obj = any as? T else { throw PerlError.unexpectedSwiftObject(self.value()) }
 		return obj
@@ -163,17 +163,17 @@ extension UnsafeInterpreter {
 	}
 
 	mutating func newRV<T: UnsafeSvProtocol>(inc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
-		return Perl_newRV(&self, UnsafeSvPointer(v))
+		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { Perl_newRV(&self, $0) }
 	}
 
 	mutating func newRV<T: UnsafeSvProtocol>(noinc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
-		return Perl_newRV_noinc(&self, UnsafeSvPointer(v))
+		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { Perl_newRV_noinc(&self, $0) }
 	}
 
 	mutating func newSV(_ v: PerlMappedClass) -> UnsafeSvPointer {
 		let u = Unmanaged<AnyObject>.passRetained(v)
 		let iv = unsafeBitCast(u, to: Int.self)
-		let sv = v.dynamicType.perlClassName.withCString {
+		let sv = type(of: v).perlClassName.withCString {
 			Perl_sv_setref_iv(&self, Perl_newSV(&self, 0), $0, iv)!
 		}
 		Perl_sv_magicext(&self, SvRV(sv), nil, PERL_MAGIC_ext, &objectMgvtbl, nil, 0)
@@ -189,7 +189,7 @@ private var objectMgvtbl = MGVTBL(
 	svt_free: {
 		(perl, sv, magic) in
 		let iv = perl!.pointee.SvIV(sv)
-		let u = Unmanaged<AnyObject>.fromOpaque(OpaquePointer(bitPattern: iv)!)
+		let u = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(bitPattern: iv)!)
 		u.release()
 		return 0
 	},

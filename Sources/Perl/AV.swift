@@ -62,7 +62,8 @@ extension PerlAV : RangeReplaceableCollection {
 		extend(to: self.count + count)
 	}
 
-	func replaceSubrange<C: Collection where C.Iterator.Element == Element> (_ subRange: Range<Index>, with newElements: C) {
+	func replaceSubrange<C: Collection>(_ subRange: Range<Index>, with newElements: C)
+		where C.Iterator.Element == Element {
 /*		precondition(subRange.lowerBound >= 0, "replace: subRange start is negative")
 		precondition(subRange.upperBound <= endIndex, "replace: subRange extends past the end")
 		let newCount = numericCast(newElements.count) as Int
@@ -98,7 +99,7 @@ extension PerlAV : RangeReplaceableCollection {
 	}
 }
 
-extension PerlAV: ArrayLiteralConvertible {
+extension PerlAV: ExpressibleByArrayLiteral {
 	convenience init (arrayLiteral elements: Element...) {
 		self.init(elements)
 	}

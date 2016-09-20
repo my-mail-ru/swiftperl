@@ -13,7 +13,7 @@ final class PerlCV : PerlSVProtocol {
 	}
 
 	@discardableResult
-	init(name: String?, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current, file: StaticString = #file, body: CvBody) {
+	init(name: String?, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current, file: StaticString = #file, body: @escaping CvBody) {
 		self.perl = perl
 		pointer = perl.pointee.newCV(name: name, file: file, body: body)
 		if name != nil {
@@ -36,7 +36,7 @@ extension PerlCV {
 %     args = ", ".join(map(lambda n: "P" + str(n) + ".cast(from: stack.args[" + str(n) + "])", range(0, p)))
 
 	@discardableResult
-	convenience init${generic}(name: String? = nil, file: StaticString = #file, body: ${paramsTuple} throws -> ${resultTuple}) {
+	convenience init${generic}(name: String? = nil, file: StaticString = #file, body: @escaping ${paramsTuple} throws -> ${resultTuple}) {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
 %     if r == 0:
@@ -59,8 +59,8 @@ extension PerlCV {
 
 extension PerlCV {
 	@discardableResult
-	convenience init<R: Collection where R.Iterator.Element == PerlSV>
-		(name: String? = nil, file: StaticString = #file, body: (ContiguousArray<PerlSV>) throws -> R) {
+	convenience init<R: Collection>(name: String? = nil, file: StaticString = #file, body: @escaping (ContiguousArray<PerlSV>) throws -> R)
+		where R.Iterator.Element == PerlSV {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
 			let args = try ContiguousArray<PerlSV>(stack.args, perl: stack.perl)

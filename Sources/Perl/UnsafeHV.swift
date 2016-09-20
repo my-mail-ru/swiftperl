@@ -68,6 +68,6 @@ struct UnsafeHvCollection: Sequence {
 
 extension UnsafeInterpreter {
 	mutating func newHV() -> UnsafeHvPointer {
-		return UnsafeHvPointer(Perl_newSV_type(&self, SVt_PVHV))
+		return UnsafeMutableRawPointer(Perl_newSV_type(&self, SVt_PVHV)).bindMemory(to: UnsafeHV.self, capacity: 1)
 	}
 }

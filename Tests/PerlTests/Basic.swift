@@ -134,7 +134,7 @@ class BasicTests : EmbeddedTestCase {
 		try perl.eval("use utf8; $тест = 'OK'")
 		let sv = perl.pointer.pointee.getSV("тест")
 		XCTAssertNotNil(sv)
-		XCTAssertEqual(try String(sv!), "OK") // FIXME try ????
+		XCTAssertEqual(String(sv!), "OK")
 //		perl.pointer.pointee.loadModule("Nothing")
 	}
 }

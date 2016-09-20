@@ -15,8 +15,8 @@ class EmbeddedTestCase : XCTestCase {
 	}
 }
 
-class CoroTests : EmbeddedTestCase {
-	static var allTests: [(String, (CoroTests) -> () throws -> Void)] {
+class PerlCoroTests : EmbeddedTestCase {
+	static var allTests: [(String, (PerlCoroTests) -> () throws -> Void)] {
 		return [
 			("testCoro", testCoro),
 		]

@@ -1,4 +1,4 @@
-enum PerlError : ErrorProtocol {
+enum PerlError : Error {
 	case died(_: PerlSV)
 	case notRV(_: PerlSV)
 	case notAV(_: PerlSV)
@@ -14,7 +14,7 @@ enum PerlError : ErrorProtocol {
 extension PerlError : CustomDebugStringConvertible {
 	var debugDescription: String {
 		switch self {
-			case died(let sv):
+			case .died(let sv):
 				return "PerlError: \(String(sv))"
 			default:
 				return "\(self)"

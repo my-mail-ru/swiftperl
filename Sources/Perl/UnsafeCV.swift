@@ -11,25 +11,25 @@ extension UnsafeCV {
 		mutating get { return bodyPointer.pointee }
 		mutating set {
 			bodyPointer.deinitialize()
-			bodyPointer.initialize(with: newValue)
+			bodyPointer.initialize(to: newValue)
 		}
 	}
 
-	private var bodyPointer: UnsafeCvBodyPointer {
-		mutating get { return UnsafeCvBodyPointer(CvXSUBANY(&self).pointee.any_ptr) }
-		mutating set { CvXSUBANY(&self).pointee.any_ptr = UnsafeMutablePointer<Void>(newValue) }
+	fileprivate var bodyPointer: UnsafeCvBodyPointer {
+		mutating get { return CvXSUBANY(&self).pointee.any_ptr.assumingMemoryBound(to: CvBody.self) }
+		mutating set { CvXSUBANY(&self).pointee.any_ptr = UnsafeMutableRawPointer(newValue) }
 	}
 
-	private static var mgvtbl = MGVTBL(
+	fileprivate static var mgvtbl = MGVTBL(
 		svt_get: nil,
 		svt_set: nil,
 		svt_len: nil,
 		svt_clear: nil,
 		svt_free: {
 			(perl, sv, magic) in
-			let bodyPointer = UnsafeCvPointer(sv!).pointee.bodyPointer
+			let bodyPointer = UnsafeMutableRawPointer(sv!).assumingMemoryBound(to: UnsafeCV.self).pointee.bodyPointer
 			bodyPointer.deinitialize()
-			bodyPointer.deallocateCapacity(1)
+			bodyPointer.deallocate(capacity: 1)
 			return 0
 		},
 		svt_copy: nil,
@@ -39,14 +39,16 @@ extension UnsafeCV {
 }
 
 extension UnsafeInterpreter {
-	mutating func newCV(name: String? = nil, file: StaticString = #file, body: CvBody) -> UnsafeCvPointer {
+	mutating func newCV(name: String? = nil, file: StaticString = #file, body: @escaping CvBody) -> UnsafeCvPointer {
 		let newXS = { (name) in
-			String(file).withCString { Perl_newXS_flags(&self, name, cvResolver, $0, nil, UInt32(XS_DYNAMIC_FILENAME))! }
+			file.description.withCString { Perl_newXS_flags(&self, name, cvResolver, $0, nil, UInt32(XS_DYNAMIC_FILENAME))! }
 		}
 		let cv: UnsafeCvPointer = name != nil ? name!.withCString(newXS) : newXS(nil)
-		Perl_sv_magicext(&self, UnsafeSvPointer(cv), nil, PERL_MAGIC_ext, &UnsafeCV.mgvtbl, nil, 0)
-		let bodyPointer = UnsafeCvBodyPointer(allocatingCapacity: 1)
-		bodyPointer.initialize(with: body)
+		cv.withMemoryRebound(to: UnsafeSV.self, capacity: 1) {
+			_ = Perl_sv_magicext(&self, $0, nil, PERL_MAGIC_ext, &UnsafeCV.mgvtbl, nil, 0)
+		}
+		let bodyPointer = UnsafeCvBodyPointer.allocate(capacity: 1)
+		bodyPointer.initialize(to: body)
 		cv.pointee.bodyPointer = bodyPointer
 		return cv
 	}

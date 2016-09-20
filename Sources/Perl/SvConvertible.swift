@@ -99,7 +99,7 @@ extension PerlObjectType {
 }
 
 extension RangeReplaceableCollection where Iterator.Element == UnsafeSvPointer, IndexDistance == Int {
-	init<C : Collection where C.Iterator.Element == PerlSVConvertible?>(_ c: C, perl: UnsafeInterpreterPointer) {
+	init<C : Collection>(_ c: C, perl: UnsafeInterpreterPointer) where C.Iterator.Element == PerlSVConvertible? {
 		func transform(_ v: PerlSVConvertible?) -> UnsafeSvPointer {
 			return v?.newUnsafeSvPointer(perl: perl) ?? perl.pointee.newSV()
 		}
@@ -120,7 +120,7 @@ extension RangeReplaceableCollection where Iterator.Element == UnsafeSvPointer, 
 	}
 
 	// FIXME remove it
-	init<C : Collection where C.Iterator.Element : PerlSVConvertible>(_ c: C, perl: UnsafeInterpreterPointer) {
+	init<C : Collection>(_ c: C, perl: UnsafeInterpreterPointer) where C.Iterator.Element : PerlSVConvertible {
 		func transform(_ v: PerlSVConvertible) -> UnsafeSvPointer {
 			return v.newUnsafeSvPointer(perl: perl)
 		}
@@ -142,7 +142,7 @@ extension RangeReplaceableCollection where Iterator.Element == UnsafeSvPointer, 
 }
 
 extension RangeReplaceableCollection where Iterator.Element : PerlSVConvertible, IndexDistance == Int {
-	init<C : Collection where C.Iterator.Element == UnsafeSvPointer>(_ c: C, perl: UnsafeInterpreterPointer) throws {
+	init<C : Collection>(_ c: C, perl: UnsafeInterpreterPointer) throws where C.Iterator.Element == UnsafeSvPointer {
 		func transform(_ v: UnsafeSvPointer) throws -> Iterator.Element {
 			return try Iterator.Element.cast(from: v)
 		}

@@ -11,8 +11,8 @@ extension UnsafeInterpreter {
 	}
 
 	static func sysInit() {
-		var argc = Process.argc
-		var argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>? = Process.unsafeArgv
+		var argc = CommandLine.argc
+		var argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>? = CommandLine.unsafeArgv
 		var env: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>? = environ
 		Perl_sys_init3(&argc, &argv, &env)
 	}
@@ -42,14 +42,16 @@ extension UnsafeInterpreter {
 		Iorigalen = 1
 		Iperl_destruct_level = 2
 		Iexit_flags |= UInt8(PERL_EXIT_DESTRUCT_END)
-		let status = "".withCString { a0 in
-			"-e".withCString { a1 in
-				"0".withCString { a2 in
-					[a0, a1, a2].withUnsafeBufferPointer { perl_parse(&self, xs_init, Int32($0.count), UnsafeMutablePointer($0.baseAddress), nil) }
+		let args: StaticString = "\0-e\00\0"
+		args.withUTF8Buffer {
+			$0.baseAddress!.withMemoryRebound(to: CChar.self, capacity: $0.count) {
+				var cargs: [UnsafeMutablePointer<CChar>?] = [$0, $0 + 1, $0 + 4]
+				let status = cargs.withUnsafeMutableBufferPointer {
+					perl_parse(&self, xs_init, Int32($0.count), $0.baseAddress, nil)
 				}
+				assert(status == 0)
 			}
 		}
-		assert(status == 0)
 	}
 
 	mutating func loadModule(_ module: String) {

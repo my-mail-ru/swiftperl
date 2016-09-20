@@ -52,6 +52,6 @@ struct UnsafeAvCollection : RandomAccessCollection {
 
 extension UnsafeInterpreter {
 	mutating func newAV() -> UnsafeAvPointer {
-		return UnsafeAvPointer(Perl_newSV_type(&self, SVt_PVAV))
+		return UnsafeMutableRawPointer(Perl_newSV_type(&self, SVt_PVAV)).bindMemory(to: UnsafeAV.self, capacity: 1)
 	}
 }

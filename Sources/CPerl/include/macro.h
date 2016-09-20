@@ -27,14 +27,14 @@ SWIFT_NAME(SvREFCNT(_:)) U32 sPerl_SvREFCNT(SV *sv) IMPL({ return SvREFCNT(sv); 
 
 SWIFT_NAME(getter:PerlInterpreter.ERRSV(self:)) NN SV *sPerl_ERRSV(pTHX) IMPL({ return ERRSV; })
 
-SWIFT_NAME(PerlInterpreter.PUSHMARK(self:_:)) void sPerl_PUSHMARK(pTHX_ NN SV **sp) IMPL({ PUSHMARK(sp); })
+SWIFT_NAME(PerlInterpreter.PUSHMARK(self:_:)) void sPerl_PUSHMARK(pTHX_ SV **sp) IMPL({ PUSHMARK(sp); })
 SWIFT_NAME(PerlInterpreter.POPMARK(self:)) I32 sPerl_POPMARK(pTHX) IMPL({ return POPMARK; })
 SWIFT_NAME(getter:PerlInterpreter.TOPMARK(self:)) I32 sPerl_TOPMARK(pTHX) IMPL({ return TOPMARK; })
 
 SWIFT_NAME(PerlInterpreter.SAVETMPS(self:)) void sPerl_SAVETMPS(pTHX) IMPL({ SAVETMPS; })
 SWIFT_NAME(PerlInterpreter.FREETMPS(self:)) void sPerl_FREETMPS(pTHX) IMPL({ FREETMPS; })
 
-SWIFT_NAME(PerlInterpreter.EXTEND(self:_:_:)) SV **sPerl_EXTEND(pTHX_ NN SV **sp, SSize_t nitems) IMPL({ EXTEND(sp, nitems); return sp; })
+SWIFT_NAME(PerlInterpreter.EXTEND(self:_:_:)) SV **sPerl_EXTEND(pTHX_ SV **sp, SSize_t nitems) IMPL({ EXTEND(sp, nitems); return sp; })
 
 SWIFT_NAME(PerlInterpreter.SvPV(self:_:_:)) char *sPerl_SvPV(pTHX_ SV *sv, STRLEN *len) IMPL({ return SvPV(sv, *len); })
 

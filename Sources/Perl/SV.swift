@@ -42,7 +42,9 @@ final class PerlSV : PerlSVProtocol {
 
 	init<T: PerlSVProtocol>(referenceTo sv: T) {
 		perl = sv.perl
-		pointer = perl.pointee.newRV(inc: Pointer(sv.pointer))
+		pointer = sv.pointer.withMemoryRebound(to: UnsafeSV.self, capacity: 1) {
+			sv.perl.pointee.newRV(inc: $0)
+		}
 	}
 
 	convenience init(_ av: PerlAV) {
@@ -93,49 +95,49 @@ final class PerlSV : PerlSVProtocol {
 	func value<T: PerlSVConvertible>() throws -> [String: T] { return try (value() as PerlHV).value() } // FIXME use unsafeHv
 }
 
-extension PerlSV : NilLiteralConvertible {
+extension PerlSV : ExpressibleByNilLiteral {
 	convenience init(nilLiteral: ()) {
 		self.init()
 	}
 }
 
-extension PerlSV: BooleanLiteralConvertible {
+extension PerlSV: ExpressibleByBooleanLiteral {
 	convenience init(booleanLiteral value: Bool) {
 		self.init(value)
 	}
 }
 
-extension PerlSV : IntegerLiteralConvertible {
+extension PerlSV : ExpressibleByIntegerLiteral {
 	convenience init(integerLiteral value: Int) {
 		self.init(value)
 	}
 }
 
-extension PerlSV : UnicodeScalarLiteralConvertible {
+extension PerlSV : ExpressibleByUnicodeScalarLiteral {
 	convenience init(unicodeScalarLiteral value: String) {
 		self.init(value)
 	}
 }
 
-extension PerlSV : ExtendedGraphemeClusterLiteralConvertible {
+extension PerlSV : ExpressibleByExtendedGraphemeClusterLiteral {
 	convenience init(extendedGraphemeClusterLiteral value: String) {
 		self.init(value)
 	}
 }
 
-extension PerlSV : StringLiteralConvertible {
+extension PerlSV : ExpressibleByStringLiteral {
 	convenience init(stringLiteral value: String) {
 		self.init(value)
 	}
 }
 
-extension PerlSV: ArrayLiteralConvertible {
+extension PerlSV: ExpressibleByArrayLiteral {
 	convenience init (arrayLiteral elements: PerlSV...) {
 		self.init(PerlAV(elements))
 	}
 }
 
-extension PerlSV : DictionaryLiteralConvertible {
+extension PerlSV : ExpressibleByDictionaryLiteral {
 	convenience init(dictionaryLiteral elements: (String, PerlSV)...) {
 		self.init(PerlHV(elements))
 	}

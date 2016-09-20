@@ -10,12 +10,16 @@ extension UnsafeSvCastProtocol {
 
 	@discardableResult
 	mutating func refcntInc() -> UnsafeMutablePointer<Self> {
-		return Pointer(UnsafeSvPointer(forceUnsafeMutablePointer(&self)).pointee.refcntInc())
+		let ptr = UnsafeMutablePointer(mutating: &self)
+		ptr.withMemoryRebound(to: UnsafeSV.self, capacity: 1) {
+			_ = $0.pointee.refcntInc()
+		}
+		return ptr
 	}
 
 	mutating func refcntDec(perl: UnsafeInterpreterPointer) {
-		UnsafeSvPointer(forceUnsafeMutablePointer(&self)).pointee.refcntDec(perl: perl)
+		UnsafeMutablePointer(mutating: &self).withMemoryRebound(to: UnsafeSV.self, capacity: 1) {
+			$0.pointee.refcntDec(perl: perl)
+		}
 	}
 }
-
-func forceUnsafeMutablePointer<T>(_ p: UnsafeMutablePointer<T>) -> UnsafeMutablePointer<T> { return p }

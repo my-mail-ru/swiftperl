@@ -1,8 +1,8 @@
 import CPerl
 
 extension UnsafeInterpreter {
-	mutating func unsafeCall<C : Collection where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int>
-		(sv: UnsafeSvPointer, args: C, flags: Int32 = 0) throws -> UnsafeStackBufferPointer {
+	mutating func unsafeCall<C : Collection>(sv: UnsafeSvPointer, args: C, flags: Int32 = 0) throws -> UnsafeStackBufferPointer
+		where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int {
 		let stack = UnsafeCallStack(perl: &self, args: args)
 		let count = Perl_call_sv(&self, sv, G_EVAL|flags)
 		let result = stack.popReturned(count: Int(count))
@@ -13,8 +13,8 @@ extension UnsafeInterpreter {
 		return result
 	}
 
-	mutating func unsafeCall<C : Collection where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int>
-		(sv: UnsafeSvPointer, discardingResultWithArgs args: C, flags: Int32 = G_VOID) throws -> Void {
+	mutating func unsafeCall<C : Collection>(sv: UnsafeSvPointer, discardingResultWithArgs args: C, flags: Int32 = G_VOID) throws -> Void
+		where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int {
 		_ = UnsafeCallStack(perl: &self, args: args)
 		_ = Perl_call_sv(&self, sv, G_EVAL|G_DISCARD|flags)
 		let err = ERRSV
@@ -87,8 +87,8 @@ extension UnsafeInterpreter {
 	}
 
 % for r in calls:
-	mutating func call<C : Collection${moreGeneric(r)} where C.Iterator.Element == PerlSVConvertible?>
-		(sv: UnsafeSvPointer, args: C, flags: Int32 = ${context(r)}) throws -> ${r} {
+	mutating func call<C : Collection${moreGeneric(r)}>(sv: UnsafeSvPointer, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
+		where C.Iterator.Element == PerlSVConvertible? {
 		enterScope()
 		defer { leaveScope() }
 		let svArgs = ContiguousArray<UnsafeSvPointer>(args, perl: &self)
@@ -104,8 +104,8 @@ extension UnsafeInterpreter {
 
 extension UnsafeInterpreter {
 % for r in calls:
-	mutating func call<C : Collection${moreGeneric(r)} where C.Iterator.Element == PerlSVConvertible?>
-		(method: String, args: C, flags: Int32 = ${context(r)}) throws -> ${r} {
+	mutating func call<C : Collection${moreGeneric(r)}>(method: String, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
+		where C.Iterator.Element == PerlSVConvertible? {
 		return try call(sv: newSV(method, mortal: true), args: args, flags: G_METHOD|flags)
 	}
 % end
@@ -117,8 +117,8 @@ extension UnsafeInterpreter {
 	}
 
 % for r in calls:
-	mutating func call<C : Collection${moreGeneric(r)} where C.Iterator.Element == PerlSVConvertible?>
-		(sub: String, args: C, flags: Int32 = ${context(r)}) throws -> ${r} {
+	mutating func call<C : Collection${moreGeneric(r)}>(sub: String, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
+		where C.Iterator.Element == PerlSVConvertible? {
 		return try call(sv: newSV(sub, mortal: true), args: args, flags: flags)
 	}
 % end
@@ -138,12 +138,16 @@ extension PerlInterpreter {
 
 extension PerlCV {
 	func call() throws -> Void {
-		try perl.pointee.call(sv: UnsafeSvPointer(pointer))
+		try pointer.withMemoryRebound(to: UnsafeSV.self, capacity: 1) {
+			try perl.pointee.call(sv: $0)
+		}
 	}
 
 % for r in calls:
 	func call${fqGeneric(r)}(_ args: PerlSVConvertible?...) throws -> ${r} {
-		return try perl.pointee.call(sv: UnsafeSvPointer(pointer), args: args)
+		return try pointer.withMemoryRebound(to: UnsafeSV.self, capacity: 1) {
+			return try perl.pointee.call(sv: $0, args: args)
+		}
 	}
 % end
 }
@@ -187,7 +191,8 @@ extension PerlObjectType {
 	}
 
 % for r in calls:
-	func call<C : Collection${moreGeneric(r)} where C.Iterator.Element == PerlSVConvertible?>(method: String, args: C) throws -> ${r} {
+	func call<C : Collection${moreGeneric(r)}>(method: String, args: C) throws -> ${r}
+		where C.Iterator.Element == PerlSVConvertible? {
 		var fullArgs = ContiguousArray<PerlSVConvertible?>()
 		fullArgs.reserveCapacity(1 + numericCast(args.count))
 		fullArgs.append(self)
@@ -199,7 +204,8 @@ extension PerlObjectType {
 		return try call(method: method, args: args)
 	}
 
-	static func call<C : Collection${moreGeneric(r)} where C.Iterator.Element == PerlSVConvertible?>(method: String, args: C, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> ${r} {
+	static func call<C : Collection${moreGeneric(r)}>(method: String, args: C, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> ${r}
+		where C.Iterator.Element == PerlSVConvertible? {
 		var fullArgs = ContiguousArray<PerlSVConvertible?>()
 		fullArgs.reserveCapacity(1 + numericCast(args.count))
 		fullArgs.append(perlClassName)
