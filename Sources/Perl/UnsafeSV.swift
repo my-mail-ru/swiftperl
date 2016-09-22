@@ -27,11 +27,11 @@ typealias UnsafeSvPointer = UnsafeMutablePointer<UnsafeSV>
 extension UnsafeSV {
 	@discardableResult
 	mutating func refcntInc() -> UnsafeSvPointer {
-		return S_SvREFCNT_inc_NN(&self)
+		return SvREFCNT_inc(&self)
 	}
 
 	mutating func refcntDec(perl: UnsafeInterpreterPointer) {
-		S_SvREFCNT_dec_NN(perl, &self)
+		SvREFCNT_dec(perl, &self)
 	}
 
 	var type: SvType { mutating get { return SvType(SvTYPE(&self)) } }
@@ -121,7 +121,7 @@ extension UnsafeSV {
 	mutating func value<T: PerlMappedClass>(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> T {
 		guard isObject(perl: perl) else { throw PerlError.notObject(self.value()) }
 		let sv = SvRV(&self)
-		guard SvTYPE(sv) == SVt_PVMG && Perl_mg_findext(perl, sv, PERL_MAGIC_ext, &objectMgvtbl) != nil else {
+		guard SvTYPE(sv) == SVt_PVMG && perl.pointee.mg_findext(sv, PERL_MAGIC_ext, &objectMgvtbl) != nil else {
 			throw PerlError.notSwiftObject(self.value())
 		}
 		let iv = perl.pointee.SvIV(sv)

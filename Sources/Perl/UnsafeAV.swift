@@ -18,14 +18,14 @@ struct UnsafeAvCollection : RandomAccessCollection {
 	let perl: UnsafeInterpreterPointer
 
 	var startIndex: Index { return 0 }
-	var endIndex: Index { return S_av_top_index(perl, av) + 1 }
+	var endIndex: Index { return perl.pointee.av_top_index(av) + 1 }
 
 	func fetch(_ i: Index, lval: Bool = false) -> Element? {
-		return Perl_av_fetch(perl, av, i, lval ? 1 : 0)?.pointee
+		return perl.pointee.av_fetch(av, i, lval ? 1 : 0)?.pointee
 	}
 
 	func store(_ i: Index, newValue: Element) -> Element? {
-		return Perl_av_store(perl, av, i, newValue)?.pointee
+		return perl.pointee.av_store(av, i, newValue)?.pointee
 	}
 
 	subscript (i: Index) -> Element { // FIXME maybe -> Element? or maybe not
@@ -34,7 +34,7 @@ struct UnsafeAvCollection : RandomAccessCollection {
 	}
 
 	func extend(to count: Int) {
-		Perl_av_extend(perl, av, count - 1)
+		perl.pointee.av_extend(av, count - 1)
 	}
 
 	func extend(by count: Int) {

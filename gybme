@@ -6,11 +6,11 @@ if [ ! -d .build/gyb ]; then
 	curl -s https://raw.githubusercontent.com/apple/swift/master/utils/gyb > .build/gyb/gyb
 	curl -s https://raw.githubusercontent.com/apple/swift/master/utils/gyb.py > .build/gyb/gyb.py
 	chmod 755 .build/gyb/gyb
-	echo "\t[done]"
+	echo -e "\t[done]"
 fi
 
 for f in Sources/Perl/Call.swift Sources/Perl/CV.swift; do
 	echo -n $f
 	.build/gyb/gyb $f.gyb > $f
-	echo "\t[done]"
+	echo -e "\t[done]"
 done

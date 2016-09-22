@@ -1,19 +1,30 @@
 # Swift and Perl Interoperability
 
+![Swift: 3.0](https://img.shields.io/badge/Swift-3.0-orange.svg)
+![OS: Linux](https://img.shields.io/badge/OS-Linux-brightgreen.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+
 swiftperl is designed to provide easy and smooth interoperability between Swift and Perl languages.
 The primary goal is to write XS modules for Perl entirely in Swift,
 though running Perl Interpreter in Swift environment is also possible.
 
 This package is on very early stage of development.
-It was never used in production and runs without modification on Ubunty 15.10 only.
 
 ## Prerequisites
 
-* Swift 3.0 preview 1 [Ubuntu 15.10](https://swift.org/builds/swift-3.0-preview-1/ubuntu1510/swift-3.0-preview-1/swift-3.0-preview-1-ubuntu15.10.tar.gz)
-* Perl 5
+* Swift 3.0 Release
+* Perl 5 (>=5.10)
 
 ## Getting Started
 
+Ubuntu 15.10:
+```sh
 	./gybme
-	swift build -Xcc -isystem/usr/lib/x86_64-linux-gnu/perl/5.20/CORE -Xcc -isystem/usr/lib/x86_64-linux-gnu/perl5/5.20/Coro -Xcc -D_GNU_SOURCE -Xcc -DPERL_NO_GET_CONTEXT
-	swift test
+	swift test -Xcc -isystem/usr/lib/x86_64-linux-gnu/perl/5.20/CORE -Xcc -isystem/usr/lib/x86_64-linux-gnu/perl5/5.20/Coro -Xcc -D_GNU_SOURCE -Xcc -DPERL_NO_GET_CONTEXT
+```
+
+CentOS 6:
+```sh
+    ./gybme
+    LD_LIBRARY_PATH=/usr/lib64/perl5/CORE/ swift test -Xcc -isystem/usr/lib64/perl5/CORE/ -Xcc -isystem/usr/lib64/perl5/vendor_perl/Coro/ -Xcc -D_GNU_SOURCE -Xcc -DPERL_NO_GET_CONTEXT -Xlinker -L/usr/lib64/perl5/CORE/
+```

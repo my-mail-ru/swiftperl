@@ -61,8 +61,8 @@ private func cvResolver(perl: UnsafeInterpreterPointer?, cv: UnsafeCvPointer?) -
 		let stack = UnsafeXSubStack(perl: perl!)
 		try cv!.pointee.body(stack)
 	} catch PerlError.died(let sv) {
-		Perl_croak_sv(perl, sv.pointer) // FIXME no one leak
+		perl!.pointee.croak_sv(sv.pointer) // FIXME no one leak
 	} catch {
-		Perl_croak_sv(perl, perl!.pointee.newSV("Exception: \(error)")) // FIXME no one leak
+		perl!.pointee.croak_sv(perl!.pointee.newSV("Exception: \(error)")) // FIXME no one leak
 	}
 }
