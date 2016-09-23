@@ -12,30 +12,13 @@ extension UnsafeInterpreter {
 
 	static func sysInit() {
 		var argc = CommandLine.argc
-		var argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>? = CommandLine.unsafeArgv
-		var env: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>? = environ
-		Perl_sys_init3(&argc, &argv, &env)
+		var argv = CommandLine.unsafeArgv
+		var env = environ
+		PERL_SYS_INIT3(&argc, &argv, &env)
 	}
 
 	static func sysTerm() {
-		Perl_sys_term()
-	}
-
-	static func alloc() -> UnsafeInterpreterPointer {
-		return perl_alloc()
-	}
-
-	mutating func construct() {
-		perl_construct(&self)
-	}
-
-	@discardableResult
-	mutating func destruct() -> Int32 {
-		return perl_destruct(&self)
-	}
-
-	mutating func free() {
-		perl_free(&self)
+		PERL_SYS_TERM()
 	}
 
 	mutating func embed() {
@@ -47,7 +30,7 @@ extension UnsafeInterpreter {
 			$0.baseAddress!.withMemoryRebound(to: CChar.self, capacity: $0.count) {
 				var cargs: [UnsafeMutablePointer<CChar>?] = [$0, $0 + 1, $0 + 4]
 				let status = cargs.withUnsafeMutableBufferPointer {
-					perl_parse(&self, xs_init, Int32($0.count), $0.baseAddress, nil)
+					parse(xs_init, Int32($0.count), $0.baseAddress, nil)
 				}
 				assert(status == 0)
 			}
@@ -61,6 +44,6 @@ extension UnsafeInterpreter {
 	}
 
 	mutating func getSV(_ name: String, flags: Int32 = 0) -> UnsafeSvPointer? {
-		return name.withCString { Perl_get_sv(&self, $0, SVf_UTF8|flags) }
+		return get_sv(name, SVf_UTF8|flags)
 	}
 }

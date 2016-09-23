@@ -42,16 +42,10 @@ struct UnsafeAvCollection : RandomAccessCollection {
 	}
 
 	func append(_ sv: Element) {
-		Perl_av_push(perl, av, sv)
+		perl.pointee.av_push(av, sv)
 	}
 
 	func removeFirst() -> Element {
-		return Perl_av_shift(perl, av)
-	}
-}
-
-extension UnsafeInterpreter {
-	mutating func newAV() -> UnsafeAvPointer {
-		return UnsafeMutableRawPointer(Perl_newSV_type(&self, SVt_PVAV)).bindMemory(to: UnsafeAV.self, capacity: 1)
+		return perl.pointee.av_shift(av)
 	}
 }

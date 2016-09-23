@@ -1,3 +1,6 @@
-.build
-Sources/Perl/Call.swift
-Sources/Perl/CV.swift
+.DS_Store
+/.build
+/Packages
+/*.xcodeproj
+/Sources/Perl/Call.swift
+/Sources/Perl/CV.swift

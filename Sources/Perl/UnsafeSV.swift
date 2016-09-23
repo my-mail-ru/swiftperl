@@ -39,7 +39,10 @@ extension UnsafeSV {
 	var isInt: Bool { mutating get { return SvIOK(&self) } }
 	var isString: Bool { mutating get { return SvPOK(&self) } }
 	var isRef: Bool { mutating get { return SvROK(&self) } }
-	mutating func isObject(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> Bool { return Perl_sv_isobject(perl, &self) != 0 }
+
+	mutating func isObject(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> Bool {
+		return perl.pointee.sv_isobject(&self)
+	}
 
 	var refValue: UnsafeSvPointer? { mutating get { return SvROK(&self) ? SvRV(&self) : nil } }
 
@@ -120,7 +123,7 @@ extension UnsafeSV {
 
 	mutating func value<T: PerlMappedClass>(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> T {
 		guard isObject(perl: perl) else { throw PerlError.notObject(self.value()) }
-		let sv = SvRV(&self)
+		let sv = SvRV(&self)!
 		guard SvTYPE(sv) == SVt_PVMG && perl.pointee.mg_findext(sv, PERL_MAGIC_ext, &objectMgvtbl) != nil else {
 			throw PerlError.notSwiftObject(self.value())
 		}
@@ -133,7 +136,7 @@ extension UnsafeSV {
 
 	mutating func value<T: PerlObjectType>(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> T {
 		guard isObject(perl: perl) else { throw PerlError.notObject(self.value()) }
-		let classname = String(cString: Perl_sv_reftype(perl, SvRV(&self), 1))
+		let classname = String(cString: perl.pointee.sv_reftype(SvRV(&self), 1))
 		guard let perlClass = PerlInterpreter.classMapping[classname] else { throw PerlError.unsupportedPerlClass(self.value()) }
 		guard let obj = perlClass.init(PerlSV(&self)) as? T else { throw PerlError.unexpectedPerlClass(self.value()) } // FIXME remove PerlSV cast
 		return obj
@@ -141,42 +144,28 @@ extension UnsafeSV {
 }
 
 extension UnsafeInterpreter {
-	mutating func newSV() -> UnsafeSvPointer {
-		return Perl_newSV(&self, 0)
-	}
-
-	mutating func newSV(_ v: UnsafeSvPointer) -> UnsafeSvPointer {
-		return Perl_newSVsv(&self, v)
-	}
-
 	mutating func newSV(_ v: Bool) -> UnsafeSvPointer {
-		return v ? Perl_newSVsv(&self, &Isv_yes) : Perl_newSVsv(&self, &Isv_no)
-	}
-
-	mutating func newSV(_ v: Int) -> UnsafeSvPointer {
-		return Perl_newSViv(&self, v)
+		return newSV(boolSV(v))
 	}
 
 	mutating func newSV(_ v: String, mortal: Bool = false) -> UnsafeSvPointer {
 		let flags = mortal ? SVf_UTF8|SVs_TEMP : SVf_UTF8
-		return v.withCStringWithLength { Perl_newSVpvn_flags(&self, $0, $1, UInt32(flags)) }
+		return v.withCStringWithLength { newSVpvn_flags($0, $1, UInt32(flags)) }
 	}
 
-	mutating func newRV<T: UnsafeSvProtocol>(inc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
-		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { Perl_newRV(&self, $0) }
+	mutating func newRV<T: UnsafeSvCastProtocol>(inc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
+		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { newRV(inc: $0) }
 	}
 
-	mutating func newRV<T: UnsafeSvProtocol>(noinc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
-		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { Perl_newRV_noinc(&self, $0) }
+	mutating func newRV<T: UnsafeSvCastProtocol>(noinc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
+		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { newRV(noinc: $0) }
 	}
 
 	mutating func newSV(_ v: PerlMappedClass) -> UnsafeSvPointer {
 		let u = Unmanaged<AnyObject>.passRetained(v)
 		let iv = unsafeBitCast(u, to: Int.self)
-		let sv = type(of: v).perlClassName.withCString {
-			Perl_sv_setref_iv(&self, Perl_newSV(&self, 0), $0, iv)!
-		}
-		Perl_sv_magicext(&self, SvRV(sv), nil, PERL_MAGIC_ext, &objectMgvtbl, nil, 0)
+		let sv = sv_setref_iv(newSV(), type(of: v).perlClassName, iv)
+		sv_magicext(SvRV(sv), nil, PERL_MAGIC_ext, &objectMgvtbl, nil, 0)
 		return sv
 	}
 }
@@ -188,7 +177,7 @@ private var objectMgvtbl = MGVTBL(
 	svt_clear: nil,
 	svt_free: {
 		(perl, sv, magic) in
-		let iv = perl!.pointee.SvIV(sv)
+		let iv = perl.unsafelyUnwrapped.pointee.SvIV(sv.unsafelyUnwrapped)
 		let u = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(bitPattern: iv)!)
 		u.release()
 		return 0

@@ -13,7 +13,7 @@ extension UnsafeStack {
 			sp = perl.pointee.EXTEND(sp, source.count)
 			for sv in source {
 				sp += 1
-				sp.initialize(to: Perl_sv_2mortal(perl, sv))
+				sp.initialize(to: perl.pointee.sv_2mortal(sv))
 			}
 		}
 		perl.pointee.Istack_sp = sp

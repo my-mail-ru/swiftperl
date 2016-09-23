@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ ! -d .build/gyb ]; then
 	echo -n Downloading gyb

@@ -4,7 +4,7 @@ extension UnsafeInterpreter {
 	mutating func unsafeCall<C : Collection>(sv: UnsafeSvPointer, args: C, flags: Int32 = 0) throws -> UnsafeStackBufferPointer
 		where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int {
 		let stack = UnsafeCallStack(perl: &self, args: args)
-		let count = Perl_call_sv(&self, sv, G_EVAL|flags)
+		let count = call_sv(sv, G_EVAL|flags)
 		let result = stack.popReturned(count: Int(count))
 		let err = ERRSV
 		if err.pointee.value(perl: &self) {
@@ -16,7 +16,7 @@ extension UnsafeInterpreter {
 	mutating func unsafeCall<C : Collection>(sv: UnsafeSvPointer, discardingResultWithArgs args: C, flags: Int32 = G_VOID) throws -> Void
 		where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int {
 		_ = UnsafeCallStack(perl: &self, args: args)
-		_ = Perl_call_sv(&self, sv, G_EVAL|G_DISCARD|flags)
+		_ = call_sv(sv, G_EVAL|G_DISCARD|flags)
 		let err = ERRSV
 		if err.pointee.value(perl: &self) {
 			throw PerlError.died(PerlSV(err)) // FIXME make a copy
@@ -25,7 +25,7 @@ extension UnsafeInterpreter {
 
 	mutating func unsafeEval(sv: UnsafeSvPointer, flags: Int32 = 0) throws -> UnsafeStackBufferPointer {
 		let stack = UnsafeCallStack(perl: &self, args: EmptyCollection())
-		let count = Perl_eval_sv(&self, sv, flags)
+		let count = eval_sv(sv, flags)
 		let result = stack.popReturned(count: Int(count))
 		let err = ERRSV
 		if err.pointee.value(perl: &self) {
@@ -42,14 +42,6 @@ extension UnsafeInterpreter {
 	mutating func leaveScope() {
 		self.FREETMPS()
 		self.LEAVE()
-	}
-
-	mutating func ENTER() {
-		Perl_push_scope(&self)
-	}
-
-	mutating func LEAVE() {
-		Perl_pop_scope(&self)
 	}
 }
 

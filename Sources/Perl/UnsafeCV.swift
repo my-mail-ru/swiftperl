@@ -40,12 +40,12 @@ extension UnsafeCV {
 
 extension UnsafeInterpreter {
 	mutating func newCV(name: String? = nil, file: StaticString = #file, body: @escaping CvBody) -> UnsafeCvPointer {
-		let newXS = { (name) in
-			file.description.withCString { Perl_newXS_flags(&self, name, cvResolver, $0, nil, UInt32(XS_DYNAMIC_FILENAME))! }
+		func newXS(_ name: UnsafePointer<CChar>?) -> UnsafeCvPointer {
+			return newXS_flags(name, cvResolver, file.description, nil, UInt32(XS_DYNAMIC_FILENAME))!
 		}
-		let cv: UnsafeCvPointer = name != nil ? name!.withCString(newXS) : newXS(nil)
+		let cv = name?.withCString(newXS) ?? newXS(nil)
 		cv.withMemoryRebound(to: UnsafeSV.self, capacity: 1) {
-			_ = Perl_sv_magicext(&self, $0, nil, PERL_MAGIC_ext, &UnsafeCV.mgvtbl, nil, 0)
+			_ = sv_magicext($0, nil, PERL_MAGIC_ext, &UnsafeCV.mgvtbl, nil, 0)
 		}
 		let bodyPointer = UnsafeCvBodyPointer.allocate(capacity: 1)
 		bodyPointer.initialize(to: body)
@@ -56,13 +56,13 @@ extension UnsafeInterpreter {
 
 let PERL_MAGIC_ext = Int32(UnicodeScalar("~").value) // mg_vtable.h
 
-private func cvResolver(perl: UnsafeInterpreterPointer?, cv: UnsafeCvPointer?) -> Void {
+private func cvResolver(perl: UnsafeInterpreterPointer, cv: UnsafeCvPointer) -> Void {
 	do {
-		let stack = UnsafeXSubStack(perl: perl!)
-		try cv!.pointee.body(stack)
+		let stack = UnsafeXSubStack(perl: perl)
+		try cv.pointee.body(stack)
 	} catch PerlError.died(let sv) {
-		perl!.pointee.croak_sv(sv.pointer) // FIXME no one leak
+		perl.pointee.croak_sv(sv.pointer) // FIXME no one leak
 	} catch {
-		perl!.pointee.croak_sv(perl!.pointee.newSV("Exception: \(error)")) // FIXME no one leak
+		perl.pointee.croak_sv(perl.pointee.newSV("Exception: \(error)")) // FIXME no one leak
 	}
 }

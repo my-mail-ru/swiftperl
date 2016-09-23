@@ -26,11 +26,11 @@ struct UnsafeHvCollection: Sequence {
 
 		init(_ c: UnsafeHvCollection) {
 			self.c = c
-			Perl_hv_iterinit(c.perl, c.hv)
+			c.perl.pointee.hv_iterinit( c.hv)
 		}
 
 		func next() -> Element? {
-			guard let he = Perl_hv_iternext_flags(c.perl, c.hv, 0) else { return nil }
+			guard let he = c.perl.pointee.hv_iternext(c.hv) else { return nil }
 			var klen = 0
 			let ckey = c.perl.pointee.HePV(he, &klen)!
 			let key = String(cString: ckey, withLength: klen)
@@ -63,11 +63,5 @@ struct UnsafeHvCollection: Sequence {
 				delete(key)
 			}
 		}
-	}
-}
-
-extension UnsafeInterpreter {
-	mutating func newHV() -> UnsafeHvPointer {
-		return UnsafeMutableRawPointer(Perl_newSV_type(&self, SVt_PVHV)).bindMemory(to: UnsafeHV.self, capacity: 1)
 	}
 }
