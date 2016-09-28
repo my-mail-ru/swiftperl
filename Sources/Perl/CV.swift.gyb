@@ -26,33 +26,50 @@ final class PerlCV : PerlSVProtocol {
 	}
 }
 
+%{
+	def generic(p, r):
+		g = ", ".join(map(lambda n: "P" + str(n) + ": PerlSVConvertible", range(0, p)) + map(lambda n: "R" + str(n) + ": PerlSVConvertible", range(0, r)))
+		return "" if g == "" else "<" + g + ">"
+
+	def tuple(prefix, count, optional):
+		if optional == 0:
+			return "(" + ", ".join(map(lambda n: prefix + str(n), range(0, count))) + ")"
+		elif optional == 1:
+			return "(" + ", ".join(map(lambda n: prefix + str(n) + "?", range(0, count))) + ")"
+		else:
+			return "(" + ", ".join([prefix + "0"] + map(lambda n: prefix + str(n) + "?", range(1, count))) + ")"
+
+	def optrange(count):
+		return range(0, (count + 1) if count < 3 else 3)
+}%
+
 extension PerlCV {
 % for p in range(0, 8):
 %   for r in range(0, 3):
-%     paramsTuple = "(" + ", ".join(map(lambda n: "P" + str(n), range(0, p))) + ")"
-%     resultTuple = "(" + ", ".join(map(lambda n: "R" + str(n), range(0, r))) + ")"
-%     generic = ", ".join(map(lambda n: "P" + str(n) + ": PerlSVConvertible", range(0, p)) + map(lambda n: "R" + str(n) + ": PerlSVConvertible", range(0, r)))
-%     generic = "" if generic == "" else "<" + generic + ">"
 %     args = ", ".join(map(lambda n: "P" + str(n) + ".cast(from: stack.args[" + str(n) + "])", range(0, p)))
+%     for po in optrange(p):
+%       for ro in optrange(r):
 
 	@discardableResult
-	convenience init${generic}(name: String? = nil, file: StaticString = #file, body: @escaping ${paramsTuple} throws -> ${resultTuple}) {
+	convenience init${generic(p, r)}(name: String? = nil, file: StaticString = #file, body: @escaping ${tuple("P", p, po)} throws -> ${tuple("R", r, ro)}) {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
-%     if r == 0:
+%         if r == 0:
 			try body(${args})
 			stack.xsReturn(EmptyCollection())
-%     elif r == 1:
+%         elif r == 1:
 			let result = try body(${args})
 			stack.xsReturn(CollectionOfOne(result.newUnsafeSvPointer(perl: stack.perl)))
-%     else:
+%         else:
 			let result = try body(${args})
 			let svResult: ContiguousArray = [ ${", ".join(map(lambda n: "result." + str(n) + ".newUnsafeSvPointer(perl: stack.perl)", range(0, r)))} ]
 			stack.xsReturn(svResult)
-%     end
+%         end
 		}
 	}
 
+%       end
+%     end
 %   end
 % end
 }
@@ -67,5 +84,28 @@ extension PerlCV {
 			let result = try body(args)
 			stack.xsReturn(ContiguousArray<UnsafeSvPointer>(result, perl: stack.perl))
 		}
+	}
+}
+
+extension PerlMappedClass {
+% for p in range(0, 8):
+%   for r in range(0, 3):
+%     for po in optrange(p):
+%       for ro in optrange(r):
+
+	@discardableResult
+	static func createPerlMethod${generic(p, r)}(_ method: String, file: StaticString = #file, body: @escaping ${tuple("P", p, po)} throws -> ${tuple("R", r, ro)}) -> PerlCV {
+		return PerlCV(name: perlClassName + "::" + method, file: file, body: body)
+	}
+
+%       end
+%     end
+%   end
+% end
+
+	@discardableResult
+	static func createPerlMethod<R: Collection>(_ method: String, file: StaticString = #file, body: @escaping (ContiguousArray<PerlSV>) throws -> R) -> PerlCV
+		where R.Iterator.Element == PerlSV {
+		return PerlCV(name: perlClassName + "::" + method, file: file, body: body)
 	}
 }

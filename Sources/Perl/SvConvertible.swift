@@ -98,6 +98,21 @@ extension PerlObjectType {
 	func newUnsafeSvPointer(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return self.sv.pointer.pointee.refcntInc() }
 }
 
+extension Optional where Wrapped : PerlSVConvertible {
+	static func cast(from sv: UnsafeSvPointer) throws -> Optional<Wrapped> {
+		return sv.pointee.defined ? try Wrapped.cast(from: sv) : nil
+	}
+
+	func newUnsafeSvPointer(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer {
+		switch self {
+			case .some(let value):
+				return value.newUnsafeSvPointer(perl: perl)
+			case .none:
+				return perl.pointee.newSV()
+		}
+	}
+}
+
 extension RangeReplaceableCollection where Iterator.Element == UnsafeSvPointer, IndexDistance == Int {
 	init<C : Collection>(_ c: C, perl: UnsafeInterpreterPointer) where C.Iterator.Element == PerlSVConvertible? {
 		func transform(_ v: PerlSVConvertible?) -> UnsafeSvPointer {
