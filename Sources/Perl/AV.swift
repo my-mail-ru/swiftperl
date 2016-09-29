@@ -24,7 +24,7 @@ final class PerlAV : PerlSVProtocol {
 	}
 
 	func value<T : PerlSVConvertible>() throws -> [T] {
-		return try map { try T.cast(from: $0.pointer) }
+		return try map { try T.promoteFromUnsafeSV($0.pointer) }
 	}
 }
 
@@ -107,7 +107,7 @@ extension PerlAV: ExpressibleByArrayLiteral {
 
 extension Array where Element : PerlSVConvertibleThrowing {
 	init(_ av: PerlAV) throws {
-		self = try av.unsafeCollection.map { try Element.cast(from: $0) }
+		self = try av.unsafeCollection.map { try Element.promoteFromUnsafeSV($0) }
 	}
 
 	init(_ sv: PerlSV) throws {
@@ -117,7 +117,7 @@ extension Array where Element : PerlSVConvertibleThrowing {
 
 extension Array where Element : PerlSVConvertibleNonThrowing {
 	init(_ av: PerlAV) {
-		self = av.unsafeCollection.map { Element.cast(from: $0) }
+		self = av.unsafeCollection.map { Element.promoteFromUnsafeSV($0) }
 	}
 
 	init(_ sv: PerlSV) throws {

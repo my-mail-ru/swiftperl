@@ -76,8 +76,8 @@ final class URI : PerlObjectType {
 
 extension NSURL : PerlMappedClass {
 	public static let perlClassName = "NSURL"
-	public static func cast(from sv: UnsafeSvPointer) throws -> Self {
-		return try NSURL.tCast(from: sv)
+	public static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer) throws -> Self {
+		return try NSURL._promoteFromUnsafeSvNonFinalClassWorkaround(sv)
 	}
 }
 

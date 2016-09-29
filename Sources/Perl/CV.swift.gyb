@@ -46,7 +46,7 @@ final class PerlCV : PerlSVProtocol {
 extension PerlCV {
 % for p in range(0, 8):
 %   for r in range(0, 3):
-%     args = ", ".join(map(lambda n: "P" + str(n) + ".cast(from: stack.args[" + str(n) + "])", range(0, p)))
+%     args = ", ".join(map(lambda n: "P" + str(n) + ".promoteFromUnsafeSV(stack.args[" + str(n) + "])", range(0, p)))
 %     for po in optrange(p):
 %       for ro in optrange(r):
 
@@ -59,10 +59,10 @@ extension PerlCV {
 			stack.xsReturn(EmptyCollection())
 %         elif r == 1:
 			let result = try body(${args})
-			stack.xsReturn(CollectionOfOne(result.newUnsafeSvPointer(perl: stack.perl)))
+			stack.xsReturn(CollectionOfOne(result.promoteToUnsafeSV(perl: stack.perl)))
 %         else:
 			let result = try body(${args})
-			let svResult: ContiguousArray = [ ${", ".join(map(lambda n: "result." + str(n) + ".newUnsafeSvPointer(perl: stack.perl)", range(0, r)))} ]
+			let svResult: ContiguousArray = [ ${", ".join(map(lambda n: "result." + str(n) + ".promoteToUnsafeSV(perl: stack.perl)", range(0, r)))} ]
 			stack.xsReturn(svResult)
 %         end
 		}

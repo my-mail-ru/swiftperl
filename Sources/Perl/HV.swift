@@ -26,7 +26,7 @@ final class PerlHV : PerlSVProtocol {
 	func value<T: PerlSVConvertible>() throws -> [String: T] {
 		var dict = [String: T]()
 		for (k, v) in pointer.pointee.collection(perl: perl) {
-			dict[k] = try T.cast(from: v)
+			dict[k] = try T.promoteFromUnsafeSV(v)
 		}
 		return dict
 	}
@@ -96,7 +96,7 @@ extension Dictionary where Value : PerlSVConvertibleNonThrowing {
 	init(_ hv: PerlHV) {
 		self.init()
 		for (k, v) in hv {
-			self[k as! Key] = Value.cast(from: v.pointer)
+			self[k as! Key] = Value.promoteFromUnsafeSV(v.pointer)
 		}
 	}
 
@@ -110,7 +110,7 @@ extension Dictionary where Value : PerlSVConvertibleThrowing {
 	init(_ hv: PerlHV) throws {
 		self.init()
 		for (k, v) in hv {
-			self[k as! Key] = try Value.cast(from: v.pointer)
+			self[k as! Key] = try Value.promoteFromUnsafeSV(v.pointer)
 		}
 	}
 
