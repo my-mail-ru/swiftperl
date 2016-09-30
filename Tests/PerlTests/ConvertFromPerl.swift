@@ -1,8 +1,8 @@
 import XCTest
 @testable import Perl
 
-class BasicTests : EmbeddedTestCase {
-	static var allTests: [(String, (BasicTests) -> () throws -> Void)] {
+class ConvertFromPerlTests : EmbeddedTestCase {
+	static var allTests: [(String, (ConvertFromPerlTests) -> () throws -> Void)] {
 		return [
 			("testUndef", testUndef),
 			("testInt", testInt),
@@ -58,8 +58,8 @@ class BasicTests : EmbeddedTestCase {
 		XCTAssert(!v.isInt)
 		XCTAssert(!v.isString)
 		XCTAssert(v.isRef)
-		XCTAssertNotNil(v.refValue)
-		let r: PerlSV = v.refValue!
+		XCTAssertNotNil(v.referent)
+		let r: PerlSV = v.referent!
 		XCTAssert(r.isInt)
 		XCTAssertEqual(r.value() as Int, 42)
 	}
@@ -70,7 +70,7 @@ class BasicTests : EmbeddedTestCase {
 		XCTAssert(!sv.isInt)
 		XCTAssert(!sv.isString)
 		XCTAssert(sv.isRef)
-		XCTAssertNotNil(sv.refValue)
+		XCTAssertNotNil(sv.referent)
 		let av: PerlAV = try sv.value()
 		XCTAssertEqual(av.count, 2)
 		XCTAssertEqual(av[0].value() as Int, 42)
@@ -95,7 +95,7 @@ class BasicTests : EmbeddedTestCase {
 		XCTAssert(!sv.isInt)
 		XCTAssert(!sv.isString)
 		XCTAssert(sv.isRef)
-		XCTAssertNotNil(sv.refValue)
+		XCTAssertNotNil(sv.referent)
 		let hv: PerlHV = try sv.value()
 //		XCTAssertEqual(hv.count, 2)
 		XCTAssertEqual(hv["one"]!.value() as Int, 1)
@@ -115,7 +115,7 @@ class BasicTests : EmbeddedTestCase {
 		XCTAssert(!sv.isInt)
 		XCTAssert(!sv.isString)
 		XCTAssert(sv.isRef)
-		XCTAssertNotNil(sv.refValue)
+		XCTAssertNotNil(sv.referent)
 		let cv: PerlCV = try sv.value()
 		XCTAssertEqual(try cv.call(10, 15) as Int?, 25)
 //		XCTAssertEqual(try sv.call(10, 15) as Int, 25)

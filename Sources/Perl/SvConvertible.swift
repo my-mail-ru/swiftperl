@@ -114,67 +114,26 @@ extension Optional where Wrapped : PerlSVConvertible {
 	}
 }
 
-extension RangeReplaceableCollection where Iterator.Element == UnsafeSvPointer, IndexDistance == Int {
-	init<C : Collection>(_ c: C, perl: UnsafeInterpreterPointer) where C.Iterator.Element == PerlSVConvertible? {
-		func transform(_ v: PerlSVConvertible?) -> UnsafeSvPointer {
-			return v?.promoteToUnsafeSV(perl: perl) ?? perl.pointee.newSV()
+extension Collection where Iterator.Element : PerlSVConvertible {
+	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer {
+		let av = perl.pointee.newAV()!
+		var c = av.pointee.collection(perl: perl)
+		c.reserveCapacity(numericCast(count))
+		for (i, v) in enumerated() {
+			c[i] = v.promoteToUnsafeSV(perl: perl)
 		}
-		self.init()
-		let initialCapacity = c.underestimatedCount
-		self.reserveCapacity(initialCapacity)
-
-		var iterator = c.makeIterator()
-
-		// Add elements up to the initial capacity without checking for regrowth.
-		for _ in 0..<initialCapacity {
-			self.append(transform(iterator.next()!))
-		}
-		// Add remaining elements, if any.
-		while let element = iterator.next() {
-			self.append(transform(element))
-		}
-	}
-
-	// FIXME remove it
-	init<C : Collection>(_ c: C, perl: UnsafeInterpreterPointer) where C.Iterator.Element : PerlSVConvertible {
-		func transform(_ v: PerlSVConvertible) -> UnsafeSvPointer {
-			return v.promoteToUnsafeSV(perl: perl)
-		}
-		self.init()
-		let initialCapacity = c.underestimatedCount
-		self.reserveCapacity(initialCapacity)
-
-		var iterator = c.makeIterator()
-
-		// Add elements up to the initial capacity without checking for regrowth.
-		for _ in 0..<initialCapacity {
-			self.append(transform(iterator.next()!))
-		}
-		// Add remaining elements, if any.
-		while let element = iterator.next() {
-			self.append(transform(element))
-		}
+		return perl.pointee.newRV(noinc: av)
 	}
 }
 
-extension RangeReplaceableCollection where Iterator.Element : PerlSVConvertible, IndexDistance == Int {
-	init<C : Collection>(_ c: C, perl: UnsafeInterpreterPointer) throws where C.Iterator.Element == UnsafeSvPointer {
-		func transform(_ v: UnsafeSvPointer) throws -> Iterator.Element {
-			return try Iterator.Element.promoteFromUnsafeSV(v)
+// where Key == String, but it is unsupported
+extension Dictionary where Value : PerlSVConvertible {
+	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer {
+		let hv = perl.pointee.newHV()!
+		var c = hv.pointee.collection(perl: perl)
+		for (k, v) in self {
+			c[k as! String] = v.promoteToUnsafeSV(perl: perl)
 		}
-		self.init()
-		let initialCapacity = c.underestimatedCount
-		self.reserveCapacity(initialCapacity)
-
-		var iterator = c.makeIterator()
-
-		// Add elements up to the initial capacity without checking for regrowth.
-		for _ in 0..<initialCapacity {
-			self.append(try transform(iterator.next()!))
-		}
-		// Add remaining elements, if any.
-		while let element = iterator.next() {
-			self.append(try transform(element))
-		}
+		return perl.pointee.newRV(noinc: hv)
 	}
 }

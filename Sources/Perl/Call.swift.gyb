@@ -83,7 +83,7 @@ extension UnsafeInterpreter {
 		where C.Iterator.Element == PerlSVConvertible? {
 		enterScope()
 		defer { leaveScope() }
-		let svArgs = ContiguousArray<UnsafeSvPointer>(args, perl: &self)
+		let svArgs: [UnsafeSvPointer] = args.map { $0?.promoteToUnsafeSV(perl: &self) ?? newSV() }
 %   if r == "Void":
 		try unsafeCall(sv: sv, discardingResultWithArgs: svArgs, flags: flags)
 %   else:

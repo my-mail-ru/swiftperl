@@ -41,6 +41,10 @@ struct UnsafeAvCollection : RandomAccessCollection {
 		extend(to: self.count + count)
 	}
 
+	func reserveCapacity(_ capacity: Int) {
+		extend(to: capacity)
+	}
+
 	func append(_ sv: Element) {
 		perl.pointee.av_push(av, sv)
 	}

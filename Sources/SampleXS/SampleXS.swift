@@ -12,7 +12,7 @@ func boot(_ p: PerlInterpreter.Pointer) {
 		stack.xsReturn(CollectionOfOne(result))
 	}
 	MyTest.createPerlMethod("test") {
-		(args: ContiguousArray<PerlSV>) -> ContiguousArray<PerlSV> in
+		(args: [PerlSV]) -> [PerlSV] in
 //		let slf: MyTest = try! args[0].value()
 //		slf.test(value: args[1].value())
 //		slf.test2(value: try! args[2].value() as PerlTestMouse)

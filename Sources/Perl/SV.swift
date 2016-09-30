@@ -25,19 +25,9 @@ final class PerlSV : PerlSVProtocol {
 		pointer = perl.pointee.newSV()
 	}
 
-	init(_ v: Bool, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	init<T : PerlSVConvertible>(_ v: T, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		self.perl = perl
-		pointer = perl.pointee.newSV(v)
-	}
-
-	init(_ v: Int, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.perl = perl
-		pointer = perl.pointee.newSV(v)
-	}
-
-	init(_ v: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.perl = perl
-		pointer = perl.pointee.newSV(v)
+		pointer = v.promoteToUnsafeSV(perl: perl)
 	}
 
 	init<T: PerlSVProtocol>(referenceTo sv: T) {
@@ -47,21 +37,22 @@ final class PerlSV : PerlSVProtocol {
 		}
 	}
 
-	convenience init(_ av: PerlAV) {
-		self.init(referenceTo: av)
-	}
-
-	convenience init(_ hv: PerlHV) {
-		self.init(referenceTo: hv)
-	}
-
-	convenience init(_ cv: PerlCV) {
-		self.init(referenceTo: cv)
-	}
-
-	init(_ v: PerlMappedClass, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	init<T : PerlSVConvertible>(_ array: [T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		self.perl = perl
-		pointer = perl.pointee.newSV(v)
+		pointer = array.promoteToUnsafeSV(perl: perl)
+	}
+
+	init<T : PerlSVConvertible>(_ dict: [String: T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		self.perl = perl
+		pointer = dict.promoteToUnsafeSV(perl: perl)
+	}
+
+	convenience init<T : PerlSVConvertible>(_ v: T?, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		if let v = v {
+			self.init(v, perl: perl)
+		} else {
+			self.init(perl: perl)
+		}
 	}
 
 	deinit {
@@ -75,8 +66,8 @@ final class PerlSV : PerlSVProtocol {
 	var isRef: Bool { return pointer.pointee.isRef }
 	var isObject: Bool { return pointer.pointee.isObject(perl: perl) }
 
-	var refValue: PerlSV? {
-		guard let sv = pointer.pointee.refValue else { return nil }
+	var referent: PerlSV? {
+		guard let sv = pointer.pointee.referent else { return nil }
 		return PerlSV(sv)
 	}
 

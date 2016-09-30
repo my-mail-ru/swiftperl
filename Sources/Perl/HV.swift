@@ -23,6 +23,13 @@ final class PerlHV : PerlSVProtocol {
 		pointer.pointee.refcntDec(perl: perl)
 	}
 
+	convenience init<T : PerlSVConvertible>(_ dict: [String: T]) {
+		self.init()
+		for (k, v) in dict {
+			self[k] = v as? PerlSV ?? PerlSV(v)
+		}
+	}
+
 	func value<T: PerlSVConvertible>() throws -> [String: T] {
 		var dict = [String: T]()
 		for (k, v) in pointer.pointee.collection(perl: perl) {

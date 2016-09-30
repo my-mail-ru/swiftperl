@@ -5,7 +5,8 @@ import XCTest
 
 var tests = [XCTestCaseEntry]()
 tests += [testCase(EmbedTests.allTests)]
-tests += [testCase(BasicTests.allTests)]
+tests += [testCase(ConvertFromPerlTests.allTests)]
+tests += [testCase(ConvertToPerlTests.allTests)]
 tests += [testCase(ObjectTests.allTests)]
 tests += [testCase(BenchmarkTests.allTests)]
 tests += [testCase(PerlCoroTests.allTests)]

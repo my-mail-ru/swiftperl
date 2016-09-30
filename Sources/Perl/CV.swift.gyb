@@ -76,13 +76,13 @@ extension PerlCV {
 
 extension PerlCV {
 	@discardableResult
-	convenience init<R: Collection>(name: String? = nil, file: StaticString = #file, body: @escaping (ContiguousArray<PerlSV>) throws -> R)
+	convenience init<R: Collection>(name: String? = nil, file: StaticString = #file, body: @escaping ([PerlSV]) throws -> R)
 		where R.Iterator.Element == PerlSV {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
-			let args = try ContiguousArray<PerlSV>(stack.args, perl: stack.perl)
+			let args = stack.args.map(PerlSV.promoteFromUnsafeSV)
 			let result = try body(args)
-			stack.xsReturn(ContiguousArray<UnsafeSvPointer>(result, perl: stack.perl))
+			stack.xsReturn(result.map { $0.promoteToUnsafeSV(perl: stack.perl) })
 		}
 	}
 }
@@ -104,7 +104,7 @@ extension PerlMappedClass {
 % end
 
 	@discardableResult
-	static func createPerlMethod<R: Collection>(_ method: String, file: StaticString = #file, body: @escaping (ContiguousArray<PerlSV>) throws -> R) -> PerlCV
+	static func createPerlMethod<R: Collection>(_ method: String, file: StaticString = #file, body: @escaping ([PerlSV]) throws -> R) -> PerlCV
 		where R.Iterator.Element == PerlSV {
 		return PerlCV(name: perlClassName + "::" + method, file: file, body: body)
 	}

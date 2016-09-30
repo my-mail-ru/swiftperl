@@ -44,7 +44,7 @@ extension UnsafeSV {
 		return perl.pointee.sv_isobject(&self)
 	}
 
-	var refValue: UnsafeSvPointer? { mutating get { return SvROK(&self) ? SvRV(&self) : nil } }
+	var referent: UnsafeSvPointer? { mutating get { return SvROK(&self) ? SvRV(&self) : nil } }
 
 	mutating func value(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> Bool {
 		return perl.pointee.SvTRUE(&self)
@@ -65,7 +65,7 @@ extension UnsafeSV {
 			case .array:
 				return UnsafeMutableRawPointer(&self).bindMemory(to: UnsafeAV.self, capacity: 1)
 			case .scalar:
-				if let v = refValue {
+				if let v = referent {
 					return try v.pointee.value()
 				} else {
 					fallthrough
@@ -80,7 +80,7 @@ extension UnsafeSV {
 			case .hash:
 				return UnsafeMutableRawPointer(&self).bindMemory(to: UnsafeHV.self, capacity: 1)
 			case .scalar:
-				if let v = refValue {
+				if let v = referent {
 					return try v.pointee.value()
 				} else {
 					fallthrough
@@ -95,7 +95,7 @@ extension UnsafeSV {
 			case .code:
 				return UnsafeMutableRawPointer(&self).bindMemory(to: UnsafeCV.self, capacity: 1)
 			case .scalar:
-				if let v = refValue {
+				if let v = referent {
 					return try v.pointee.value()
 				} else {
 					fallthrough

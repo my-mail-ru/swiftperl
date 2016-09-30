@@ -23,6 +23,15 @@ final class PerlAV : PerlSVProtocol {
 		pointer.pointee.refcntDec(perl: perl)
 	}
 
+	convenience init<C : Collection>(_ c: C, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current)
+		where C.Iterator.Element : PerlSVConvertible {
+		self.init(perl: perl)
+		reserveCapacity(numericCast(c.count))
+		for (i, v) in c.enumerated() {
+			self[i] = v as? PerlSV ?? PerlSV(v, perl: perl)
+		}
+	}
+
 	func value<T : PerlSVConvertible>() throws -> [T] {
 		return try map { try T.promoteFromUnsafeSV($0.pointer) }
 	}
@@ -60,6 +69,10 @@ extension PerlAV : RangeReplaceableCollection {
 
 	func extend(by count: Int) {
 		extend(to: self.count + count)
+	}
+
+	func reserveCapacity(_ capacity: Int) {
+		extend(to: capacity)
 	}
 
 	func replaceSubrange<C: Collection>(_ subRange: Range<Index>, with newElements: C)
