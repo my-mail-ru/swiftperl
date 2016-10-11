@@ -7,6 +7,11 @@ protocol PerlSVProtocol {
 	init(_: UnsafeMutablePointer<Struct>, perl: UnsafeInterpreterPointer)
 }
 
+protocol PerlSvCastable : PerlSVProtocol, PerlSVProbablyConvertible {
+	associatedtype Struct : UnsafeSvCastable
+	init?(_ sv: PerlSV) throws
+}
+
 final class PerlSV : PerlSVProtocol {
 	typealias Struct = UnsafeSV
 	typealias Pointer = UnsafeSvPointer
@@ -70,20 +75,6 @@ final class PerlSV : PerlSVProtocol {
 		guard let sv = pointer.pointee.referent else { return nil }
 		return PerlSV(sv)
 	}
-
-	func value() -> Bool { return pointer.pointee.value(perl: perl) }
-	func value() -> Int { return pointer.pointee.value(perl: perl) }
-	func value() -> String { return pointer.pointee.value(perl: perl) }
-
-	func value() throws -> PerlAV { return try pointer.pointee.value() }
-	func value() throws -> PerlHV { return try pointer.pointee.value() }
-	func value() throws -> PerlCV { return try pointer.pointee.value() }
-
-	func value<T: PerlMappedClass>() throws -> T { return try pointer.pointee.value(perl: perl) }
-	func value<T: PerlObjectType>() throws -> T { return try pointer.pointee.value(perl: perl) }
-
-	func value<T: PerlSVConvertible>() throws -> [T] { return try (value() as PerlAV).value() } // FIXME use unsafeAv
-	func value<T: PerlSVConvertible>() throws -> [String: T] { return try (value() as PerlHV).value() } // FIXME use unsafeHv
 }
 
 extension PerlSV : ExpressibleByNilLiteral {
@@ -131,5 +122,31 @@ extension PerlSV: ExpressibleByArrayLiteral {
 extension PerlSV : ExpressibleByDictionaryLiteral {
 	convenience init(dictionaryLiteral elements: (String, PerlSV)...) {
 		self.init(PerlHV(elements))
+	}
+}
+
+extension Bool {
+	init(_ sv: PerlSV) {
+		self.init(sv.pointer, perl: sv.perl)
+	}
+}
+
+extension Int {
+	init?(_ sv: PerlSV) {
+		self.init(sv.pointer, perl: sv.perl)
+	}
+
+	init(forcing sv: PerlSV) {
+		self.init(forcing: sv.pointer, perl: sv.perl)
+	}
+}
+
+extension String {
+	init?(_ sv: PerlSV) {
+		self.init(sv.pointer, perl: sv.perl)
+	}
+
+	init(forcing sv: PerlSV) {
+		self.init(forcing: sv.pointer, perl: sv.perl)
 	}
 }

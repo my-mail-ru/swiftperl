@@ -7,7 +7,7 @@ func boot(_ p: PerlInterpreter.Pointer) {
 	print("OK")
 	PerlCV(name: "Swift::test") {
 		(stack: UnsafeXSubStack) in
-		print("args: \(stack.args.map(String.init))")
+		print("args: \(stack.args.map { String($0, perl: p) })")
 		let result = PerlSV(MyTest()).promoteToUnsafeSV(perl: stack.perl)
 		stack.xsReturn(CollectionOfOne(result))
 	}
@@ -31,7 +31,7 @@ func boot(_ p: PerlInterpreter.Pointer) {
 		do {
 			try stack.perl.pointee.call(sub: "main::die_now")
 		} catch PerlError.died(let err) {
-			print("Perl died: \(err.value() as String)")
+			print("Perl died: \(String(err))")
 		} catch {
 			print("Other error")
 		}
@@ -64,12 +64,12 @@ final class MyTest : PerlMappedClass {
 		value.attr_rw = "Строка"
 		print("array: \(value.list.count)")
 		for v in value.list {
-			print("value: \(v.value() as String)")
+			print("value: \(String(v))")
 		}
 		for (k, v) in value.hash {
-			print("key: \(k), value: \(v.value() as String)")
+			print("key: \(k), value: \(String(v))")
 		}
-		print("key3: \(value.hash["key3"]!.value() as String)")
+		print("key3: \(String(value.hash["key3"]!))")
 		print("do_something: \(try! value.doSomething(15, "more + "))")
 		print("list: \(value.list)")
 //		print("listOfStrings: \(value.listOfStrings)")

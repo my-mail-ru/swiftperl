@@ -46,100 +46,28 @@ extension UnsafeSV {
 
 	var referent: UnsafeSvPointer? { mutating get { return SvROK(&self) ? SvRV(&self) : nil } }
 
-	mutating func value(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> Bool {
-		return perl.pointee.SvTRUE(&self)
-	}
-
-	mutating func value(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> Int {
-		return perl.pointee.SvIV(&self)
-	}
-
-	mutating func value(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> String {
-		var clen = 0
-		let cstr = perl.pointee.SvPV(&self, &clen)!
-		return String(cString: cstr, withLength: clen)
-	}
-
-	mutating func value() throws -> UnsafeAvPointer {
-		switch type {
-			case .array:
-				return UnsafeMutableRawPointer(&self).bindMemory(to: UnsafeAV.self, capacity: 1)
-			case .scalar:
-				if let v = referent {
-					return try v.pointee.value()
-				} else {
-					fallthrough
-				}
-			default:
-				throw PerlError.notAV(self.value())
+	mutating func swiftObject(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> AnyObject {
+		guard isObject(perl: perl) else {
+			throw PerlError.notObject(PerlSV(&self, perl: perl))
 		}
-	}
-
-	mutating func value() throws -> UnsafeHvPointer {
-		switch type {
-			case .hash:
-				return UnsafeMutableRawPointer(&self).bindMemory(to: UnsafeHV.self, capacity: 1)
-			case .scalar:
-				if let v = referent {
-					return try v.pointee.value()
-				} else {
-					fallthrough
-				}
-			default:
-				throw PerlError.notHV(self.value())
-		}
-	}
-
-	mutating func value() throws -> UnsafeCvPointer {
-		switch type {
-			case .code:
-				return UnsafeMutableRawPointer(&self).bindMemory(to: UnsafeCV.self, capacity: 1)
-			case .scalar:
-				if let v = referent {
-					return try v.pointee.value()
-				} else {
-					fallthrough
-				}
-			default:
-				throw PerlError.notCV(self.value())
-		}
-	}
-
-	mutating func value() -> PerlSV {
-		return PerlSV(&self)
-	}
-
-	mutating func value() throws -> PerlAV {
-		return PerlAV(try self.value() as UnsafeAvPointer)
-	}
-
-	mutating func value() throws -> PerlHV {
-		return PerlHV(try self.value() as UnsafeHvPointer)
-	}
-
-	mutating func value() throws -> PerlCV {
-		return PerlCV(try self.value() as UnsafeCvPointer)
-	}
-
-	mutating func value<T: PerlMappedClass>(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> T {
-		guard isObject(perl: perl) else { throw PerlError.notObject(self.value()) }
 		let sv = SvRV(&self)!
 		guard SvTYPE(sv) == SVt_PVMG && perl.pointee.mg_findext(sv, PERL_MAGIC_ext, &objectMgvtbl) != nil else {
-			throw PerlError.notSwiftObject(self.value())
+			throw PerlError.notSwiftObject(PerlSV(&self, perl: perl))
 		}
 		let iv = perl.pointee.SvIV(sv)
 		let u = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(bitPattern: iv)!)
-		let any = u.takeUnretainedValue()
-		guard let obj = any as? T else { throw PerlError.unexpectedSwiftObject(self.value()) }
-		return obj
+		return u.takeUnretainedValue()
 	}
 
-	mutating func value<T: PerlObjectType>(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> T {
-		guard isObject(perl: perl) else { throw PerlError.notObject(self.value()) }
+	mutating func perlObject(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> PerlObjectType {
+		guard isObject(perl: perl) else {
+			throw PerlError.notObject(PerlSV(&self, perl: perl))
+		}
 		let classname = String(cString: perl.pointee.sv_reftype(SvRV(&self), 1))
-		guard let perlClass = PerlInterpreter.classMapping[classname] else { throw PerlError.unsupportedPerlClass(self.value()) }
-		guard let obj = perlClass.init(PerlSV(&self)) as? T else { throw PerlError.unexpectedPerlClass(self.value()) } // FIXME remove PerlSV cast
-		return obj
+		guard let perlClass = PerlInterpreter.classMapping[classname] else {
+			throw PerlError.unsupportedPerlClass(PerlSV(&self))
+		}
+		return perlClass.init(PerlSV(&self, perl: perl)) // FIXME remove PerlSV cast
 	}
 }
 
@@ -153,20 +81,24 @@ extension UnsafeInterpreter {
 		return v.withCStringWithLength { newSVpvn_flags($0, $1, UInt32(flags)) }
 	}
 
-	mutating func newRV<T: UnsafeSvCastProtocol>(inc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
+	mutating func newRV<T: UnsafeSvCastable>(inc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
 		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { newRV(inc: $0) }
 	}
 
-	mutating func newRV<T: UnsafeSvCastProtocol>(noinc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
+	mutating func newRV<T: UnsafeSvCastable>(noinc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
 		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { newRV(noinc: $0) }
 	}
 
-	mutating func newSV(_ v: PerlMappedClass) -> UnsafeSvPointer {
+	mutating func newSV(_ v: AnyObject, isa: String) -> UnsafeSvPointer {
 		let u = Unmanaged<AnyObject>.passRetained(v)
 		let iv = unsafeBitCast(u, to: Int.self)
-		let sv = sv_setref_iv(newSV(), type(of: v).perlClassName, iv)
+		let sv = sv_setref_iv(newSV(), isa, iv)
 		sv_magicext(SvRV(sv), nil, PERL_MAGIC_ext, &objectMgvtbl, nil, 0)
 		return sv
+	}
+
+	mutating func newSV(_ v: PerlMappedClass) -> UnsafeSvPointer {
+		return newSV(v, isa: type(of: v).perlClassName)
 	}
 }
 
@@ -186,3 +118,33 @@ private var objectMgvtbl = MGVTBL(
 	svt_dup: nil,
 	svt_local: nil
 )
+
+extension Bool {
+	init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		self = perl.pointee.SvTRUE(sv)
+	}
+}
+
+extension Int {
+	init?(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		guard SvOK(sv) else { return nil }
+		self.init(forcing: sv, perl: perl)
+	}
+
+	init(forcing sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		self = perl.pointee.SvIV(sv)
+	}
+}
+
+extension String {
+	init?(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		guard SvOK(sv) else { return nil }
+		self.init(forcing: sv, perl: perl)
+	}
+
+	init(forcing sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		var clen = 0
+		let cstr = perl.pointee.SvPV(sv, &clen)!
+		self = String(cString: cstr, withLength: clen)
+	}
+}

@@ -1,4 +1,4 @@
-final class PerlHV : PerlSVProtocol {
+final class PerlHV : PerlSvCastable {
 	typealias Struct = UnsafeHV
 	typealias Pointer = UnsafeHvPointer
 	let unsafeCollection: UnsafeHvCollection
@@ -23,6 +23,11 @@ final class PerlHV : PerlSVProtocol {
 		pointer.pointee.refcntDec(perl: perl)
 	}
 
+	convenience init?(_ sv: PerlSV) throws {
+		guard let hv = try UnsafeHvPointer(sv.pointer, perl: sv.perl) else { return nil }
+		self.init(hv, perl: sv.perl)
+	}
+
 	convenience init<T : PerlSVConvertible>(_ dict: [String: T]) {
 		self.init()
 		for (k, v) in dict {
@@ -33,7 +38,7 @@ final class PerlHV : PerlSVProtocol {
 	func value<T: PerlSVConvertible>() throws -> [String: T] {
 		var dict = [String: T]()
 		for (k, v) in pointer.pointee.collection(perl: perl) {
-			dict[k] = try T.promoteFromUnsafeSV(v)
+			dict[k] = try T.promoteFromUnsafeSV(v, perl: perl)
 		}
 		return dict
 	}
@@ -99,29 +104,32 @@ extension PerlHV : ExpressibleByDictionaryLiteral {
 }
 
 // where Key == String, but it is unsupported
-extension Dictionary where Value : PerlSVConvertibleNonThrowing {
+extension Dictionary where Value : PerlSVDefinitelyConvertible {
 	init(_ hv: PerlHV) {
 		self.init()
 		for (k, v) in hv {
-			self[k as! Key] = Value.promoteFromUnsafeSV(v.pointer)
+			self[k as! Key] = Value.promoteFromUnsafeSV(v.pointer, perl: hv.perl)
 		}
-	}
-
-	init(_ sv: PerlSV) throws {
-		try self.init(PerlHV(sv))
 	}
 }
 
 // where Key == String, but it is unsupported
-extension Dictionary where Value : PerlSVConvertibleThrowing {
+extension Dictionary where Value : PerlSVProbablyConvertible {
 	init(_ hv: PerlHV) throws {
 		self.init()
 		for (k, v) in hv {
-			self[k as! Key] = try Value.promoteFromUnsafeSV(v.pointer)
+			self[k as! Key] = try Value.promoteFromUnsafeSV(v.pointer, perl: hv.perl)
 		}
 	}
+}
 
-	init(_ sv: PerlSV) throws {
-		try self.init(PerlHV(sv))
+// where Key == String, but it is unsupported
+extension Dictionary where Value : PerlSVConvertible {
+	init?(_ sv: PerlSV) throws {
+		guard let hv = try UnsafeHvPointer(sv.pointer, perl: sv.perl) else { return nil }
+		self.init()
+		for (k, v) in hv.pointee.collection(perl: sv.perl) {
+			self[k as! Key] = try Value.promoteFromUnsafeSV(v, perl: sv.perl)
+		}
 	}
 }

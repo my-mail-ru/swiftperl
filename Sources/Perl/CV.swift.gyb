@@ -1,6 +1,6 @@
 import CPerl
 
-final class PerlCV : PerlSVProtocol {
+final class PerlCV : PerlSvCastable {
 	typealias Struct = UnsafeCV
 	typealias Pointer = UnsafeCvPointer
 	let pointer: Pointer
@@ -24,6 +24,11 @@ final class PerlCV : PerlSVProtocol {
 	deinit {
 		pointer.pointee.refcntDec(perl: perl)
 	}
+
+	convenience init?(_ sv: PerlSV) throws {
+		guard let cv = try UnsafeCvPointer(sv.pointer, perl: sv.perl) else { return nil }
+		self.init(cv, perl: sv.perl)
+	}
 }
 
 %{
@@ -46,7 +51,7 @@ final class PerlCV : PerlSVProtocol {
 extension PerlCV {
 % for p in range(0, 8):
 %   for r in range(0, 3):
-%     args = ", ".join(map(lambda n: "P" + str(n) + ".promoteFromUnsafeSV(stack.args[" + str(n) + "])", range(0, p)))
+%     args = ", ".join(map(lambda n: "P" + str(n) + ".promoteFromUnsafeSV(stack.args[" + str(n) + "], perl: stack.perl)", range(0, p)))
 %     for po in optrange(p):
 %       for ro in optrange(r):
 
@@ -80,7 +85,7 @@ extension PerlCV {
 		where R.Iterator.Element == PerlSV {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
-			let args = stack.args.map(PerlSV.promoteFromUnsafeSV)
+			let args = stack.args.map { PerlSV.promoteFromUnsafeSV($0, perl: stack.perl) }
 			let result = try body(args)
 			stack.xsReturn(result.map { $0.promoteToUnsafeSV(perl: stack.perl) })
 		}

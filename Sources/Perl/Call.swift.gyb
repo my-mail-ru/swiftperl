@@ -7,7 +7,7 @@ extension UnsafeInterpreter {
 		let count = call_sv(sv, G_EVAL|flags)
 		let result = stack.popReturned(count: Int(count))
 		let err = ERRSV
-		if err.pointee.value(perl: &self) {
+		if Bool(err, perl: &self) {
 			throw PerlError.died(PerlSV(err)) // FIXME make a copy
 		}
 		return result
@@ -18,7 +18,7 @@ extension UnsafeInterpreter {
 		_ = UnsafeCallStack(perl: &self, args: args)
 		_ = call_sv(sv, G_EVAL|G_DISCARD|flags)
 		let err = ERRSV
-		if err.pointee.value(perl: &self) {
+		if Bool(err, perl: &self) {
 			throw PerlError.died(PerlSV(err)) // FIXME make a copy
 		}
 	}
@@ -28,7 +28,7 @@ extension UnsafeInterpreter {
 		let count = eval_sv(sv, flags)
 		let result = stack.popReturned(count: Int(count))
 		let err = ERRSV
-		if err.pointee.value(perl: &self) {
+		if Bool(err, perl: &self) {
 			throw PerlError.died(PerlSV(err)) // FIXME make a copy
 		}
 		return result
@@ -68,7 +68,7 @@ extension UnsafeInterpreter {
 		return "" if g == "" else ", " + g
 	
 	def result(r):
-		return re.sub("(R(\\d*))(\\?)?", lambda m: m.group(1) + "(" + ("" if m.group(3) else "nonNil: ") + "svResult[" + (m.group(2) or "0") + "])", r)
+		return re.sub("(R(\\d*)\\??)", lambda m: m.group(1) + ".promoteFromUnsafeSV(svResult[" + (m.group(2) or "0") + "], perl: &self)", r)
 
 	calls = ["Void", "R", "R?", "(R0?, R1?)"]
 }%

@@ -18,7 +18,7 @@ class BenchmarkTests : EmbeddedTestCase {
 
 	func testBenchmarkCallPerl() throws {
 		let sv: PerlSV = try perl.eval("sub test { my ($c, $d) = @_; return $c + $d } \\&test")
-		let cv: PerlCV = try sv.value()
+		let cv: PerlCV = try PerlCV(sv)!
 		var s: Int?
 		for _ in 1...100000 {
 			s = try cv.call(10, 15)

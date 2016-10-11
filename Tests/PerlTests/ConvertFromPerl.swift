@@ -22,8 +22,10 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssert(!v.isInt)
 		XCTAssert(!v.isString)
 		XCTAssert(!v.isRef)
-		XCTAssertEqual(v.value() as Int, 0)
-		XCTAssertEqual(v.value() as String, "")
+		XCTAssertNil(Int(v))
+		XCTAssertNil(String(v))
+		XCTAssertEqual(Int(forcing: v), 0)
+		XCTAssertEqual(String(forcing: v), "")
 	}
 
 	func testInt() throws {
@@ -32,9 +34,8 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssert(v.isInt)
 		XCTAssert(!v.isString)
 		XCTAssert(!v.isRef)
-		XCTAssertEqual(v.value() as Int, 42)
-		XCTAssertEqual(v.value() as String, "42")
 		XCTAssertEqual(Int(v), 42)
+		XCTAssertEqual(String(v), "42")
 	}
 
 	func testString() throws {
@@ -43,13 +44,13 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssert(!v.isInt)
 		XCTAssert(v.isString)
 		XCTAssert(!v.isRef)
-		XCTAssertEqual(v.value() as Int, 0)
-		XCTAssertEqual(v.value() as String, "test")
+		XCTAssertEqual(Int(v), 0)
+		XCTAssertEqual(String(v), "test")
 		XCTAssertEqual(String(v), "test")
 		let u: PerlSV = try perl.eval("'строченька'")
-		XCTAssertEqual(u.value() as String, "строченька")
+		XCTAssertEqual(String(u), "строченька")
 		let n: PerlSV = try perl.eval("'null' . chr(0) . 'sepparated'")
-		XCTAssertEqual(n.value() as String, "null\0sepparated")
+		XCTAssertEqual(String(n), "null\0sepparated")
 	}
 
 	func testScalarRef() throws {
@@ -61,7 +62,7 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssertNotNil(v.referent)
 		let r: PerlSV = v.referent!
 		XCTAssert(r.isInt)
-		XCTAssertEqual(r.value() as Int, 42)
+		XCTAssertEqual(Int(r), 42)
 	}
 
 	func testArrayRef() throws {
@@ -71,21 +72,21 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssert(!sv.isString)
 		XCTAssert(sv.isRef)
 		XCTAssertNotNil(sv.referent)
-		let av: PerlAV = try sv.value()
+		let av: PerlAV = try PerlAV(sv)!
 		XCTAssertEqual(av.count, 2)
-		XCTAssertEqual(av[0].value() as Int, 42)
-		XCTAssertEqual(av[1].value() as String, "str")
-		let strs: [String] = try sv.value()
+		XCTAssertEqual(Int(av[0]), 42)
+		XCTAssertEqual(String(av[1]), "str")
+		let strs: [String] = try [String](sv)!
 		XCTAssertEqual(strs, ["42", "str"])
 		XCTAssertEqual([String](av), ["42", "str"])
-		XCTAssertEqual(try [String](sv), ["42", "str"])
+		XCTAssertEqual(try [String](sv)!, ["42", "str"])
 
 		let i: PerlSV = try perl.eval("[42, 15, 10]")
-		let ints: [Int] = try i.value()
+		let ints: [Int] = try [Int](i)!
 		XCTAssertEqual(ints, [42, 15, 10])
 
 		let s: PerlSV = try perl.eval("[qw/one two three/]")
-		let strings: [String] = try s.value()
+		let strings: [String] = try [String](s)!
 		XCTAssertEqual(strings, ["one", "two", "three"])
 	}
 
@@ -96,17 +97,17 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssert(!sv.isString)
 		XCTAssert(sv.isRef)
 		XCTAssertNotNil(sv.referent)
-		let hv: PerlHV = try sv.value()
+		let hv: PerlHV = try PerlHV(sv)!
 //		XCTAssertEqual(hv.count, 2)
-		XCTAssertEqual(hv["one"]!.value() as Int, 1)
-		XCTAssertEqual(hv["two"]!.value() as Int, 2)
-//		let hd: [String: Int] = try hv.value()
+		XCTAssertEqual(Int(hv["one"]!), 1)
+		XCTAssertEqual(Int(hv["two"]!), 2)
+//		let hd: [String: Int] = try [String: Int](hv)
 //		XCTAssertEqual(hd, ["one": 1, "two": 2])
-		let sd: [String: Int] = try sv.value()
+		let sd: [String: Int] = try [String: Int](sv)!
 		XCTAssertEqual(sd, ["one": 1, "two": 2])
 		XCTAssertEqual(sd, ["one": 1, "two": 2])
 		XCTAssertEqual([String: Int](hv), ["one": 1, "two": 2])
-		XCTAssertEqual(try [String: Int](sv), ["one": 1, "two": 2])
+		XCTAssertEqual(try [String: Int](sv)!, ["one": 1, "two": 2])
 	}
 
 	func testCodeRef() throws {
@@ -116,7 +117,7 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssert(!sv.isString)
 		XCTAssert(sv.isRef)
 		XCTAssertNotNil(sv.referent)
-		let cv: PerlCV = try sv.value()
+		let cv: PerlCV = try PerlCV(sv)!
 		XCTAssertEqual(try cv.call(10, 15) as Int?, 25)
 //		XCTAssertEqual(try sv.call(10, 15) as Int, 25)
 	}

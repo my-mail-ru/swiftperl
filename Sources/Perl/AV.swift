@@ -1,4 +1,4 @@
-final class PerlAV : PerlSVProtocol {
+final class PerlAV : PerlSvCastable {
 	typealias Struct = UnsafeAV
 	typealias Pointer = UnsafeAvPointer
 	let unsafeCollection: UnsafeAvCollection
@@ -23,6 +23,11 @@ final class PerlAV : PerlSVProtocol {
 		pointer.pointee.refcntDec(perl: perl)
 	}
 
+	convenience init?(_ sv: PerlSV) throws {
+		guard let av = try UnsafeAvPointer(sv.pointer, perl: sv.perl) else { return nil }
+		self.init(av, perl: sv.perl)
+	}
+
 	convenience init<C : Collection>(_ c: C, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current)
 		where C.Iterator.Element : PerlSVConvertible {
 		self.init(perl: perl)
@@ -33,7 +38,7 @@ final class PerlAV : PerlSVProtocol {
 	}
 
 	func value<T : PerlSVConvertible>() throws -> [T] {
-		return try map { try T.promoteFromUnsafeSV($0.pointer) }
+		return try map { try T.promoteFromUnsafeSV($0.pointer, perl: $0.perl) }
 	}
 }
 
@@ -118,22 +123,21 @@ extension PerlAV: ExpressibleByArrayLiteral {
 	}
 }
 
-extension Array where Element : PerlSVConvertibleThrowing {
+extension Array where Element : PerlSVProbablyConvertible {
 	init(_ av: PerlAV) throws {
-		self = try av.unsafeCollection.map { try Element.promoteFromUnsafeSV($0) }
-	}
-
-	init(_ sv: PerlSV) throws {
-		try self.init(PerlAV(sv))
+		self = try av.unsafeCollection.map { try Element.promoteFromUnsafeSV($0, perl: av.perl) }
 	}
 }
 
-extension Array where Element : PerlSVConvertibleNonThrowing {
+extension Array where Element : PerlSVDefinitelyConvertible {
 	init(_ av: PerlAV) {
-		self = av.unsafeCollection.map { Element.promoteFromUnsafeSV($0) }
+		self = av.unsafeCollection.map { Element.promoteFromUnsafeSV($0, perl: av.perl) }
 	}
+}
 
-	init(_ sv: PerlSV) throws {
-		try self.init(PerlAV(sv))
+extension Array where Element : PerlSVConvertible {
+	init?(_ sv: PerlSV) throws {
+		guard let av = try UnsafeAvPointer(sv.pointer, perl: sv.perl) else { return nil }
+		self = try av.pointee.collection(perl: sv.perl).map { try Element.promoteFromUnsafeSV($0, perl: sv.perl) }
 	}
 }

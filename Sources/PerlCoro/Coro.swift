@@ -21,7 +21,7 @@ final class PerlCoro : PerlObjectType {
 		guard let sv = perl.pointee.getSV("Coro::API") else {
 			throw PerlCoro.CoroError.coroApiNotFound
 		}
-		coroApi = UnsafeMutablePointer<CoroAPI>(bitPattern: Int(sv))
+		coroApi = UnsafeMutablePointer<CoroAPI>(bitPattern: Int(sv)!)
 		guard coroApi.pointee.ver == CORO_API_VERSION && coroApi.pointee.rev >= CORO_API_REVISION else {
 			throw PerlCoro.CoroError.coroApiVersionMismatch(
 				used: (ver: coroApi.pointee.ver, rev: coroApi.pointee.rev),

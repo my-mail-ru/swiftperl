@@ -1,6 +1,6 @@
 import CPerl
 
-protocol PerlObjectType : PerlSVConvertibleThrowing {
+protocol PerlObjectType : PerlSVProbablyConvertible {
 	var sv: PerlSV { get }
 	static var perlClassName: String { get }
 	init(_: PerlSV)

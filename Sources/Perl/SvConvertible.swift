@@ -1,107 +1,83 @@
 import CPerl
 
 protocol PerlSVConvertible {
-	static func promoteFromUnsafeSV(_: UnsafeSvPointer) throws -> Self
+	static func promoteFromUnsafeSV(_: UnsafeSvPointer, perl: UnsafeInterpreterPointer/* = UnsafeInterpreter.current */) throws -> Self
 	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer/* = UnsafeInterpreter.current */) -> UnsafeSvPointer
 }
 
-extension PerlSVConvertible {
-	init?(_ sv: UnsafeSvPointer) throws {
-		guard sv.pointee.defined else { return nil }
-		self = try Self.promoteFromUnsafeSV(sv)
-	}
+protocol PerlSVProbablyConvertible : PerlSVConvertible {}
 
-	init(nonNil sv: UnsafeSvPointer) throws {
-		self = try Self.promoteFromUnsafeSV(sv)
-	}
+protocol PerlSVDefinitelyConvertible : PerlSVConvertible {
+	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer/* = UnsafeInterpreter.current */) -> Self
 }
 
-protocol PerlSVConvertibleThrowing : PerlSVConvertible {}
-
-protocol PerlSVConvertibleNonThrowing : PerlSVConvertible {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer) -> Self
-}
-
-protocol PerlSVConvertibleByInit : PerlSVConvertibleThrowing {
-	init(_: PerlSV) throws
-}
-
-extension PerlSVConvertibleByInit {
-	init(_ sv: UnsafeSvPointer) throws { self = try Self.promoteFromUnsafeSV(sv) }
-}
-
-protocol PerlSVConvertibleNonThrowingByInit : PerlSVConvertibleNonThrowing {
-	init(_: PerlSV)
-}
-
-extension PerlSVConvertibleNonThrowingByInit {
-	init(_ sv: UnsafeSvPointer) { self = Self.promoteFromUnsafeSV(sv) }
-}
-
-extension Bool : PerlSVConvertibleNonThrowingByInit {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer) -> Bool { return sv.pointee.value() }
+extension Bool : PerlSVDefinitelyConvertible {
+	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> Bool { return Bool(sv, perl: perl) }
 	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
-	init(_ sv: PerlSV) { self = sv.value() }
 }
 
-extension Int : PerlSVConvertibleNonThrowingByInit {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer) -> Int { return sv.pointee.value() }
+extension Int : PerlSVDefinitelyConvertible {
+	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> Int { return Int(forcing: sv, perl: perl) }
 	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
-	init(_ sv: PerlSV) { self = sv.value() }
 }
 
-extension String : PerlSVConvertibleNonThrowingByInit {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer) -> String { return sv.pointee.value() }
+extension String : PerlSVDefinitelyConvertible {
+	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> String { return String(forcing: sv, perl: perl) }
 	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
-	init(_ sv: PerlSV) { self = sv.value() }
 }
 
-extension PerlSV : PerlSVConvertibleNonThrowing {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer) -> PerlSV { return sv.pointee.value() }
+extension PerlSV : PerlSVDefinitelyConvertible {
+	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> PerlSV { return PerlSV(sv, perl: perl) }
 	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return self.pointer.pointee.refcntInc() }
 }
 
-extension PerlAV : PerlSVConvertibleByInit {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer) throws -> PerlAV { return try sv.pointee.value() }
-	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newRV(inc: self.pointer) }
-	convenience init(_ sv: PerlSV) throws { self.init(try sv.pointer.pointee.value() as UnsafeAvPointer) }
+extension PerlSvCastable {
+	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Self {
+		guard let unsafe = try UnsafeMutablePointer<Struct>(sv, perl: perl) else { throw PerlError.unexpectedUndef(PerlSV(sv, perl: perl)) }
+		return self.init(unsafe, perl: perl)
+	}
+
+	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer {
+		return perl.pointee.newRV(inc: self.pointer)
+	}
 }
 
-extension PerlHV : PerlSVConvertibleByInit {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer) throws -> PerlHV { return try sv.pointee.value() }
-	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newRV(inc: self.pointer) }
-	convenience init(_ sv: PerlSV) throws { self.init(try sv.pointer.pointee.value() as UnsafeHvPointer) }
-}
-
-extension PerlCV : PerlSVConvertibleByInit {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer) throws -> PerlCV { return try sv.pointee.value() }
-	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newRV(inc: self.pointer) }
-	convenience init(_ sv: PerlSV) throws { self.init(try sv.pointer.pointee.value() as UnsafeCvPointer) }
-}
-
-protocol PerlMappedClass : class, PerlSVConvertibleThrowing {
+protocol PerlMappedClass : class, PerlSVProbablyConvertible {
 	static var perlClassName: String { get }
 }
 
 extension PerlMappedClass {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer) throws -> Self { return try sv.pointee.value() }
-	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
+	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Self {
+		return try _promoteFromUnsafeSvNonFinalClassWorkaround(sv, perl: perl)
+	}
 
-	static func _promoteFromUnsafeSvNonFinalClassWorkaround<T>(_ sv: UnsafeSvPointer) throws -> T {
-		let base: Self = try sv.pointee.value()
-		guard let obj = base as? T else { throw PerlError.unexpectedSwiftObject(sv.pointee.value()) }
+	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer {
+		return perl.pointee.newSV(self)
+	}
+
+	static func _promoteFromUnsafeSvNonFinalClassWorkaround<T>(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> T {
+		let base = try sv.pointee.swiftObject(perl: perl)
+		guard let obj = base as? T else { throw PerlError.unexpectedObjectType(PerlSV(sv, perl: perl)) }
 		return obj
 	}
 }
 
 extension PerlObjectType {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer) throws -> Self { return try sv.pointee.value() }
-	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return self.sv.pointer.pointee.refcntInc() }
+	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Self {
+		guard let obj = try sv.pointee.swiftObject(perl: perl) as? Self else {
+			throw PerlError.unexpectedObjectType(PerlSV(sv, perl: perl))
+		}
+		return obj
+	}
+
+	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer {
+		return self.sv.pointer.pointee.refcntInc()
+	}
 }
 
 extension Optional where Wrapped : PerlSVConvertible {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer) throws -> Optional<Wrapped> {
-		return sv.pointee.defined ? try Wrapped.promoteFromUnsafeSV(sv) : nil
+	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Optional<Wrapped> {
+		return sv.pointee.defined ? try Wrapped.promoteFromUnsafeSV(sv, perl: perl) : nil
 	}
 
 	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer {
@@ -114,7 +90,7 @@ extension Optional where Wrapped : PerlSVConvertible {
 	}
 }
 
-extension Collection where Iterator.Element : PerlSVConvertible {
+extension Array where Element : PerlSVConvertible {
 	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer {
 		let av = perl.pointee.newAV()!
 		var c = av.pointee.collection(perl: perl)
