@@ -5,24 +5,18 @@ protocol PerlSVConvertible {
 	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer/* = UnsafeInterpreter.current */) -> UnsafeSvPointer
 }
 
-protocol PerlSVProbablyConvertible : PerlSVConvertible {}
-
-protocol PerlSVDefinitelyConvertible : PerlSVConvertible {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer/* = UnsafeInterpreter.current */) -> Self
-}
-
-extension Bool : PerlSVDefinitelyConvertible {
+extension Bool : PerlSVConvertible {
 	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> Bool { return Bool(sv, perl: perl) }
 	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
 }
 
-extension Int : PerlSVDefinitelyConvertible {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> Int { return Int(forcing: sv, perl: perl) }
+extension Int : PerlSVConvertible {
+	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Int { return try Int(sv, perl: perl) }
 	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
 }
 
-extension String : PerlSVDefinitelyConvertible {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> String { return String(forcing: sv, perl: perl) }
+extension String : PerlSVConvertible {
+	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> String { return try String(sv, perl: perl) }
 	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
 }
 

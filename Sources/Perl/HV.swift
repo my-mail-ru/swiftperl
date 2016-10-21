@@ -112,19 +112,7 @@ extension PerlHV : ExpressibleByDictionaryLiteral {
 }
 
 // where Key == String, but it is unsupported
-extension Dictionary where Value : PerlSVDefinitelyConvertible {
-	init(_ hv: PerlHV) {
-		self.init()
-		hv.withUnsafeCollection {
-			for (k, v) in $0 {
-				self[k as! Key] = Value.promoteFromUnsafeSV(v, perl: $0.perl)
-			}
-		}
-	}
-}
-
-// where Key == String, but it is unsupported
-extension Dictionary where Value : PerlSVProbablyConvertible {
+extension Dictionary where Value : PerlSVConvertible {
 	init(_ hv: PerlHV) throws {
 		self.init()
 		try hv.withUnsafeCollection {
@@ -133,10 +121,7 @@ extension Dictionary where Value : PerlSVProbablyConvertible {
 			}
 		}
 	}
-}
 
-// where Key == String, but it is unsupported
-extension Dictionary where Value : PerlSVConvertible {
 	init?(_ sv: PerlSV) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }

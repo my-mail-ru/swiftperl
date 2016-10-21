@@ -40,6 +40,13 @@ struct UnsafeXSubStack : UnsafeStack {
 		var sp = UnsafeMutableRawPointer(args.baseAddress!).assumingMemoryBound(to: Optional<UnsafeSvPointer>.self) - 1
 		pushTo(sp: &sp, from: result)
 	}
+
+	subscript(_ i: Int) -> UnsafeSvPointer {
+		guard i < args.count else {
+			return perl.pointee.sv_2mortal(perl.pointee.newSV())
+		}
+		return args[i]
+	}
 }
 
 struct UnsafeCallStack : UnsafeStack {

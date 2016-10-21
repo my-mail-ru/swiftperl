@@ -57,7 +57,7 @@ final class PerlCV : PerlValue, PerlDerived {
 extension PerlCV {
 % for p in range(0, 8):
 %   for r in range(0, 3):
-%     args = ", ".join(map(lambda n: "P" + str(n) + ".promoteFromUnsafeSV(stack.args[" + str(n) + "], perl: stack.perl)", range(0, p)))
+%     args = ", ".join(map(lambda n: "P" + str(n) + ".promoteFromUnsafeSV(stack[" + str(n) + "], perl: stack.perl)", range(0, p)))
 %     for po in optrange(p):
 %       for ro in optrange(r):
 

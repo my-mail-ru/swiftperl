@@ -13,7 +13,7 @@ class BenchmarkTests : EmbeddedTestCase {
 	func testBenchmarkPerlOnly() throws {
 		_ = try perl.eval("sub test { my ($c, $d) = @_; return $c + $d }")
 		let sv: PerlSV = try perl.eval("my $s; for (1..100000) { $s = test(10, 15) } $s")
-		XCTAssertEqual(Int(sv), 25)
+		XCTAssertEqual(try Int(sv), 25)
 	}
 
 	func testBenchmarkCallPerl() throws {
@@ -32,7 +32,7 @@ class BenchmarkTests : EmbeddedTestCase {
 			return c + d
 		}
 		let sv: PerlSV = try perl.eval("my $s; for (1..100000) { $s = test(10, 15) } $s")
-		XCTAssertEqual(Int(sv), 25)
+		XCTAssertEqual(try Int(sv), 25)
 	}
 /*
 	func testBenchmarkPerlOnly() {

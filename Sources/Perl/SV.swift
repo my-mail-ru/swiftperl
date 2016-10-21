@@ -77,10 +77,10 @@ final class PerlSV : PerlValue, PerlDerived {
 		var values = [String]()
 		if defined {
 			if isInt {
-				values.append("iv: \(Int(self)!)")
+				values.append("iv: \(Int(unchecked: self))")
 			}
 			if isString {
-				values.append("pv: \(String(self)!.debugDescription)")
+				values.append("pv: \(String(unchecked: self).debugDescription)")
 			}
 			if let ref = referent {
 				var str = "rv: "
@@ -151,29 +151,41 @@ extension Bool {
 }
 
 extension Int {
-	init?(_ sv: PerlSV) {
+	init(_ sv: PerlSV) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		self.init(usv, perl: perl)
+		try self.init(usv, perl: perl)
 	}
 
-	init(forcing sv: PerlSV) {
+	init?(nilable sv: PerlSV) {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		self.init(forcing: usv, perl: perl)
+		self.init(nilable: usv, perl: perl)
+	}
+
+	init(unchecked sv: PerlSV) {
+		defer { _fixLifetime(sv) }
+		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
+		self.init(unchecked: usv, perl: perl)
 	}
 }
 
 extension String {
-	init?(_ sv: PerlSV) {
+	init(_ sv: PerlSV) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		self.init(usv, perl: perl)
+		try self.init(usv, perl: perl)
 	}
 
-	init(forcing sv: PerlSV) {
+	init?(nilable sv: PerlSV) {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		self.init(forcing: usv, perl: perl)
+		self.init(nilable: usv, perl: perl)
+	}
+
+	init(unchecked sv: PerlSV) {
+		defer { _fixLifetime(sv) }
+		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
+		self.init(unchecked: usv, perl: perl)
 	}
 }

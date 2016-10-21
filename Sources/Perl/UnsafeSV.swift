@@ -123,26 +123,51 @@ extension Bool {
 	init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		self = perl.pointee.SvTRUE(sv)
 	}
+
+	init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		guard SvOK(sv) else { return nil }
+		self = perl.pointee.SvTRUE(sv)
+	}
 }
 
 extension Int {
-	init?(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		guard SvOK(sv) else { return nil }
-		self.init(forcing: sv, perl: perl)
+	init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+		guard sv.pointee.type == .scalar else {
+			throw PerlError.unexpectedSvType(promoteFromUnsafeSV(inc: sv, perl: perl), want: .scalar)
+		}
+		guard SvOK(sv) else {
+			throw PerlError.unexpectedUndef(promoteFromUnsafeSV(inc: sv, perl: perl))
+		}
+		self.init(unchecked: sv, perl: perl)
 	}
 
-	init(forcing sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		guard SvOK(sv) else { return nil }
+		self.init(unchecked: sv, perl: perl)
+	}
+
+	init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		self = perl.pointee.SvIV(sv)
 	}
 }
 
 extension String {
-	init?(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		guard SvOK(sv) else { return nil }
-		self.init(forcing: sv, perl: perl)
+	init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+		guard sv.pointee.type == .scalar else {
+			throw PerlError.unexpectedSvType(promoteFromUnsafeSV(inc: sv, perl: perl), want: .scalar)
+		}
+		guard SvOK(sv) else {
+			throw PerlError.unexpectedUndef(promoteFromUnsafeSV(inc: sv, perl: perl))
+		}
+		self.init(unchecked: sv, perl: perl)
 	}
 
-	init(forcing sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		guard SvOK(sv) else { return nil }
+		self.init(unchecked: sv, perl: perl)
+	}
+
+	init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		var clen = 0
 		let cstr = perl.pointee.SvPV(sv, &clen)!
 		self = String(cString: cstr, withLength: clen)

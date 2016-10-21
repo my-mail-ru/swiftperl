@@ -7,7 +7,7 @@ func boot(_ p: UnsafeInterpreterPointer) {
 	print("OK")
 	PerlCV(name: "Swift::test") {
 		(stack: UnsafeXSubStack) in
-		print("args: \(stack.args.map { String($0, perl: p) })")
+		print("args: \(try stack.args.map { try String($0, perl: p) })")
 		let result = PerlSV(MyTest()).promoteToUnsafeSV(perl: stack.perl)
 		stack.xsReturn(CollectionOfOne(result))
 	}
@@ -31,7 +31,7 @@ func boot(_ p: UnsafeInterpreterPointer) {
 		do {
 			try stack.perl.pointee.call(sub: "main::die_now")
 		} catch PerlError.died(let err) {
-			print("Perl died: \(String(err))")
+			print("Perl died: \(try String(err))")
 		} catch {
 			print("Other error")
 		}
@@ -59,17 +59,17 @@ final class MyTest : PerlBridgedObject {
 //		print("~~~~~~~~~ \(t.attr_ro)")
 	}
 
-	func test2 (value: PerlTestMouse) {
+	func test2 (value: PerlTestMouse) throws {
 		print("test2: \(value.attr_rw) - \(value.attr_ro)")
 		value.attr_rw = "Строка"
 		print("array: \(value.list.count)")
 		for v in value.list {
-			print("value: \(String(v))")
+			print("value: \(try String(v))")
 		}
 		for (k, v) in value.hash {
-			print("key: \(k), value: \(String(v))")
+			print("key: \(k), value: \(try String(v))")
 		}
-		print("key3: \(String(value.hash["key3"]!))")
+		print("key3: \(try String(value.hash["key3"]!))")
 		print("do_something: \(try! value.doSomething(15, "more + "))")
 		print("list: \(value.list)")
 //		print("listOfStrings: \(value.listOfStrings)")

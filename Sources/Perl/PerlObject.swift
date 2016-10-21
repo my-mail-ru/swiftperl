@@ -40,7 +40,7 @@ class PerlObject : PerlValue, PerlDerived {
 	}
 }
 
-protocol PerlBridgedObject : AnyPerl, PerlNamedClass, PerlSVProbablyConvertible {}
+protocol PerlBridgedObject : AnyPerl, PerlNamedClass, PerlSVConvertible {}
 
 protocol PerlNamedClass : class {
 	static var perlClassName: String { get }

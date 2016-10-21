@@ -22,10 +22,10 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssert(!v.isInt)
 		XCTAssert(!v.isString)
 		XCTAssert(!v.isRef)
-		XCTAssertNil(Int(v))
-		XCTAssertNil(String(v))
-		XCTAssertEqual(Int(forcing: v), 0)
-		XCTAssertEqual(String(forcing: v), "")
+		XCTAssertNil(Int(nilable: v))
+		XCTAssertNil(String(nilable: v))
+		XCTAssertEqual(Int(unchecked: v), 0)
+		XCTAssertEqual(String(unchecked: v), "")
 	}
 
 	func testInt() throws {
@@ -34,8 +34,8 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssert(v.isInt)
 		XCTAssert(!v.isString)
 		XCTAssert(!v.isRef)
-		XCTAssertEqual(Int(v), 42)
-		XCTAssertEqual(String(v), "42")
+		XCTAssertEqual(try Int(v), 42)
+		XCTAssertEqual(try String(v), "42")
 	}
 
 	func testString() throws {
@@ -44,13 +44,13 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssert(!v.isInt)
 		XCTAssert(v.isString)
 		XCTAssert(!v.isRef)
-		XCTAssertEqual(Int(v), 0)
-		XCTAssertEqual(String(v), "test")
-		XCTAssertEqual(String(v), "test")
+		XCTAssertEqual(try Int(v), 0)
+		XCTAssertEqual(try String(v), "test")
+		XCTAssertEqual(try String(v), "test")
 		let u: PerlSV = try perl.eval("'строченька'")
-		XCTAssertEqual(String(u), "строченька")
+		XCTAssertEqual(try String(u), "строченька")
 		let n: PerlSV = try perl.eval("'null' . chr(0) . 'sepparated'")
-		XCTAssertEqual(String(n), "null\0sepparated")
+		XCTAssertEqual(try String(n), "null\0sepparated")
 	}
 
 	func testScalarRef() throws {
@@ -62,7 +62,7 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssertNotNil(v.referent)
 		let r = v.referent! as! PerlSV
 		XCTAssert(r.isInt)
-		XCTAssertEqual(Int(r), 42)
+		XCTAssertEqual(try Int(r), 42)
 	}
 
 	func testArrayRef() throws {
@@ -74,11 +74,11 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssertNotNil(sv.referent)
 		let av: PerlAV = try PerlAV(sv)!
 		XCTAssertEqual(av.count, 2)
-		XCTAssertEqual(Int(av[0]), 42)
-		XCTAssertEqual(String(av[1]), "str")
+		XCTAssertEqual(try Int(av[0]), 42)
+		XCTAssertEqual(try String(av[1]), "str")
 		let strs: [String] = try [String](sv)!
 		XCTAssertEqual(strs, ["42", "str"])
-		XCTAssertEqual([String](av), ["42", "str"])
+		XCTAssertEqual(try [String](av), ["42", "str"])
 		XCTAssertEqual(try [String](sv)!, ["42", "str"])
 
 		let i: PerlSV = try perl.eval("[42, 15, 10]")
@@ -99,14 +99,14 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssertNotNil(sv.referent)
 		let hv: PerlHV = try PerlHV(sv)!
 //		XCTAssertEqual(hv.count, 2)
-		XCTAssertEqual(Int(hv["one"]!), 1)
-		XCTAssertEqual(Int(hv["two"]!), 2)
+		XCTAssertEqual(try Int(hv["one"]!), 1)
+		XCTAssertEqual(try Int(hv["two"]!), 2)
 //		let hd: [String: Int] = try [String: Int](hv)
 //		XCTAssertEqual(hd, ["one": 1, "two": 2])
 		let sd: [String: Int] = try [String: Int](sv)!
 		XCTAssertEqual(sd, ["one": 1, "two": 2])
 		XCTAssertEqual(sd, ["one": 1, "two": 2])
-		XCTAssertEqual([String: Int](hv), ["one": 1, "two": 2])
+		XCTAssertEqual(try [String: Int](hv), ["one": 1, "two": 2])
 		XCTAssertEqual(try [String: Int](sv)!, ["one": 1, "two": 2])
 	}
 
@@ -135,7 +135,7 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		try perl.eval("use utf8; $тест = 'OK'")
 		let sv = perl.pointer.pointee.getSV("тест")
 		XCTAssertNotNil(sv)
-		XCTAssertEqual(String(sv!), "OK")
+		XCTAssertEqual(try String(sv!), "OK")
 //		perl.pointer.pointee.loadModule("Nothing")
 	}
 }

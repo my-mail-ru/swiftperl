@@ -1,4 +1,4 @@
-protocol PerlDerived : PerlSVProbablyConvertible {
+protocol PerlDerived : PerlSVConvertible {
 	associatedtype UnsafeValue : UnsafeSvProtocol
 }
 

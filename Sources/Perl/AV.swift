@@ -134,23 +134,13 @@ extension PerlAV: ExpressibleByArrayLiteral {
 	}
 }
 
-extension Array where Element : PerlSVProbablyConvertible {
+extension Array where Element : PerlSVConvertible {
 	init(_ av: PerlAV) throws {
 		self = try av.withUnsafeCollection { uc in
 			try uc.map { try Element.promoteFromUnsafeSV($0, perl: uc.perl) }
 		}
 	}
-}
 
-extension Array where Element : PerlSVDefinitelyConvertible {
-	init(_ av: PerlAV) {
-		self = av.withUnsafeCollection { uc in
-			uc.map { Element.promoteFromUnsafeSV($0, perl: uc.perl) }
-		}
-	}
-}
-
-extension Array where Element : PerlSVConvertible {
 	init?(_ sv: PerlSV) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
