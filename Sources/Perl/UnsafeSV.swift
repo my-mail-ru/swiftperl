@@ -133,10 +133,10 @@ extension Bool {
 extension Int {
 	init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
 		guard sv.pointee.type == .scalar else {
-			throw PerlError.unexpectedSvType(promoteFromUnsafeSV(inc: sv, perl: perl), want: .scalar)
+			throw PerlError.unexpectedSvType(fromUnsafeSvPointer(inc: sv, perl: perl), want: .scalar)
 		}
 		guard SvOK(sv) else {
-			throw PerlError.unexpectedUndef(promoteFromUnsafeSV(inc: sv, perl: perl))
+			throw PerlError.unexpectedUndef(fromUnsafeSvPointer(inc: sv, perl: perl))
 		}
 		self.init(unchecked: sv, perl: perl)
 	}
@@ -154,10 +154,10 @@ extension Int {
 extension String {
 	init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
 		guard sv.pointee.type == .scalar else {
-			throw PerlError.unexpectedSvType(promoteFromUnsafeSV(inc: sv, perl: perl), want: .scalar)
+			throw PerlError.unexpectedSvType(fromUnsafeSvPointer(inc: sv, perl: perl), want: .scalar)
 		}
 		guard SvOK(sv) else {
-			throw PerlError.unexpectedUndef(promoteFromUnsafeSV(inc: sv, perl: perl))
+			throw PerlError.unexpectedUndef(fromUnsafeSvPointer(inc: sv, perl: perl))
 		}
 		self.init(unchecked: sv, perl: perl)
 	}

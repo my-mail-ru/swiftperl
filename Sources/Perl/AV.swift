@@ -15,7 +15,7 @@ final class PerlAV : PerlValue, PerlDerived {
 	}
 
 	convenience init<C : Collection>(_ c: C, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current)
-		where C.Iterator.Element : PerlSVConvertible {
+		where C.Iterator.Element : PerlSvConvertible {
 		self.init(perl: perl)
 		reserveCapacity(numericCast(c.count))
 		for (i, v) in c.enumerated() {
@@ -134,10 +134,10 @@ extension PerlAV: ExpressibleByArrayLiteral {
 	}
 }
 
-extension Array where Element : PerlSVConvertible {
+extension Array where Element : PerlSvConvertible {
 	init(_ av: PerlAV) throws {
 		self = try av.withUnsafeCollection { uc in
-			try uc.map { try Element.promoteFromUnsafeSV($0, perl: uc.perl) }
+			try uc.map { try Element.fromUnsafeSvPointer($0, perl: uc.perl) }
 		}
 	}
 
@@ -145,6 +145,6 @@ extension Array where Element : PerlSVConvertible {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		guard let av = try UnsafeAvPointer(autoDeref: usv, perl: perl) else { return nil }
-		self = try av.pointee.collection(perl: perl).map { try Element.promoteFromUnsafeSV($0, perl: perl) }
+		self = try av.pointee.collection(perl: perl).map { try Element.fromUnsafeSvPointer($0, perl: perl) }
 	}
 }

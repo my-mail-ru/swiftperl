@@ -45,14 +45,14 @@ extension UnsafeMutablePointer where Pointee : UnsafeSvCastable {
 		if sv.pointee.type == .scalar {
 			guard SvOK(sv) else { return nil }
 			guard let xv = sv.pointee.referent else {
-				throw PerlError.unexpectedSvType(promoteFromUnsafeSV(inc: sv, perl: perl), want: Pointee.type)
+				throw PerlError.unexpectedSvType(fromUnsafeSvPointer(inc: sv, perl: perl), want: Pointee.type)
 			}
 			v = xv
 		} else {
 			v = sv
 		}
 		guard v.pointee.type == Pointee.type else {
-			throw PerlError.unexpectedSvType(promoteFromUnsafeSV(inc: sv, perl: perl), want: Pointee.type)
+			throw PerlError.unexpectedSvType(fromUnsafeSvPointer(inc: sv, perl: perl), want: Pointee.type)
 		}
 		self = UnsafeMutableRawPointer(v).bindMemory(to: Pointee.self, capacity: 1)
 	}

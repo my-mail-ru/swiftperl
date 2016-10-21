@@ -39,7 +39,7 @@ final class PerlCV : PerlValue, PerlDerived {
 
 %{
 	def generic(p, r):
-		g = ", ".join(map(lambda n: "P" + str(n) + ": PerlSVConvertible", range(0, p)) + map(lambda n: "R" + str(n) + ": PerlSVConvertible", range(0, r)))
+		g = ", ".join(map(lambda n: "P" + str(n) + ": PerlSvConvertible", range(0, p)) + map(lambda n: "R" + str(n) + ": PerlSvConvertible", range(0, r)))
 		return "" if g == "" else "<" + g + ">"
 
 	def tuple(prefix, count, optional):
@@ -57,7 +57,7 @@ final class PerlCV : PerlValue, PerlDerived {
 extension PerlCV {
 % for p in range(0, 8):
 %   for r in range(0, 3):
-%     args = ", ".join(map(lambda n: "P" + str(n) + ".promoteFromUnsafeSV(stack[" + str(n) + "], perl: stack.perl)", range(0, p)))
+%     args = ", ".join(map(lambda n: "P" + str(n) + ".fromUnsafeSvPointer(stack[" + str(n) + "], perl: stack.perl)", range(0, p)))
 %     for po in optrange(p):
 %       for ro in optrange(r):
 
@@ -70,10 +70,10 @@ extension PerlCV {
 			stack.xsReturn(EmptyCollection())
 %         elif r == 1:
 			let result = try body(${args})
-			stack.xsReturn(CollectionOfOne(result.promoteToUnsafeSV(perl: stack.perl)))
+			stack.xsReturn(CollectionOfOne(result.toUnsafeSvPointer(perl: stack.perl)))
 %         else:
 			let result = try body(${args})
-			let svResult: ContiguousArray = [ ${", ".join(map(lambda n: "result." + str(n) + ".promoteToUnsafeSV(perl: stack.perl)", range(0, r)))} ]
+			let svResult: ContiguousArray = [ ${", ".join(map(lambda n: "result." + str(n) + ".toUnsafeSvPointer(perl: stack.perl)", range(0, r)))} ]
 			stack.xsReturn(svResult)
 %         end
 		}
@@ -91,9 +91,9 @@ extension PerlCV {
 		where R.Iterator.Element == PerlSV {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
-			let args = try stack.args.map { try PerlSV.promoteFromUnsafeSV($0, perl: stack.perl) }
+			let args = try stack.args.map { try PerlSV.fromUnsafeSvPointer($0, perl: stack.perl) }
 			let result = try body(args)
-			stack.xsReturn(result.map { $0.promoteToUnsafeSV(perl: stack.perl) })
+			stack.xsReturn(result.map { $0.toUnsafeSvPointer(perl: stack.perl) })
 		}
 	}
 }

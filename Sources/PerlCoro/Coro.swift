@@ -51,7 +51,7 @@ final class PerlCoro : PerlObject, PerlNamedClass {
 		set { coroApi.pointee.readyhook = newValue }
 	}
 
-	convenience init(_ cv: PerlCV, args: PerlSVConvertible?...) {
+	convenience init(_ cv: PerlCV, args: PerlSvConvertible?...) {
 		var args = args
 		args.insert(cv, at: 0)
 		try! self.init(method: "new", args: args)
@@ -83,7 +83,7 @@ final class PerlCoro : PerlObject, PerlNamedClass {
 
 	// func throw
 	
-	func join<R : PerlSVConvertible>() -> R? { return try! call(method: "join") }
+	func join<R : PerlSvConvertible>() -> R? { return try! call(method: "join") }
 
 	// func onDestroy
 	

@@ -5,11 +5,11 @@ class PerlObject : PerlValue, PerlDerived {
 
 	convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
 		guard sv.pointee.isObject(perl: perl) else {
-			throw PerlError.notObject(promoteFromUnsafeSV(noinc: sv, perl: perl))
+			throw PerlError.notObject(fromUnsafeSvPointer(noinc: sv, perl: perl))
 		}
 		if let named = type(of: self) as? PerlNamedClass.Type {
 			guard sv.pointee.isDerived(from: named.perlClassName, perl: perl) else {
-				throw PerlError.unexpectedObjectType(promoteFromUnsafeSV(noinc: sv, perl: perl), want: type(of: self))
+				throw PerlError.unexpectedObjectType(fromUnsafeSvPointer(noinc: sv, perl: perl), want: type(of: self))
 			}
 		}
 		self.init(noincUnchecked: sv, perl: perl)
@@ -26,7 +26,7 @@ class PerlObject : PerlValue, PerlDerived {
 	}
 
 	var referent: AnyPerl {
-		return withUnsafeSvPointer { sv, perl in promoteFromUnsafeSV(inc: sv.pointee.referent!, perl: perl) }
+		return withUnsafeSvPointer { sv, perl in fromUnsafeSvPointer(inc: sv.pointee.referent!, perl: perl) }
 	}
 
 	override var debugDescription: String {
@@ -40,7 +40,7 @@ class PerlObject : PerlValue, PerlDerived {
 	}
 }
 
-protocol PerlBridgedObject : AnyPerl, PerlNamedClass, PerlSVConvertible {}
+protocol PerlBridgedObject : AnyPerl, PerlNamedClass, PerlSvConvertible {}
 
 protocol PerlNamedClass : class {
 	static var perlClassName: String { get }
@@ -53,18 +53,18 @@ extension PerlNamedClass {
 }
 
 extension PerlNamedClass where Self : PerlObject {
-	init(method: String, args: [PerlSVConvertible?], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+	init(method: String, args: [PerlSvConvertible?], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
 		perl.pointee.enterScope()
 		defer { perl.pointee.leaveScope() }
 		let classname = (type(of: self) as PerlNamedClass.Type).perlClassName
-		let args = [classname as PerlSVConvertible?] + args
-		let svArgs: [UnsafeSvPointer] = args.map { $0?.promoteToUnsafeSV(perl: perl) ?? perl.pointee.newSV() }
+		let args = [classname as PerlSvConvertible?] + args
+		let svArgs: [UnsafeSvPointer] = args.map { $0?.toUnsafeSvPointer(perl: perl) ?? perl.pointee.newSV() }
 		let sv = try perl.pointee.unsafeCall(sv: perl.pointee.newSV(method, mortal: true), args: svArgs, flags: G_METHOD|G_SCALAR)[0]
 		guard sv.pointee.isObject(perl: perl) else {
-			throw PerlError.notObject(promoteFromUnsafeSV(inc: sv, perl: perl))
+			throw PerlError.notObject(fromUnsafeSvPointer(inc: sv, perl: perl))
 		}
 		guard sv.pointee.isDerived(from: classname, perl: perl) else {
-			throw PerlError.unexpectedObjectType(promoteFromUnsafeSV(inc: sv, perl: perl), want: Self.self)
+			throw PerlError.unexpectedObjectType(fromUnsafeSvPointer(inc: sv, perl: perl), want: Self.self)
 		}
 		self.init(incUnchecked: sv, perl: perl)
 	}

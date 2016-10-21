@@ -8,7 +8,7 @@ func boot(_ p: UnsafeInterpreterPointer) {
 	PerlCV(name: "Swift::test") {
 		(stack: UnsafeXSubStack) in
 		print("args: \(try stack.args.map { try String($0, perl: p) })")
-		let result = PerlSV(MyTest()).promoteToUnsafeSV(perl: stack.perl)
+		let result = PerlSV(MyTest()).toUnsafeSvPointer(perl: stack.perl)
 		stack.xsReturn(CollectionOfOne(result))
 	}
 	MyTest.createPerlMethod("test") {

@@ -15,8 +15,8 @@ final class PerlSV : PerlValue, PerlDerived {
 		try self.init(_noinc: sv, perl: perl)
 	}
 
-	convenience init<T : PerlSVConvertible>(_ v: T, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.init(noincUnchecked: v.promoteToUnsafeSV(perl: perl), perl: perl)
+	convenience init<T : PerlSvConvertible>(_ v: T, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		self.init(noincUnchecked: v.toUnsafeSvPointer(perl: perl), perl: perl)
 	}
 
 	convenience init<T : PerlValue>(referenceTo sv: T) {
@@ -30,15 +30,15 @@ final class PerlSV : PerlValue, PerlDerived {
 		self.init(referenceTo: sv)
 	}
 
-	convenience init<T : PerlSVConvertible>(_ array: [T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.init(noincUnchecked: array.promoteToUnsafeSV(perl: perl), perl: perl)
+	convenience init<T : PerlSvConvertible>(_ array: [T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		self.init(noincUnchecked: array.toUnsafeSvPointer(perl: perl), perl: perl)
 	}
 
-	convenience init<T : PerlSVConvertible>(_ dict: [String: T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.init(noincUnchecked: dict.promoteToUnsafeSV(perl: perl), perl: perl)
+	convenience init<T : PerlSvConvertible>(_ dict: [String: T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		self.init(noincUnchecked: dict.toUnsafeSvPointer(perl: perl), perl: perl)
 	}
 
-	convenience init<T : PerlSVConvertible>(_ v: T?, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	convenience init<T : PerlSvConvertible>(_ v: T?, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		if let v = v {
 			self.init(v, perl: perl)
 		} else {
@@ -69,7 +69,7 @@ final class PerlSV : PerlValue, PerlDerived {
 	var referent: AnyPerl? {
 		return withUnsafeSvPointer { rv, perl in
 			guard let sv = rv.pointee.referent else { return nil }
-			return promoteFromUnsafeSV(inc: sv, perl: perl)
+			return fromUnsafeSvPointer(inc: sv, perl: perl)
 		}
 	}
 

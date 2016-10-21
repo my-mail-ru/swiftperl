@@ -1,11 +1,11 @@
-protocol PerlDerived : PerlSVConvertible {
+protocol PerlDerived : PerlSvConvertible {
 	associatedtype UnsafeValue : UnsafeSvProtocol
 }
 
 extension PerlDerived where Self : PerlValue {
 	init(_noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
 		guard sv.pointee.type == UnsafeValue.type else {
-			throw PerlError.unexpectedSvType(promoteFromUnsafeSV(noinc: sv, perl: perl), want: UnsafeValue.type)
+			throw PerlError.unexpectedSvType(fromUnsafeSvPointer(noinc: sv, perl: perl), want: UnsafeValue.type)
 		}
 		self.init(noincUnchecked: sv, perl: perl)
 	}

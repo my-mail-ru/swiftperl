@@ -57,7 +57,7 @@ extension UnsafeInterpreter {
 			return "G_SCALAR"
 	
 	def generic(r):
-		return ", ".join(map(lambda r: r + " : PerlSVConvertible", re.findall("R\\d*", r)))
+		return ", ".join(map(lambda r: r + " : PerlSvConvertible", re.findall("R\\d*", r)))
 	
 	def fqGeneric(r):
 		g = generic(r)
@@ -68,7 +68,7 @@ extension UnsafeInterpreter {
 		return "" if g == "" else ", " + g
 	
 	def result(r):
-		return re.sub("(R(\\d*)\\??)", lambda m: m.group(1) + ".promoteFromUnsafeSV(svResult[" + (m.group(2) or "0") + "], perl: &self)", r)
+		return re.sub("(R(\\d*)\\??)", lambda m: m.group(1) + ".fromUnsafeSvPointer(svResult[" + (m.group(2) or "0") + "], perl: &self)", r)
 
 	calls = ["Void", "R", "R?", "(R0?, R1?)"]
 }%
@@ -80,10 +80,10 @@ extension UnsafeInterpreter {
 
 % for r in calls:
 	mutating func call<C : Collection${moreGeneric(r)}>(sv: UnsafeSvPointer, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
-		where C.Iterator.Element == PerlSVConvertible? {
+		where C.Iterator.Element == PerlSvConvertible? {
 		enterScope()
 		defer { leaveScope() }
-		let svArgs: [UnsafeSvPointer] = args.map { $0?.promoteToUnsafeSV(perl: &self) ?? newSV() }
+		let svArgs: [UnsafeSvPointer] = args.map { $0?.toUnsafeSvPointer(perl: &self) ?? newSV() }
 %   if r == "Void":
 		try unsafeCall(sv: sv, discardingResultWithArgs: svArgs, flags: flags)
 %   else:
@@ -97,7 +97,7 @@ extension UnsafeInterpreter {
 extension UnsafeInterpreter {
 % for r in calls:
 	mutating func call<C : Collection${moreGeneric(r)}>(method: String, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
-		where C.Iterator.Element == PerlSVConvertible? {
+		where C.Iterator.Element == PerlSvConvertible? {
 		return try call(sv: newSV(method, mortal: true), args: args, flags: G_METHOD|flags)
 	}
 % end
@@ -110,7 +110,7 @@ extension UnsafeInterpreter {
 
 % for r in calls:
 	mutating func call<C : Collection${moreGeneric(r)}>(sub: String, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
-		where C.Iterator.Element == PerlSVConvertible? {
+		where C.Iterator.Element == PerlSvConvertible? {
 		return try call(sv: newSV(sub, mortal: true), args: args, flags: flags)
 	}
 % end
@@ -122,7 +122,7 @@ extension PerlInterpreter {
 	}
 
 % for r in calls:
-	func call${fqGeneric(r)}(sub: String, _ args: PerlSVConvertible?...) throws -> ${r} {
+	func call${fqGeneric(r)}(sub: String, _ args: PerlSvConvertible?...) throws -> ${r} {
 		return try pointer.pointee.call(sub: sub, args: args)
 	}
 % end
@@ -136,7 +136,7 @@ extension PerlCV {
 	}
 
 % for r in calls:
-	func call${fqGeneric(r)}(_ args: PerlSVConvertible?...) throws -> ${r} {
+	func call${fqGeneric(r)}(_ args: PerlSvConvertible?...) throws -> ${r} {
 		return try withUnsafeSvPointer { sv, perl in
 			return try perl.pointee.call(sv: sv, args: args)
 		}
@@ -180,15 +180,15 @@ extension PerlObject {
 
 % for r in calls:
 	func call<C : Collection${moreGeneric(r)}>(method: String, args: C) throws -> ${r}
-		where C.Iterator.Element == PerlSVConvertible? {
-		var fullArgs = ContiguousArray<PerlSVConvertible?>()
+		where C.Iterator.Element == PerlSvConvertible? {
+		var fullArgs = ContiguousArray<PerlSvConvertible?>()
 		fullArgs.reserveCapacity(1 + numericCast(args.count))
 		fullArgs.append(self)
 		fullArgs.append(contentsOf: args)
 		return try perl.pointee.call(method: method, args: fullArgs)
 	}
 
-	func call${fqGeneric(r)}(method: String, _ args: PerlSVConvertible?...) throws -> ${r} {
+	func call${fqGeneric(r)}(method: String, _ args: PerlSvConvertible?...) throws -> ${r} {
 		return try call(method: method, args: args)
 	}
 % end
@@ -201,15 +201,15 @@ extension PerlNamedClass {
 
 % for r in calls:
 	static func call<C : Collection${moreGeneric(r)}>(method: String, args: C, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> ${r}
-		where C.Iterator.Element == PerlSVConvertible? {
-		var fullArgs = ContiguousArray<PerlSVConvertible?>()
+		where C.Iterator.Element == PerlSvConvertible? {
+		var fullArgs = ContiguousArray<PerlSvConvertible?>()
 		fullArgs.reserveCapacity(1 + numericCast(args.count))
 		fullArgs.append(perlClassName)
 		fullArgs.append(contentsOf: args)
 		return try perl.pointee.call(method: method, args: fullArgs)
 	}
 
-	static func call${fqGeneric(r)}(method: String, _ args: PerlSVConvertible?..., perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> ${r} {
+	static func call${fqGeneric(r)}(method: String, _ args: PerlSvConvertible?..., perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> ${r} {
 		return try call(method: method, args: args)
 	}
 % end

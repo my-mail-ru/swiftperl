@@ -14,7 +14,7 @@ final class PerlHV : PerlValue, PerlDerived {
 		try self.init(_noinc: sv, perl: perl)
 	}
 
-	convenience init<T : PerlSVConvertible>(_ dict: [String: T]) {
+	convenience init<T : PerlSvConvertible>(_ dict: [String: T]) {
 		self.init()
 		for (k, v) in dict {
 			self[k] = v as? PerlSV ?? PerlSV(v)
@@ -35,11 +35,11 @@ final class PerlHV : PerlValue, PerlDerived {
 		}
 	}
 
-	func value<T: PerlSVConvertible>() throws -> [String: T] {
+	func value<T: PerlSvConvertible>() throws -> [String: T] {
 		var dict = [String: T]()
 		try withUnsafeCollection {
 			for (k, v) in $0 {
-				dict[k] = try T.promoteFromUnsafeSV(v, perl: $0.perl)
+				dict[k] = try T.fromUnsafeSvPointer(v, perl: $0.perl)
 			}
 		}
 		return dict
@@ -112,12 +112,12 @@ extension PerlHV : ExpressibleByDictionaryLiteral {
 }
 
 // where Key == String, but it is unsupported
-extension Dictionary where Value : PerlSVConvertible {
+extension Dictionary where Value : PerlSvConvertible {
 	init(_ hv: PerlHV) throws {
 		self.init()
 		try hv.withUnsafeCollection {
 			for (k, v) in $0 {
-				self[k as! Key] = try Value.promoteFromUnsafeSV(v, perl: $0.perl)
+				self[k as! Key] = try Value.fromUnsafeSvPointer(v, perl: $0.perl)
 			}
 		}
 	}
@@ -128,7 +128,7 @@ extension Dictionary where Value : PerlSVConvertible {
 		guard let hv = try UnsafeHvPointer(autoDeref: usv, perl: perl) else { return nil }
 		self.init()
 		for (k, v) in hv.pointee.collection(perl: perl) {
-			self[k as! Key] = try Value.promoteFromUnsafeSV(v, perl: perl)
+			self[k as! Key] = try Value.fromUnsafeSvPointer(v, perl: perl)
 		}
 	}
 }
