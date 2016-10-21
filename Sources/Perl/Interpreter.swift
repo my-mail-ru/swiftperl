@@ -1,9 +1,7 @@
 import func Glibc.atexit
 
 final class PerlInterpreter {
-	typealias Pointer = UnsafeInterpreterPointer
-
-	var pointer: Pointer
+	var pointer: UnsafeInterpreterPointer
 
 	static var initialized: Bool = {
 		UnsafeInterpreter.sysInit()

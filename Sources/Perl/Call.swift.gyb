@@ -8,7 +8,7 @@ extension UnsafeInterpreter {
 		let result = stack.popReturned(count: Int(count))
 		let err = ERRSV
 		if Bool(err, perl: &self) {
-			throw PerlError.died(PerlSV(err)) // FIXME make a copy
+			throw PerlError.died(try PerlSV(copy: err, perl: &self))
 		}
 		return result
 	}
@@ -19,7 +19,7 @@ extension UnsafeInterpreter {
 		_ = call_sv(sv, G_EVAL|G_DISCARD|flags)
 		let err = ERRSV
 		if Bool(err, perl: &self) {
-			throw PerlError.died(PerlSV(err)) // FIXME make a copy
+			throw PerlError.died(try PerlSV(copy: err, perl: &self))
 		}
 	}
 
@@ -29,7 +29,7 @@ extension UnsafeInterpreter {
 		let result = stack.popReturned(count: Int(count))
 		let err = ERRSV
 		if Bool(err, perl: &self) {
-			throw PerlError.died(PerlSV(err)) // FIXME make a copy
+			throw PerlError.died(try PerlSV(copy: err, perl: &self))
 		}
 		return result
 	}
@@ -130,15 +130,15 @@ extension PerlInterpreter {
 
 extension PerlCV {
 	func call() throws -> Void {
-		try pointer.withMemoryRebound(to: UnsafeSV.self, capacity: 1) {
-			try perl.pointee.call(sv: $0)
+		try withUnsafeSvPointer { sv, perl in
+			try perl.pointee.call(sv: sv)
 		}
 	}
 
 % for r in calls:
 	func call${fqGeneric(r)}(_ args: PerlSVConvertible?...) throws -> ${r} {
-		return try pointer.withMemoryRebound(to: UnsafeSV.self, capacity: 1) {
-			return try perl.pointee.call(sv: $0, args: args)
+		return try withUnsafeSvPointer { sv, perl in
+			return try perl.pointee.call(sv: sv, args: args)
 		}
 	}
 % end
@@ -173,13 +173,9 @@ extension PerlInterpreter {
 % end
 }
 
-extension PerlObjectType {
+extension PerlObject {
 	func call(method: String) throws -> Void {
-		return try sv.perl.pointee.call(method: method, args: CollectionOfOne(.some(self)))
-	}
-
-	static func call(method: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Void {
-		return try perl.pointee.call(method: method, args: CollectionOfOne(.some(perlClassName)))
+		try perl.pointee.call(method: method, args: CollectionOfOne(.some(self)))
 	}
 
 % for r in calls:
@@ -189,13 +185,21 @@ extension PerlObjectType {
 		fullArgs.reserveCapacity(1 + numericCast(args.count))
 		fullArgs.append(self)
 		fullArgs.append(contentsOf: args)
-		return try sv.perl.pointee.call(method: method, args: fullArgs)
+		return try perl.pointee.call(method: method, args: fullArgs)
 	}
 
 	func call${fqGeneric(r)}(method: String, _ args: PerlSVConvertible?...) throws -> ${r} {
 		return try call(method: method, args: args)
 	}
+% end
+}
 
+extension PerlNamedClass {
+	static func call(method: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Void {
+		return try perl.pointee.call(method: method, args: CollectionOfOne(.some(perlClassName)))
+	}
+
+% for r in calls:
 	static func call<C : Collection${moreGeneric(r)}>(method: String, args: C, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> ${r}
 		where C.Iterator.Element == PerlSVConvertible? {
 		var fullArgs = ContiguousArray<PerlSVConvertible?>()

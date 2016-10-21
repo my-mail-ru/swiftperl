@@ -1,33 +1,39 @@
 import CPerl
 
-final class PerlCV : PerlSvCastable {
-	typealias Struct = UnsafeCV
-	typealias Pointer = UnsafeCvPointer
-	let pointer: Pointer
-	let perl: UnsafeInterpreterPointer
+final class PerlCV : PerlValue, PerlDerived {
+	typealias UnsafeValue = UnsafeCV
 
-	init(_ p: Pointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.perl = perl
-		pointer = p
-		pointer.pointee.refcntInc()
+	convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
+		try self.init(_noinc: sv, perl: perl)
 	}
 
 	@discardableResult
-	init(name: String?, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current, file: StaticString = #file, body: @escaping CvBody) {
-		self.perl = perl
-		pointer = perl.pointee.newCV(name: name, file: file, body: body)
+	convenience init(name: String?, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current, file: StaticString = #file, body: @escaping CvBody) {
+		let cv = perl.pointee.newCV(name: name, file: file, body: body) // FIXME Why result is non-optional???
+		let sv = UnsafeMutableRawPointer(cv).bindMemory(to: UnsafeSV.self, capacity: 1)
+		self.init(noincUnchecked: sv, perl: perl)
 		if name != nil {
-			pointer.pointee.refcntInc()
+			sv.pointee.refcntInc()
 		}
 	}
 
-	deinit {
-		pointer.pointee.refcntDec(perl: perl)
+	func withUnsafeCvPointer<R>(_ body: (UnsafeCvPointer, UnsafeInterpreterPointer) throws -> R) rethrows -> R {
+		return try withUnsafeSvPointer { sv, perl in
+			return try sv.withMemoryRebound(to: UnsafeCV.self, capacity: 1) {
+				return try body($0, perl)
+			}
+		}
 	}
 
-	convenience init?(_ sv: PerlSV) throws {
-		guard let cv = try UnsafeCvPointer(sv.pointer, perl: sv.perl) else { return nil }
-		self.init(cv, perl: sv.perl)
+	var file: String {
+		return withUnsafeCvPointer { cv, _ in cv.pointee.file }
+	}
+
+	override var debugDescription: String {
+		let deparse: PerlObject = try! perl.pointee.eval("use B::Deparse; B::Deparse->new('-sCi0')")
+		var text: String = try! deparse.call(method: "coderef2text", self)
+		text = text.characters.split { $0 == "\n" } .map(String.init).joined(separator: " ")
+		return "PerlCV(\(text) at \(file))"
 	}
 }
 
@@ -85,14 +91,14 @@ extension PerlCV {
 		where R.Iterator.Element == PerlSV {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
-			let args = stack.args.map { PerlSV.promoteFromUnsafeSV($0, perl: stack.perl) }
+			let args = try stack.args.map { try PerlSV.promoteFromUnsafeSV($0, perl: stack.perl) }
 			let result = try body(args)
 			stack.xsReturn(result.map { $0.promoteToUnsafeSV(perl: stack.perl) })
 		}
 	}
 }
 
-extension PerlMappedClass {
+extension PerlBridgedObject {
 % for p in range(0, 8):
 %   for r in range(0, 3):
 %     for po in optrange(p):

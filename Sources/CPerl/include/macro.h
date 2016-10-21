@@ -235,7 +235,7 @@ PERL_STATIC_INLINE char *sPerl_SvPV(pTHX_ _Nonnull SV *sv, STRLEN *len) {
 }
 
 SWIFT_NAME(PerlInterpreter.sv_reftype(self:_:_:))
-PERL_STATIC_INLINE const char *sPerl_sv_reftype(pTHX_ _Nonnull const SV *const sv, const int ob) {
+PERL_STATIC_INLINE const char *sPerl_sv_reftype(pTHX_ _Nonnull const SV *const sv, const bool ob) {
 	return sv_reftype(sv, ob);
 }
 
@@ -247,6 +247,11 @@ PERL_STATIC_INLINE bool sPerl_sv_isobject(pTHX_ SV* sv) {
 SWIFT_NAME(PerlInterpreter.sv_setref_iv(self:_:_:_:))
 PERL_STATIC_INLINE _Nonnull SV *sPerl_sv_setref_iv(pTHX_ _Nonnull SV *const rv, const char *const classname, const IV iv) {
 	return sv_setref_iv(rv, classname, iv);
+}
+
+SWIFT_NAME(PerlInterpreter.sv_derived_from(self:_:_:))
+PERL_STATIC_INLINE bool sPerl_sv_derived_from(pTHX_ _Nonnull SV* sv, _Nonnull const char *const name) {
+	return sv_derived_from(sv, name);
 }
 
 // AV
@@ -337,6 +342,11 @@ PERL_STATIC_INLINE SV *sPerl_HeVAL(_Nonnull HE *he) {
 SWIFT_NAME(CvXSUBANY(_:))
 PERL_STATIC_INLINE ANY *sPerl_CvXSUBANY(_Nonnull CV *cv) {
 	return &CvXSUBANY(cv);
+}
+
+SWIFT_NAME(CvFILE(_:))
+PERL_STATIC_INLINE char *sPerl_CvFILE(_Nonnull CV *cv) {
+	return CvFILE(cv);
 }
 
 SWIFT_NAME(PerlInterpreter.newXS_flags(self:_:_:_:_:_:))

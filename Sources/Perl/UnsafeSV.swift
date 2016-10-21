@@ -40,34 +40,34 @@ extension UnsafeSV {
 	var isString: Bool { mutating get { return SvPOK(&self) } }
 	var isRef: Bool { mutating get { return SvROK(&self) } }
 
+	var referent: UnsafeSvPointer? {
+		mutating get { return SvROK(&self) ? SvRV(&self) : nil }
+	}
+
 	mutating func isObject(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> Bool {
 		return perl.pointee.sv_isobject(&self)
 	}
 
-	var referent: UnsafeSvPointer? { mutating get { return SvROK(&self) ? SvRV(&self) : nil } }
-
-	mutating func swiftObject(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> AnyObject {
-		guard isObject(perl: perl) else {
-			throw PerlError.notObject(PerlSV(&self, perl: perl))
-		}
-		let sv = SvRV(&self)!
-		guard SvTYPE(sv) == SVt_PVMG && perl.pointee.mg_findext(sv, PERL_MAGIC_ext, &objectMgvtbl) != nil else {
-			throw PerlError.notSwiftObject(PerlSV(&self, perl: perl))
-		}
-		let iv = perl.pointee.SvIV(sv)
-		let u = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(bitPattern: iv)!)
-		return u.takeUnretainedValue()
+	mutating func isDerived(from: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> Bool {
+		return from.withCString { perl.pointee.sv_derived_from(&self, $0) }
 	}
 
-	mutating func perlObject(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> PerlObjectType {
-		guard isObject(perl: perl) else {
-			throw PerlError.notObject(PerlSV(&self, perl: perl))
-		}
-		let classname = String(cString: perl.pointee.sv_reftype(SvRV(&self), 1))
-		guard let perlClass = PerlInterpreter.classMapping[classname] else {
-			throw PerlError.unsupportedPerlClass(PerlSV(&self))
-		}
-		return perlClass.init(PerlSV(&self, perl: perl)) // FIXME remove PerlSV cast
+	mutating func classname(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> String? {
+		guard isObject(perl: perl) else { return nil }
+		return String(cString: perl.pointee.sv_reftype(SvRV(&self), true))
+	}
+
+	mutating func hasSwiftObjectMagic(perl: UnsafeInterpreterPointer) -> Bool {
+		return SvTYPE(&self) == SVt_PVMG && perl.pointee.mg_findext(&self, PERL_MAGIC_ext, &objectMgvtbl) != nil
+	}
+
+	mutating func swiftObject(perl: UnsafeInterpreterPointer) -> PerlBridgedObject? {
+		guard isObject(perl: perl) else { return nil }
+		let sv = SvRV(&self)!
+		guard sv.pointee.hasSwiftObjectMagic(perl: perl) else { return nil }
+		let iv = perl.pointee.SvIV(sv)
+		let u = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(bitPattern: iv)!)
+		return (u.takeUnretainedValue() as! PerlBridgedObject)
 	}
 }
 
@@ -97,7 +97,7 @@ extension UnsafeInterpreter {
 		return sv
 	}
 
-	mutating func newSV(_ v: PerlMappedClass) -> UnsafeSvPointer {
+	mutating func newSV(_ v: PerlBridgedObject) -> UnsafeSvPointer {
 		return newSV(v, isa: type(of: v).perlClassName)
 	}
 }

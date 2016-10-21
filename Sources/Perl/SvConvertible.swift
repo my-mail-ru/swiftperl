@@ -26,27 +26,28 @@ extension String : PerlSVDefinitelyConvertible {
 	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
 }
 
-extension PerlSV : PerlSVDefinitelyConvertible {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> PerlSV { return PerlSV(sv, perl: perl) }
-	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return self.pointer.pointee.refcntInc() }
-}
-
-extension PerlSvCastable {
-	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Self {
-		guard let unsafe = try UnsafeMutablePointer<Struct>(sv, perl: perl) else { throw PerlError.unexpectedUndef(PerlSV(sv, perl: perl)) }
-		return self.init(unsafe, perl: perl)
+extension PerlSV : PerlSVConvertible {
+	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> PerlSV {
+		return try PerlSV(inc: sv, perl: perl)
 	}
 
 	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer {
-		return perl.pointee.newRV(inc: self.pointer)
+		return withUnsafeSvPointer { sv, _ in sv.pointee.refcntInc() }
 	}
 }
 
-protocol PerlMappedClass : class, PerlSVProbablyConvertible {
-	static var perlClassName: String { get }
+extension PerlDerived where Self : PerlValue, UnsafeValue : UnsafeSvCastable {
+	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Self {
+		guard let unsafe = try UnsafeMutablePointer<UnsafeValue>(autoDeref: sv, perl: perl) else { throw PerlError.unexpectedUndef(Perl.promoteFromUnsafeSV(inc: sv, perl: perl)) }
+		return self.init(inc: unsafe, perl: perl)
+	}
+
+	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer {
+		return withUnsafeSvPointer { sv, perl in perl.pointee.newRV(inc: sv) }
+	}
 }
 
-extension PerlMappedClass {
+extension PerlBridgedObject {
 	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Self {
 		return try _promoteFromUnsafeSvNonFinalClassWorkaround(sv, perl: perl)
 	}
@@ -56,22 +57,34 @@ extension PerlMappedClass {
 	}
 
 	static func _promoteFromUnsafeSvNonFinalClassWorkaround<T>(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> T {
-		let base = try sv.pointee.swiftObject(perl: perl)
-		guard let obj = base as? T else { throw PerlError.unexpectedObjectType(PerlSV(sv, perl: perl)) }
+		guard let base = sv.pointee.swiftObject(perl: perl) else {
+			throw PerlError.notSwiftObject(Perl.promoteFromUnsafeSV(inc: sv, perl: perl))
+		}
+		guard let obj = base as? T else {
+			throw PerlError.unexpectedObjectType(Perl.promoteFromUnsafeSV(inc: sv, perl: perl), want:  self)
+		}
 		return obj
 	}
 }
 
-extension PerlObjectType {
+extension PerlObject {
 	static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Self {
-		guard let obj = try sv.pointee.swiftObject(perl: perl) as? Self else {
-			throw PerlError.unexpectedObjectType(PerlSV(sv, perl: perl))
-		}
-		return obj
+		return try _promoteFromUnsafeSvNonFinalClassWorkaround(sv, perl: perl)
 	}
 
 	func promoteToUnsafeSV(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer {
-		return self.sv.pointer.pointee.refcntInc()
+		return withUnsafeSvPointer { sv, _ in sv.pointee.refcntInc() }
+	}
+
+	static func _promoteFromUnsafeSvNonFinalClassWorkaround<T>(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> T {
+		guard let classname = sv.pointee.classname(perl: perl) else {
+			throw PerlError.notObject(Perl.promoteFromUnsafeSV(inc: sv, perl: perl))
+		}
+		let base = PerlObject.derivedClass(for: classname).init(incUnchecked: sv, perl: perl)
+		guard let obj = base as? T else {
+			throw PerlError.unexpectedObjectType(Perl.promoteFromUnsafeSV(inc: sv, perl: perl), want: self)
+		}
+		return obj
 	}
 }
 

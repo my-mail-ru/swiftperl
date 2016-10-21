@@ -36,6 +36,10 @@ extension UnsafeCV {
 		svt_dup: nil,
 		svt_local: nil
 	)
+
+	var file: String {
+		mutating get { return String(cString: CvFILE(&self)) }
+	}
 }
 
 extension UnsafeInterpreter {
@@ -61,8 +65,9 @@ private func cvResolver(perl: UnsafeInterpreterPointer, cv: UnsafeCvPointer) -> 
 		let stack = UnsafeXSubStack(perl: perl)
 		try cv.pointee.body(stack)
 	} catch PerlError.died(let sv) {
-		perl.pointee.croak_sv(sv.pointer) // FIXME no one leak
+		let usv = sv.withUnsafeSvPointer { sv, perl in perl.pointee.newSV(sv)! }
+		perl.pointee.croak_sv(perl.pointee.sv_2mortal(usv)) // FIXME check: sv must die before croak_sv is called
 	} catch {
-		perl.pointee.croak_sv(perl.pointee.newSV("Exception: \(error)")) // FIXME no one leak
+		perl.pointee.croak_sv(perl.pointee.newSV("Exception: \(error)", mortal: true))
 	}
 }

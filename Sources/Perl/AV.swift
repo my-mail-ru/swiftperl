@@ -1,31 +1,17 @@
-final class PerlAV : PerlSvCastable {
-	typealias Struct = UnsafeAV
-	typealias Pointer = UnsafeAvPointer
-	let unsafeCollection: UnsafeAvCollection
-
-	var pointer: Pointer { return unsafeCollection.av }
-	var perl: UnsafeInterpreterPointer { return unsafeCollection.perl }
+final class PerlAV : PerlValue, PerlDerived {
+	typealias UnsafeValue = UnsafeAV
 
 	convenience init() {
 		self.init(perl: UnsafeInterpreter.current)
 	}
 
-	init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		unsafeCollection = perl.pointee.newAV().pointee.collection(perl: perl)
+	convenience init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		let av = perl.pointee.newAV()!
+		self.init(noinc: av, perl: perl)
 	}
 
-	init(_ p: Pointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		unsafeCollection = p.pointee.collection(perl: perl)
-		pointer.pointee.refcntInc()
-	}
-
-	deinit {
-		pointer.pointee.refcntDec(perl: perl)
-	}
-
-	convenience init?(_ sv: PerlSV) throws {
-		guard let av = try UnsafeAvPointer(sv.pointer, perl: sv.perl) else { return nil }
-		self.init(av, perl: sv.perl)
+	convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
+		try self.init(_noinc: sv, perl: perl)
 	}
 
 	convenience init<C : Collection>(_ c: C, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current)
@@ -37,8 +23,23 @@ final class PerlAV : PerlSvCastable {
 		}
 	}
 
-	func value<T : PerlSVConvertible>() throws -> [T] {
-		return try map { try T.promoteFromUnsafeSV($0.pointer, perl: $0.perl) }
+	func withUnsafeAvPointer<R>(_ body: (UnsafeAvPointer, UnsafeInterpreterPointer) throws -> R) rethrows -> R {
+		return try withUnsafeSvPointer { sv, perl in
+			return try sv.withMemoryRebound(to: UnsafeAV.self, capacity: 1) {
+				return try body($0, perl)
+			}
+		}
+	}
+
+	func withUnsafeCollection<R>(_ body: (UnsafeAvCollection) throws -> R) rethrows -> R {
+		return try withUnsafeAvPointer {
+			return try body($0.pointee.collection(perl: $1))
+		}
+	}
+
+	override var debugDescription: String {
+		let values = map { $0.debugDescription } .joined(separator: ", ")
+		return "PerlAV([\(values)])"
 	}
 }
 
@@ -50,11 +51,17 @@ extension PerlAV : RandomAccessCollection {
 	typealias Indices = CountableRange<Int>
 
 	var startIndex: Int { return 0 }
-	var endIndex: Int { return unsafeCollection.endIndex }
+	var endIndex: Int { return withUnsafeCollection { $0.endIndex } }
 
 	subscript (i: Int) -> PerlSV {
-		get { return PerlSV(unsafeCollection[i], perl: unsafeCollection.perl) }
-		set { unsafeCollection.store(i, newValue: newValue.pointer)?.pointee.refcntInc() }
+		get { return withUnsafeCollection { try! PerlSV(inc: $0[i], perl: $0.perl) } }
+		set {
+			withUnsafeCollection { c in
+				newValue.withUnsafeSvPointer { sv, _ in
+					_ = c.store(i, newValue: sv)?.pointee.refcntInc()
+				}
+			}
+		}
 	}
 }
 
@@ -69,7 +76,7 @@ extension PerlAV {
 
 extension PerlAV : RangeReplaceableCollection {
 	func extend(to count: Int) {
-		unsafeCollection.extend(to: count)
+		withUnsafeCollection { $0.extend(to: count) }
 	}
 
 	func extend(by count: Int) {
@@ -109,11 +116,15 @@ extension PerlAV : RangeReplaceableCollection {
 	}
 
 	func append(_ sv: Element) {
-		unsafeCollection.append(sv.pointer) // FIXME refcnt?
+		withUnsafeCollection { c in
+			sv.withUnsafeSvPointer { sv, _ in
+				c.append(sv.pointee.refcntInc())
+			}
+		}
 	}
 
 	func removeFirst() -> Element {
-		return PerlSV(unsafeCollection.removeFirst()) // FIXME refcnt?
+		return withUnsafeCollection { try! PerlSV(noinc: $0.removeFirst(), perl: $0.perl) }
 	}
 }
 
@@ -125,19 +136,25 @@ extension PerlAV: ExpressibleByArrayLiteral {
 
 extension Array where Element : PerlSVProbablyConvertible {
 	init(_ av: PerlAV) throws {
-		self = try av.unsafeCollection.map { try Element.promoteFromUnsafeSV($0, perl: av.perl) }
+		self = try av.withUnsafeCollection { uc in
+			try uc.map { try Element.promoteFromUnsafeSV($0, perl: uc.perl) }
+		}
 	}
 }
 
 extension Array where Element : PerlSVDefinitelyConvertible {
 	init(_ av: PerlAV) {
-		self = av.unsafeCollection.map { Element.promoteFromUnsafeSV($0, perl: av.perl) }
+		self = av.withUnsafeCollection { uc in
+			uc.map { Element.promoteFromUnsafeSV($0, perl: uc.perl) }
+		}
 	}
 }
 
 extension Array where Element : PerlSVConvertible {
 	init?(_ sv: PerlSV) throws {
-		guard let av = try UnsafeAvPointer(sv.pointer, perl: sv.perl) else { return nil }
-		self = try av.pointee.collection(perl: sv.perl).map { try Element.promoteFromUnsafeSV($0, perl: sv.perl) }
+		defer { _fixLifetime(sv) }
+		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
+		guard let av = try UnsafeAvPointer(autoDeref: usv, perl: perl) else { return nil }
+		self = try av.pointee.collection(perl: perl).map { try Element.promoteFromUnsafeSV($0, perl: perl) }
 	}
 }

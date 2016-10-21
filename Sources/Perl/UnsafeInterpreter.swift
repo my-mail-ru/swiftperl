@@ -28,7 +28,8 @@ extension UnsafeInterpreter {
 		let args: StaticString = "\0-e\00\0"
 		args.withUTF8Buffer {
 			$0.baseAddress!.withMemoryRebound(to: CChar.self, capacity: $0.count) {
-				var cargs: [UnsafeMutablePointer<CChar>?] = [$0, $0 + 1, $0 + 4]
+				let start = UnsafeMutablePointer(mutating: $0)
+				var cargs: [UnsafeMutablePointer<CChar>?] = [start, start + 1, start + 4]
 				let status = cargs.withUnsafeMutableBufferPointer {
 					parse(xs_init, Int32($0.count), $0.baseAddress, nil)
 				}

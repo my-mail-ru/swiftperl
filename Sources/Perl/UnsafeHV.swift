@@ -9,7 +9,7 @@ extension UnsafeHV {
 	}
 }
 
-struct UnsafeHvCollection: Sequence {
+struct UnsafeHvCollection: Sequence, IteratorProtocol {
 	typealias Key = String
 	typealias Value = UnsafeSvPointer
 	typealias Element = (key: Key, value: Value)
@@ -17,26 +17,18 @@ struct UnsafeHvCollection: Sequence {
 	let hv: UnsafeHvPointer
 	let perl: UnsafeInterpreterPointer
 
-	func makeIterator() -> Iterator {
-		return Iterator(self)
+	func makeIterator() -> UnsafeHvCollection {
+		perl.pointee.hv_iterinit(hv)
+		return self
 	}
 
-	struct Iterator: IteratorProtocol {
-		let c: UnsafeHvCollection
-
-		init(_ c: UnsafeHvCollection) {
-			self.c = c
-			c.perl.pointee.hv_iterinit( c.hv)
-		}
-
-		func next() -> Element? {
-			guard let he = c.perl.pointee.hv_iternext(c.hv) else { return nil }
-			var klen = 0
-			let ckey = c.perl.pointee.HePV(he, &klen)!
-			let key = String(cString: ckey, withLength: klen)
-			let value = HeVAL(he)!
-			return (key: key, value: value)
-		}
+	func next() -> Element? {
+		guard let he = perl.pointee.hv_iternext(hv) else { return nil }
+		var klen = 0
+		let ckey = perl.pointee.HePV(he, &klen)!
+		let key = String(cString: ckey, withLength: klen)
+		let value = HeVAL(he)!
+		return (key: key, value: value)
 	}
 
 	func fetch(_ key: Key, lval: Bool = false) -> Value? {

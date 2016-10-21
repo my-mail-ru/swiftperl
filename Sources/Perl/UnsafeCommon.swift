@@ -1,12 +1,14 @@
 import func CPerl.SvOK
 
-protocol UnsafeSvProtocol {}
-
-extension UnsafeSV : UnsafeSvProtocol {}
-
-protocol UnsafeSvCastable : UnsafeSvProtocol {
+protocol UnsafeSvProtocol {
 	static var type: SvType { get }
 }
+
+extension UnsafeSV : UnsafeSvProtocol {
+	static var type: SvType { return .scalar }
+}
+
+protocol UnsafeSvCastable : UnsafeSvProtocol {}
 
 extension UnsafeAV : UnsafeSvCastable {
 	static var type: SvType { return .array }
@@ -21,8 +23,6 @@ extension UnsafeCV : UnsafeSvCastable {
 }
 
 extension UnsafeSvCastable {
-	typealias Pointer = UnsafeMutablePointer<Self>
-
 	@discardableResult
 	mutating func refcntInc() -> UnsafeMutablePointer<Self> {
 		let ptr = UnsafeMutablePointer(mutating: &self)
@@ -40,10 +40,20 @@ extension UnsafeSvCastable {
 }
 
 extension UnsafeMutablePointer where Pointee : UnsafeSvCastable {
-	init?(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		guard SvOK(sv) else { return nil }
-		let v = sv.pointee.referent ?? sv
-		guard v.pointee.type == Pointee.type else { throw PerlError.unexpectedType(PerlSV(sv), want: Pointee.type) }
+	init?(autoDeref sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+		let v: UnsafeSvPointer
+		if sv.pointee.type == .scalar {
+			guard SvOK(sv) else { return nil }
+			guard let xv = sv.pointee.referent else {
+				throw PerlError.unexpectedSvType(promoteFromUnsafeSV(inc: sv, perl: perl), want: Pointee.type)
+			}
+			v = xv
+		} else {
+			v = sv
+		}
+		guard v.pointee.type == Pointee.type else {
+			throw PerlError.unexpectedSvType(promoteFromUnsafeSV(inc: sv, perl: perl), want: Pointee.type)
+		}
 		self = UnsafeMutableRawPointer(v).bindMemory(to: Pointee.self, capacity: 1)
 	}
 }

@@ -1,55 +1,41 @@
-protocol PerlSVProtocol {
-	associatedtype Struct
-
-	var pointer: UnsafeMutablePointer<Struct> { get }
-	var perl: UnsafeInterpreterPointer { get }
-
-	init(_: UnsafeMutablePointer<Struct>, perl: UnsafeInterpreterPointer)
-}
-
-protocol PerlSvCastable : PerlSVProtocol, PerlSVProbablyConvertible {
-	associatedtype Struct : UnsafeSvCastable
-	init?(_ sv: PerlSV) throws
-}
-
-final class PerlSV : PerlSVProtocol {
-	typealias Struct = UnsafeSV
-	typealias Pointer = UnsafeSvPointer
-	let pointer: Pointer
-	let perl: UnsafeInterpreterPointer
-
-	init(_ p: Pointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.perl = perl
-		pointer = p.pointee.refcntInc()
-	}
+final class PerlSV : PerlValue, PerlDerived {
+	typealias UnsafeValue = UnsafeSV
 
 	convenience init() { self.init(perl: UnsafeInterpreter.current) } // default bellow doesn't work...
 
-	init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.perl = perl
-		pointer = perl.pointee.newSV()
+	convenience init(copy sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
+		try self.init(noinc: perl.pointee.newSV(sv), perl: perl)
 	}
 
-	init<T : PerlSVConvertible>(_ v: T, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.perl = perl
-		pointer = v.promoteToUnsafeSV(perl: perl)
+	convenience init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		self.init(noincUnchecked: perl.pointee.newSV(), perl: perl)
 	}
 
-	init<T: PerlSVProtocol>(referenceTo sv: T) {
-		perl = sv.perl
-		pointer = sv.pointer.withMemoryRebound(to: UnsafeSV.self, capacity: 1) {
-			sv.perl.pointee.newRV(inc: $0)
+	convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
+		try self.init(_noinc: sv, perl: perl)
+	}
+
+	convenience init<T : PerlSVConvertible>(_ v: T, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		self.init(noincUnchecked: v.promoteToUnsafeSV(perl: perl), perl: perl)
+	}
+
+	convenience init<T : PerlValue>(referenceTo sv: T) {
+		let rv = sv.withUnsafeSvPointer { sv, perl in
+			perl.pointee.newRV(inc: sv)!
 		}
+		self.init(noincUnchecked: rv, perl: sv.perl)
 	}
 
-	init<T : PerlSVConvertible>(_ array: [T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.perl = perl
-		pointer = array.promoteToUnsafeSV(perl: perl)
+	convenience init<T : PerlValue>(_ sv: T) where T : PerlDerived, T.UnsafeValue : UnsafeSvCastable {
+		self.init(referenceTo: sv)
 	}
 
-	init<T : PerlSVConvertible>(_ dict: [String: T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.perl = perl
-		pointer = dict.promoteToUnsafeSV(perl: perl)
+	convenience init<T : PerlSVConvertible>(_ array: [T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		self.init(noincUnchecked: array.promoteToUnsafeSV(perl: perl), perl: perl)
+	}
+
+	convenience init<T : PerlSVConvertible>(_ dict: [String: T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		self.init(noincUnchecked: dict.promoteToUnsafeSV(perl: perl), perl: perl)
 	}
 
 	convenience init<T : PerlSVConvertible>(_ v: T?, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
@@ -60,20 +46,51 @@ final class PerlSV : PerlSVProtocol {
 		}
 	}
 
-	deinit {
-		pointer.pointee.refcntDec(perl: perl)
+	var defined: Bool {
+		return withUnsafeSvPointer { sv, _ in sv.pointee.defined }
 	}
 
-	var type: SvType { return pointer.pointee.type }
-	var defined: Bool { return pointer.pointee.defined }
-	var isInt: Bool { return pointer.pointee.isInt }
-	var isString: Bool { return pointer.pointee.isString }
-	var isRef: Bool { return pointer.pointee.isRef }
-	var isObject: Bool { return pointer.pointee.isObject(perl: perl) }
+	var isInt: Bool {
+		return withUnsafeSvPointer { sv, _ in sv.pointee.isInt }
+	}
 
-	var referent: PerlSV? {
-		guard let sv = pointer.pointee.referent else { return nil }
-		return PerlSV(sv)
+	var isString: Bool {
+		return withUnsafeSvPointer { sv, _ in sv.pointee.isString }
+	}
+
+	var isRef: Bool {
+		return withUnsafeSvPointer { sv, _ in sv.pointee.isRef }
+	}
+
+	var isObject: Bool {
+		return withUnsafeSvPointer { sv, perl in sv.pointee.isObject(perl: perl) }
+	}
+
+	var referent: AnyPerl? {
+		return withUnsafeSvPointer { rv, perl in
+			guard let sv = rv.pointee.referent else { return nil }
+			return promoteFromUnsafeSV(inc: sv, perl: perl)
+		}
+	}
+
+	override var debugDescription: String {
+		var values = [String]()
+		if defined {
+			if isInt {
+				values.append("iv: \(Int(self)!)")
+			}
+			if isString {
+				values.append("pv: \(String(self)!.debugDescription)")
+			}
+			if let ref = referent {
+				var str = "rv: "
+				debugPrint(ref, terminator: "", to: &str)
+				values.append(str)
+			}
+		} else {
+			values.append("undef")
+		}
+		return "PerlSV(\(values.joined(separator: ", ")))"
 	}
 }
 
@@ -127,26 +144,36 @@ extension PerlSV : ExpressibleByDictionaryLiteral {
 
 extension Bool {
 	init(_ sv: PerlSV) {
-		self.init(sv.pointer, perl: sv.perl)
+		defer { _fixLifetime(sv) }
+		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
+		self.init(usv, perl: perl)
 	}
 }
 
 extension Int {
 	init?(_ sv: PerlSV) {
-		self.init(sv.pointer, perl: sv.perl)
+		defer { _fixLifetime(sv) }
+		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
+		self.init(usv, perl: perl)
 	}
 
 	init(forcing sv: PerlSV) {
-		self.init(forcing: sv.pointer, perl: sv.perl)
+		defer { _fixLifetime(sv) }
+		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
+		self.init(forcing: usv, perl: perl)
 	}
 }
 
 extension String {
 	init?(_ sv: PerlSV) {
-		self.init(sv.pointer, perl: sv.perl)
+		defer { _fixLifetime(sv) }
+		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
+		self.init(usv, perl: perl)
 	}
 
 	init(forcing sv: PerlSV) {
-		self.init(forcing: sv.pointer, perl: sv.perl)
+		defer { _fixLifetime(sv) }
+		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
+		self.init(forcing: usv, perl: perl)
 	}
 }

@@ -3,7 +3,7 @@
 var perlInterpreter: PerlInterpreter!
 
 @_cdecl("boot_SampleXS")
-func boot(_ p: PerlInterpreter.Pointer) {
+func boot(_ p: UnsafeInterpreterPointer) {
 	print("OK")
 	PerlCV(name: "Swift::test") {
 		(stack: UnsafeXSubStack) in
@@ -40,7 +40,7 @@ func boot(_ p: PerlInterpreter.Pointer) {
 	PerlInterpreter.register(PerlTestMouse.self)
 }
 
-final class MyTest : PerlMappedClass {
+final class MyTest : PerlBridgedObject {
 	static var perlClassName = "Swift::Perl.MyTest"
 	var property = 15
 	static var staticProperty = 500
@@ -77,10 +77,8 @@ final class MyTest : PerlMappedClass {
 	}
 }
 
-final class PerlTestMouse: PerlObjectType {
+final class PerlTestMouse: PerlObject, PerlNamedClass {
 	static let perlClassName = "TestMouse"
-	let sv: PerlSV
-	init(_ sv: PerlSV) { self.sv = sv }
 
 	var `attr_ro`: Int {
 		get { return try! call(method: "attr_ro") }

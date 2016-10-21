@@ -1,31 +1,17 @@
-final class PerlHV : PerlSvCastable {
-	typealias Struct = UnsafeHV
-	typealias Pointer = UnsafeHvPointer
-	let unsafeCollection: UnsafeHvCollection
-
-	var pointer: Pointer { return unsafeCollection.hv }
-	var perl: UnsafeInterpreterPointer { return unsafeCollection.perl }
+final class PerlHV : PerlValue, PerlDerived {
+	typealias UnsafeValue = UnsafeHV
 
 	convenience init() {
 		self.init(perl: UnsafeInterpreter.current)
 	}
 
-	init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		unsafeCollection = perl.pointee.newHV().pointee.collection(perl: perl)
+	convenience init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		let hv = perl.pointee.newHV()!
+		self.init(noinc: hv, perl: perl)
 	}
 
-	init (_ p: Pointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		unsafeCollection = p.pointee.collection(perl: perl)
-		pointer.pointee.refcntInc()
-	}
-
-	deinit {
-		pointer.pointee.refcntDec(perl: perl)
-	}
-
-	convenience init?(_ sv: PerlSV) throws {
-		guard let hv = try UnsafeHvPointer(sv.pointer, perl: sv.perl) else { return nil }
-		self.init(hv, perl: sv.perl)
+	convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
+		try self.init(_noinc: sv, perl: perl)
 	}
 
 	convenience init<T : PerlSVConvertible>(_ dict: [String: T]) {
@@ -35,47 +21,69 @@ final class PerlHV : PerlSvCastable {
 		}
 	}
 
+	func withUnsafeHvPointer<R>(_ body: (UnsafeHvPointer, UnsafeInterpreterPointer) throws -> R) rethrows -> R {
+		return try withUnsafeSvPointer { sv, perl in
+			return try sv.withMemoryRebound(to: UnsafeHV.self, capacity: 1) {
+				return try body($0, perl)
+			}
+		}
+	}
+
+	func withUnsafeCollection<R>(_ body: (UnsafeHvCollection) throws -> R) rethrows -> R {
+		return try withUnsafeHvPointer {
+			return try body($0.pointee.collection(perl: $1))
+		}
+	}
+
 	func value<T: PerlSVConvertible>() throws -> [String: T] {
 		var dict = [String: T]()
-		for (k, v) in pointer.pointee.collection(perl: perl) {
-			dict[k] = try T.promoteFromUnsafeSV(v, perl: perl)
+		try withUnsafeCollection {
+			for (k, v) in $0 {
+				dict[k] = try T.promoteFromUnsafeSV(v, perl: $0.perl)
+			}
 		}
 		return dict
 	}
+
+	override var debugDescription: String {
+		let values = map { "\($0.key.debugDescription): \($0.value.debugDescription)" } .joined(separator: ", ")
+		return "PerlHV([\(values)])"
+	}
 }
 
-extension PerlHV: Sequence {
+extension PerlHV: Sequence, IteratorProtocol {
 	typealias Key = String
 	typealias Value = PerlSV
 	typealias Element = (key: Key, value: Value)
 
-	func makeIterator () -> Iterator {
-		return Iterator(unsafeCollection)
+	func makeIterator () -> PerlHV {
+		withUnsafeCollection { _ = $0.makeIterator() }
+		return self
 	}
 
-	struct Iterator: IteratorProtocol {
-		let i: UnsafeHvCollection.Iterator
-
-		init(_ c: UnsafeHvCollection) {
-			i = c.makeIterator()
-		}
-
-		func next() -> Element? {
-			guard let u = i.next() else { return nil }
-			return (key: u.key, value: PerlSV(u.value, perl: i.c.perl))
+	func next() -> Element? {
+		return withUnsafeCollection {
+			guard let u = $0.next() else { return nil }
+			return (key: u.key, value: try! PerlSV(inc: u.value, perl: $0.perl))
 		}
 	}
 
 	subscript (key: Key) -> PerlSV? {
 		get {
-			guard let sv = unsafeCollection[key] else { return nil }
-			return PerlSV(sv, perl: unsafeCollection.perl)
+			return withUnsafeCollection {
+				guard let sv = $0[key] else { return nil }
+				return try! PerlSV(inc: sv, perl: $0.perl)
+			}
 		}
 		set {
-			if let value = newValue {
-				unsafeCollection.store(key, newValue: value.pointer)?.pointee.refcntInc()
-			} else {
-				unsafeCollection.delete(key)
+			withUnsafeCollection { c in
+				if let value = newValue {
+					value.withUnsafeSvPointer { sv, _ in
+						_ = c.store(key, newValue: sv)?.pointee.refcntInc()
+					}
+				} else {
+					c.delete(key)
+				}
 			}
 		}
 	}
@@ -107,8 +115,10 @@ extension PerlHV : ExpressibleByDictionaryLiteral {
 extension Dictionary where Value : PerlSVDefinitelyConvertible {
 	init(_ hv: PerlHV) {
 		self.init()
-		for (k, v) in hv {
-			self[k as! Key] = Value.promoteFromUnsafeSV(v.pointer, perl: hv.perl)
+		hv.withUnsafeCollection {
+			for (k, v) in $0 {
+				self[k as! Key] = Value.promoteFromUnsafeSV(v, perl: $0.perl)
+			}
 		}
 	}
 }
@@ -117,8 +127,10 @@ extension Dictionary where Value : PerlSVDefinitelyConvertible {
 extension Dictionary where Value : PerlSVProbablyConvertible {
 	init(_ hv: PerlHV) throws {
 		self.init()
-		for (k, v) in hv {
-			self[k as! Key] = try Value.promoteFromUnsafeSV(v.pointer, perl: hv.perl)
+		try hv.withUnsafeCollection {
+			for (k, v) in $0 {
+				self[k as! Key] = try Value.promoteFromUnsafeSV(v, perl: $0.perl)
+			}
 		}
 	}
 }
@@ -126,10 +138,12 @@ extension Dictionary where Value : PerlSVProbablyConvertible {
 // where Key == String, but it is unsupported
 extension Dictionary where Value : PerlSVConvertible {
 	init?(_ sv: PerlSV) throws {
-		guard let hv = try UnsafeHvPointer(sv.pointer, perl: sv.perl) else { return nil }
+		defer { _fixLifetime(sv) }
+		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
+		guard let hv = try UnsafeHvPointer(autoDeref: usv, perl: perl) else { return nil }
 		self.init()
-		for (k, v) in hv.pointee.collection(perl: sv.perl) {
-			self[k as! Key] = try Value.promoteFromUnsafeSV(v, perl: sv.perl)
+		for (k, v) in hv.pointee.collection(perl: perl) {
+			self[k as! Key] = try Value.promoteFromUnsafeSV(v, perl: perl)
 		}
 	}
 }

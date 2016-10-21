@@ -60,7 +60,7 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssert(!v.isString)
 		XCTAssert(v.isRef)
 		XCTAssertNotNil(v.referent)
-		let r: PerlSV = v.referent!
+		let r = v.referent! as! PerlSV
 		XCTAssert(r.isInt)
 		XCTAssertEqual(Int(r), 42)
 	}

@@ -41,21 +41,19 @@ class ObjectTests : EmbeddedTestCase {
 	}
 }
 
-final class URI : PerlObjectType {
+final class URI : PerlObject, PerlNamedClass {
 	static let perlClassName = "URI"
-	let sv: PerlSV
-	init(_ sv: PerlSV) { self.sv = sv }
 
 	convenience init(_ str: String) throws {
-		self.init(try URI.call(method: "new", str) as PerlSV)
+		try self.init(method: "new", args: [str])
 	}
 
 	convenience init(_ str: String, scheme: String) throws {
-		self.init(try URI.call(method: "new", str, scheme) as PerlSV)
+		try self.init(method: "new", args: [str, scheme])
 	}
 
 	convenience init(copyOf uri: URI) {
-		self.init(try! uri.call(method: "clone") as PerlSV)
+		try! self.init(uri.call(method: "clone") as PerlSV)
 	}
 
 	var scheme: String? { return try! call(method: "scheme") }
@@ -74,14 +72,14 @@ final class URI : PerlObjectType {
 	var secure: Bool { return try! call(method: "secure") }
 }
 
-extension NSURL : PerlMappedClass {
+extension NSURL : PerlBridgedObject {
 	public static let perlClassName = "NSURL"
 	public static func promoteFromUnsafeSV(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Self {
 		return try NSURL._promoteFromUnsafeSvNonFinalClassWorkaround(sv, perl: perl)
 	}
 }
 
-final class TestRefCnt : PerlMappedClass {
+final class TestRefCnt : PerlBridgedObject {
 	static let perlClassName = "TestRefCnt"
 	static var refcnt = 0
 	init() { TestRefCnt.refcnt += 1 }

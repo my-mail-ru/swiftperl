@@ -2,10 +2,8 @@ import CPerlCoro
 @testable import Perl
 
 // TODO generic on function argument
-final class PerlCoro : PerlObjectType {
+final class PerlCoro : PerlObject, PerlNamedClass {
 	static let perlClassName = "Coro"
-	let sv: PerlSV
-	init(_ sv: PerlSV) { self.sv = sv }
 
 	enum CoroError : Error {
 		case coroApiNotFound
@@ -45,7 +43,7 @@ final class PerlCoro : PerlObjectType {
 	}
 
 	static var current: PerlCoro {
-		return PerlCoro(PerlSV(coroApi.pointee.current)) // is it?
+		return PerlCoro(incUnchecked: coroApi.pointee.current, perl: PerlCoro.perl)
 	}
 
 	static var readyhook: @convention(c) () -> () {
@@ -56,18 +54,24 @@ final class PerlCoro : PerlObjectType {
 	convenience init(_ cv: PerlCV, args: PerlSVConvertible?...) {
 		var args = args
 		args.insert(cv, at: 0)
-		self.init(try! PerlCoro.call(method: "new", args: args) as PerlSV)
+		try! self.init(method: "new", args: args)
 	}
 
 	@discardableResult
-	func ready() -> Bool { return PerlCoro.coroApi.pointee.ready(PerlCoro.perl, sv.pointer) != 0 }
+	func ready() -> Bool {
+		return withUnsafeSvPointer { sv, perl in PerlCoro.coroApi.pointee.ready!(perl, sv) != 0 }
+	}
+
 	func suspend() { return try! call(method: "suspend") }
 	func resume() { return try! call(method: "resume") }
 
 	var isNew: Bool { return try! call(method: "is_new") }
 	var isZombie: Bool { return try! call(method: "is_zombie") }
 
-	var isReady: Bool { return PerlCoro.coroApi.pointee.is_ready(PerlCoro.perl, sv.pointer) != 0 }
+	var isReady: Bool {
+		return withUnsafeSvPointer { sv, perl in PerlCoro.coroApi.pointee.is_ready!(perl, sv) != 0 }
+	}
+
 	var isRunning: Bool { return try! call(method: "is_running") }
 	var isSuspended: Bool { return try! call(method: "is_suspended") }
 
