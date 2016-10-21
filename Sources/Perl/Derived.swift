@@ -1,4 +1,4 @@
-protocol PerlDerived : PerlSvConvertible {
+public protocol PerlDerived : PerlSvConvertible {
 	associatedtype UnsafeValue : UnsafeSvProtocol
 }
 
@@ -22,7 +22,7 @@ extension PerlDerived where Self : PerlValue, UnsafeValue : UnsafeSvCastable {
 		self.init(noincUnchecked: sv, perl: perl)
 	}
 
-	init?(_ sv: PerlSV) throws {
+	public init?(_ sv: PerlSV) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		guard let uxv = try UnsafeMutablePointer<UnsafeValue>(autoDeref: usv, perl: perl) else { return nil }

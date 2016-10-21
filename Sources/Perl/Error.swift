@@ -1,4 +1,4 @@
-enum PerlError : Error {
+public enum PerlError : Error {
 	case died(_: PerlSV)
 	case unexpectedUndef(_: AnyPerl)
 	case unexpectedSvType(_: AnyPerl, want: SvType)

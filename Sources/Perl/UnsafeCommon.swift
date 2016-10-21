@@ -1,25 +1,25 @@
 import func CPerl.SvOK
 
-protocol UnsafeSvProtocol {
+public protocol UnsafeSvProtocol {
 	static var type: SvType { get }
 }
 
 extension UnsafeSV : UnsafeSvProtocol {
-	static var type: SvType { return .scalar }
+	public static var type: SvType { return .scalar }
 }
 
-protocol UnsafeSvCastable : UnsafeSvProtocol {}
+public protocol UnsafeSvCastable : UnsafeSvProtocol {}
 
 extension UnsafeAV : UnsafeSvCastable {
-	static var type: SvType { return .array }
+	public static var type: SvType { return .array }
 }
 
 extension UnsafeHV : UnsafeSvCastable {
-	static var type: SvType { return .hash }
+	public static var type: SvType { return .hash }
 }
 
 extension UnsafeCV : UnsafeSvCastable {
-	static var type: SvType { return .code }
+	public static var type: SvType { return .code }
 }
 
 extension UnsafeSvCastable {

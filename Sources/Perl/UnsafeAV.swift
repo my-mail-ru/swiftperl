@@ -1,7 +1,7 @@
 import CPerl
 
-typealias UnsafeAV = CPerl.AV
-typealias UnsafeAvPointer = UnsafeMutablePointer<UnsafeAV>
+public typealias UnsafeAV = CPerl.AV
+public typealias UnsafeAvPointer = UnsafeMutablePointer<UnsafeAV>
 
 extension UnsafeAV {
 	mutating func collection(perl: UnsafeInterpreterPointer/* = UnsafeInterpreter.current*/) -> UnsafeAvCollection {

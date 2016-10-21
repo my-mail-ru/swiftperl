@@ -1,7 +1,7 @@
 import CPerl
 
-typealias UnsafeHV = CPerl.HV
-typealias UnsafeHvPointer = UnsafeMutablePointer<UnsafeHV>
+public typealias UnsafeHV = CPerl.HV
+public typealias UnsafeHvPointer = UnsafeMutablePointer<UnsafeHV>
 
 extension UnsafeHV {
 	mutating func collection(perl: UnsafeInterpreterPointer/* = UnsafeInterpreter.current*/) -> UnsafeHvCollection {

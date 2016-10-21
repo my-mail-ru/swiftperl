@@ -1,18 +1,15 @@
-@testable import Perl
-
-var perlInterpreter: PerlInterpreter!
+import Perl
 
 @_cdecl("boot_SampleXS")
 func boot(_ p: UnsafeInterpreterPointer) {
 	print("OK")
 	PerlCV(name: "Swift::test") {
-		(stack: UnsafeXSubStack) in
-		print("args: \(try stack.args.map { try String($0, perl: p) })")
-		let result = PerlSV(MyTest()).toUnsafeSvPointer(perl: stack.perl)
-		stack.xsReturn(CollectionOfOne(result))
+		(args: [PerlSV], _) -> [PerlSV] in
+		print("args: \(try args.map { try String($0) })")
+		return [PerlSV(MyTest())]
 	}
 	MyTest.createPerlMethod("test") {
-		(args: [PerlSV]) -> [PerlSV] in
+		(args: [PerlSV], perl: UnsafeInterpreterPointer) -> [PerlSV] in
 //		let slf: MyTest = try! args[0].value()
 //		slf.test(value: args[1].value())
 //		slf.test2(value: try! args[2].value() as PerlTestMouse)
@@ -27,17 +24,18 @@ func boot(_ p: UnsafeInterpreterPointer) {
 		throw PerlError.died(PerlSV("Throwing from Swift"))
 	}
 	PerlCV(name: "Swift::test_die") {
-		(stack: UnsafeXSubStack) -> Void in
+		(args: [PerlSV], perl: UnsafeInterpreterPointer) -> [PerlSV] in
 		do {
-			try stack.perl.pointee.call(sub: "main::die_now")
+			try perl.pointee.call(sub: "main::die_now")
 		} catch PerlError.died(let err) {
 			print("Perl died: \(try String(err))")
 		} catch {
 			print("Other error")
 		}
 		print("DONE")
+		return [PerlSV]()
 	}
-	PerlInterpreter.register(PerlTestMouse.self)
+	PerlTestMouse.register()
 }
 
 final class MyTest : PerlBridgedObject {

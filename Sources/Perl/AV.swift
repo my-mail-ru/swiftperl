@@ -1,11 +1,11 @@
-final class PerlAV : PerlValue, PerlDerived {
-	typealias UnsafeValue = UnsafeAV
+public final class PerlAV : PerlValue, PerlDerived {
+	public typealias UnsafeValue = UnsafeAV
 
-	convenience init() {
+	public convenience init() {
 		self.init(perl: UnsafeInterpreter.current)
 	}
 
-	convenience init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public convenience init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		let av = perl.pointee.newAV()!
 		self.init(noinc: av, perl: perl)
 	}
@@ -14,7 +14,7 @@ final class PerlAV : PerlValue, PerlDerived {
 		try self.init(_noinc: sv, perl: perl)
 	}
 
-	convenience init<C : Collection>(_ c: C, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current)
+	public convenience init<C : Collection>(_ c: C, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current)
 		where C.Iterator.Element : PerlSvConvertible {
 		self.init(perl: perl)
 		reserveCapacity(numericCast(c.count))
@@ -37,7 +37,7 @@ final class PerlAV : PerlValue, PerlDerived {
 		}
 	}
 
-	override var debugDescription: String {
+	public override var debugDescription: String {
 		let values = map { $0.debugDescription } .joined(separator: ", ")
 		return "PerlAV([\(values)])"
 	}
@@ -45,15 +45,15 @@ final class PerlAV : PerlValue, PerlDerived {
 
 //struct PerlAV: MutableCollection {
 extension PerlAV : RandomAccessCollection {
-	typealias Element = PerlSV
-	typealias Index = Int
-	typealias Iterator = IndexingIterator<PerlAV>
-	typealias Indices = CountableRange<Int>
+	public typealias Element = PerlSV
+	public typealias Index = Int
+	public typealias Iterator = IndexingIterator<PerlAV>
+	public typealias Indices = CountableRange<Int>
 
-	var startIndex: Int { return 0 }
-	var endIndex: Int { return withUnsafeCollection { $0.endIndex } }
+	public var startIndex: Int { return 0 }
+	public var endIndex: Int { return withUnsafeCollection { $0.endIndex } }
 
-	subscript (i: Int) -> PerlSV {
+	public subscript (i: Int) -> PerlSV {
 		get { return withUnsafeCollection { try! PerlSV(inc: $0[i], perl: $0.perl) } }
 		set {
 			withUnsafeCollection { c in
@@ -66,7 +66,7 @@ extension PerlAV : RandomAccessCollection {
 }
 
 extension PerlAV {
-	convenience init(_ array: [Element]) {
+	public convenience init(_ array: [Element]) {
 		self.init()
 		for (i, v) in array.enumerated() {
 			self[i] = v
@@ -74,7 +74,7 @@ extension PerlAV {
 	}
 }
 
-extension PerlAV : RangeReplaceableCollection {
+extension PerlAV {
 	func extend(to count: Int) {
 		withUnsafeCollection { $0.extend(to: count) }
 	}
@@ -83,39 +83,11 @@ extension PerlAV : RangeReplaceableCollection {
 		extend(to: self.count + count)
 	}
 
-	func reserveCapacity(_ capacity: Int) {
+	public func reserveCapacity(_ capacity: Int) {
 		extend(to: capacity)
 	}
 
-	func replaceSubrange<C: Collection>(_ subRange: Range<Index>, with newElements: C)
-		where C.Iterator.Element == Element {
-/*		precondition(subRange.lowerBound >= 0, "replace: subRange start is negative")
-		precondition(subRange.upperBound <= endIndex, "replace: subRange extends past the end")
-		let newCount = numericCast(newElements.count) as Int
-		let growth = newCount - subRange.count
-		let moveRange = subRange.lowerBound..<self.endIndex
-		if growth > 0 {
-			extend(by: growth)
-			for i in moveRange.reversed() {
-				self[i] = self[i + growth]
-			}
-		} else {
-			for i in moveRange {
-				self[i] = self[i + growth]
-			}
-		}
-		sx += growth
-		var i = subRange.lowerBound
-		var j = newElements.startIndex
-		for _ in 0..<newCount {
-			self[i] = newElements[j]
-			formIndex(after: &i)
-			newElements.formIndex(after: &j)
-		}
-		putBack()*/
-	}
-
-	func append(_ sv: Element) {
+	public func append(_ sv: Element) {
 		withUnsafeCollection { c in
 			sv.withUnsafeSvPointer { sv, _ in
 				c.append(sv.pointee.refcntInc())
@@ -123,25 +95,25 @@ extension PerlAV : RangeReplaceableCollection {
 		}
 	}
 
-	func removeFirst() -> Element {
+	public func removeFirst() -> Element {
 		return withUnsafeCollection { try! PerlSV(noinc: $0.removeFirst(), perl: $0.perl) }
 	}
 }
 
 extension PerlAV: ExpressibleByArrayLiteral {
-	convenience init (arrayLiteral elements: Element...) {
+	public convenience init (arrayLiteral elements: Element...) {
 		self.init(elements)
 	}
 }
 
 extension Array where Element : PerlSvConvertible {
-	init(_ av: PerlAV) throws {
+	public init(_ av: PerlAV) throws {
 		self = try av.withUnsafeCollection { uc in
 			try uc.map { try Element.fromUnsafeSvPointer($0, perl: uc.perl) }
 		}
 	}
 
-	init?(_ sv: PerlSV) throws {
+	public init?(_ sv: PerlSV) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		guard let av = try UnsafeAvPointer(autoDeref: usv, perl: perl) else { return nil }

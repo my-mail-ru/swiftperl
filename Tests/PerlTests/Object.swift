@@ -1,6 +1,6 @@
 import XCTest
 import Foundation
-@testable import Perl
+import Perl
 
 class ObjectTests : EmbeddedTestCase {
 	static var allTests: [(String, (ObjectTests) -> () throws -> Void)] {

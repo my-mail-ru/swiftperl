@@ -1,13 +1,15 @@
 import XCTest
-@testable import Perl
-@testable import PerlCoro
+import Perl
+import PerlCoro
 
 class EmbeddedTestCase : XCTestCase {
 	var perl: PerlInterpreter!
 
 	override func setUp() {
 		perl = PerlInterpreter()
-		UnsafeInterpreter.current = perl.pointer
+		perl.withUnsafeInterpreterPointer {
+			UnsafeInterpreter.current = $0
+		}
 	}
 
 	override func tearDown() {
@@ -23,7 +25,9 @@ class PerlCoroTests : EmbeddedTestCase {
 	}
 
 	func testCoro() throws {
-		UnsafeInterpreter.main = perl.pointer
+		perl.withUnsafeInterpreterPointer {
+			UnsafeInterpreter.main = $0
+		}
 		try PerlCoro.initialize()
 		var result = [Int]()
 		let c1 = PerlCoro(PerlCV {

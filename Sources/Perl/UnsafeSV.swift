@@ -1,6 +1,6 @@
 import CPerl
 
-enum SvType {
+public enum SvType {
 	case scalar, array, hash, code, format, io
 
 	init(_ t: svtype) {
@@ -21,8 +21,8 @@ enum SvType {
 	}
 }
 
-typealias UnsafeSV = CPerl.SV
-typealias UnsafeSvPointer = UnsafeMutablePointer<UnsafeSV>
+public typealias UnsafeSV = CPerl.SV
+public typealias UnsafeSvPointer = UnsafeMutablePointer<UnsafeSV>
 
 extension UnsafeSV {
 	@discardableResult
@@ -120,18 +120,18 @@ private var objectMgvtbl = MGVTBL(
 )
 
 extension Bool {
-	init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		self = perl.pointee.SvTRUE(sv)
 	}
 
-	init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		guard SvOK(sv) else { return nil }
 		self = perl.pointee.SvTRUE(sv)
 	}
 }
 
 extension Int {
-	init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
 		guard sv.pointee.type == .scalar else {
 			throw PerlError.unexpectedSvType(fromUnsafeSvPointer(inc: sv, perl: perl), want: .scalar)
 		}
@@ -141,18 +141,18 @@ extension Int {
 		self.init(unchecked: sv, perl: perl)
 	}
 
-	init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		guard SvOK(sv) else { return nil }
 		self.init(unchecked: sv, perl: perl)
 	}
 
-	init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		self = perl.pointee.SvIV(sv)
 	}
 }
 
 extension String {
-	init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
 		guard sv.pointee.type == .scalar else {
 			throw PerlError.unexpectedSvType(fromUnsafeSvPointer(inc: sv, perl: perl), want: .scalar)
 		}
@@ -162,12 +162,12 @@ extension String {
 		self.init(unchecked: sv, perl: perl)
 	}
 
-	init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		guard SvOK(sv) else { return nil }
 		self.init(unchecked: sv, perl: perl)
 	}
 
-	init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		var clen = 0
 		let cstr = perl.pointee.SvPV(sv, &clen)!
 		self = String(cString: cstr, withLength: clen)

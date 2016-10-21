@@ -1,11 +1,11 @@
-final class PerlHV : PerlValue, PerlDerived {
-	typealias UnsafeValue = UnsafeHV
+public final class PerlHV : PerlValue, PerlDerived {
+	public typealias UnsafeValue = UnsafeHV
 
-	convenience init() {
+	public convenience init() {
 		self.init(perl: UnsafeInterpreter.current)
 	}
 
-	convenience init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public convenience init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		let hv = perl.pointee.newHV()!
 		self.init(noinc: hv, perl: perl)
 	}
@@ -14,7 +14,7 @@ final class PerlHV : PerlValue, PerlDerived {
 		try self.init(_noinc: sv, perl: perl)
 	}
 
-	convenience init<T : PerlSvConvertible>(_ dict: [String: T]) {
+	public convenience init<T : PerlSvConvertible>(_ dict: [String: T]) {
 		self.init()
 		for (k, v) in dict {
 			self[k] = v as? PerlSV ?? PerlSV(v)
@@ -35,40 +35,30 @@ final class PerlHV : PerlValue, PerlDerived {
 		}
 	}
 
-	func value<T: PerlSvConvertible>() throws -> [String: T] {
-		var dict = [String: T]()
-		try withUnsafeCollection {
-			for (k, v) in $0 {
-				dict[k] = try T.fromUnsafeSvPointer(v, perl: $0.perl)
-			}
-		}
-		return dict
-	}
-
-	override var debugDescription: String {
+	public override var debugDescription: String {
 		let values = map { "\($0.key.debugDescription): \($0.value.debugDescription)" } .joined(separator: ", ")
 		return "PerlHV([\(values)])"
 	}
 }
 
 extension PerlHV: Sequence, IteratorProtocol {
-	typealias Key = String
-	typealias Value = PerlSV
-	typealias Element = (key: Key, value: Value)
+	public typealias Key = String
+	public typealias Value = PerlSV
+	public typealias Element = (key: Key, value: Value)
 
-	func makeIterator () -> PerlHV {
+	public func makeIterator () -> PerlHV {
 		withUnsafeCollection { _ = $0.makeIterator() }
 		return self
 	}
 
-	func next() -> Element? {
+	public func next() -> Element? {
 		return withUnsafeCollection {
 			guard let u = $0.next() else { return nil }
 			return (key: u.key, value: try! PerlSV(inc: u.value, perl: $0.perl))
 		}
 	}
 
-	subscript (key: Key) -> PerlSV? {
+	public subscript (key: Key) -> PerlSV? {
 		get {
 			return withUnsafeCollection {
 				guard let sv = $0[key] else { return nil }
@@ -90,14 +80,14 @@ extension PerlHV: Sequence, IteratorProtocol {
 }
 
 extension PerlHV {
-	convenience init(_ dict: [Key: Value]) {
+	public convenience init(_ dict: [Key: Value]) {
 		self.init()
 		for (k, v) in dict {
 			self[k] = v
 		}
 	}
 
-	convenience init(_ elements: [(Key, Value)]) {
+	public convenience init(_ elements: [(Key, Value)]) {
 		self.init()
 		for (k, v) in elements {
 			self[k] = v
@@ -106,14 +96,14 @@ extension PerlHV {
 }
 
 extension PerlHV : ExpressibleByDictionaryLiteral {
-	convenience init(dictionaryLiteral elements: (Key, Value)...) {
+	public convenience init(dictionaryLiteral elements: (Key, Value)...) {
 		self.init(elements)
 	}
 }
 
 // where Key == String, but it is unsupported
 extension Dictionary where Value : PerlSvConvertible {
-	init(_ hv: PerlHV) throws {
+	public init(_ hv: PerlHV) throws {
 		self.init()
 		try hv.withUnsafeCollection {
 			for (k, v) in $0 {
@@ -122,7 +112,7 @@ extension Dictionary where Value : PerlSvConvertible {
 		}
 	}
 
-	init?(_ sv: PerlSV) throws {
+	public init?(_ sv: PerlSV) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		guard let hv = try UnsafeHvPointer(autoDeref: usv, perl: perl) else { return nil }

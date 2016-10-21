@@ -1,7 +1,7 @@
 import CPerl
 
-class PerlObject : PerlValue, PerlDerived {
-	typealias UnsafeValue = UnsafeSV
+open class PerlObject : PerlValue, PerlDerived {
+	public typealias UnsafeValue = UnsafeSV
 
 	convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
 		guard sv.pointee.isObject(perl: perl) else {
@@ -15,7 +15,7 @@ class PerlObject : PerlValue, PerlDerived {
 		self.init(noincUnchecked: sv, perl: perl)
 	}
 
-	convenience init(_ sv: PerlSV) throws {
+	public convenience init(_ sv: PerlSV) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		try self.init(inc: usv, perl: perl)
@@ -29,31 +29,37 @@ class PerlObject : PerlValue, PerlDerived {
 		return withUnsafeSvPointer { sv, perl in fromUnsafeSvPointer(inc: sv.pointee.referent!, perl: perl) }
 	}
 
-	override var debugDescription: String {
+	public override var debugDescription: String {
 		var rvDesc = ""
 		debugPrint(referent, terminator: "", to: &rvDesc)
 		return "\(type(of: self))(\(perlClassName), rv=\(rvDesc))"
 	}
 
 	static func derivedClass(for classname: String) -> PerlObject.Type {
-		return PerlInterpreter.classMapping[classname] ?? PerlObject.self
+		return classMapping[classname] ?? PerlObject.self
+	}
+
+	static var classMapping = [String: PerlObject.Type ]()
+
+	public static func register<T>(_ swiftClass: T.Type, as classname: String) where T : PerlObject, T : PerlNamedClass {
+		classMapping[classname] = swiftClass
 	}
 }
 
-protocol PerlBridgedObject : AnyPerl, PerlNamedClass, PerlSvConvertible {}
+public protocol PerlBridgedObject : AnyPerl, PerlNamedClass, PerlSvConvertible {}
 
-protocol PerlNamedClass : class {
+public protocol PerlNamedClass : class {
 	static var perlClassName: String { get }
 }
 
 extension PerlNamedClass {
-	static func loadModule(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public static func loadModule(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		perl.pointee.loadModule(perlClassName)
 	}
 }
 
 extension PerlNamedClass where Self : PerlObject {
-	init(method: String, args: [PerlSvConvertible?], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+	public init(method: String, args: [PerlSvConvertible?], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
 		perl.pointee.enterScope()
 		defer { perl.pointee.leaveScope() }
 		let classname = (type(of: self) as PerlNamedClass.Type).perlClassName
@@ -68,12 +74,8 @@ extension PerlNamedClass where Self : PerlObject {
 		}
 		self.init(incUnchecked: sv, perl: perl)
 	}
-}
 
-extension PerlInterpreter {
-	static var classMapping = [String: PerlObject.Type ]()
-
-	static func register<T>(_ swiftClass: T.Type) where T : PerlObject, T : PerlNamedClass {
-		classMapping[(swiftClass as PerlNamedClass.Type).perlClassName] = swiftClass
+	public static func register() {
+		PerlObject.register(self, as: (self as PerlNamedClass.Type).perlClassName)
 	}
 }

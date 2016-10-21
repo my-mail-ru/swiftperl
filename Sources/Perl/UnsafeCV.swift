@@ -1,7 +1,7 @@
 import CPerl
 
-typealias UnsafeCV = CPerl.CV
-typealias UnsafeCvPointer = UnsafeMutablePointer<UnsafeCV>
+public typealias UnsafeCV = CPerl.CV
+public typealias UnsafeCvPointer = UnsafeMutablePointer<UnsafeCV>
 
 typealias CvBody = (UnsafeXSubStack) throws -> Void
 typealias UnsafeCvBodyPointer = UnsafeMutablePointer<CvBody>

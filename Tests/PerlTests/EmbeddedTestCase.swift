@@ -1,12 +1,14 @@
 import XCTest
-@testable import Perl
+import Perl
 
 class EmbeddedTestCase : XCTestCase {
 	var perl: PerlInterpreter!
 
 	override func setUp() {
 		perl = PerlInterpreter()
-		UnsafeInterpreter.current = perl.pointer
+		perl.withUnsafeInterpreterPointer {
+			UnsafeInterpreter.current = $0
+		}
 	}
 
 	override func tearDown() {

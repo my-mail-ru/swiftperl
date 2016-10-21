@@ -1,5 +1,5 @@
 import XCTest
-@testable import Perl
+import Perl
 
 class BenchmarkTests : EmbeddedTestCase {
 	static var allTests: [(String, (BenchmarkTests) -> () throws -> Void)] {

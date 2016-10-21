@@ -1,22 +1,22 @@
-class PerlValue : AnyPerl, CustomDebugStringConvertible {
+open class PerlValue : AnyPerl, CustomDebugStringConvertible {
 	private let sv: UnsafeSvPointer
 	let perl: UnsafeInterpreterPointer
 
-	required init(noincUnchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) {
+	public required init(noincUnchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) {
 		self.sv = sv
 		self.perl = perl
 	}
 
-	required init(incUnchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) {
+	public required init(incUnchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) {
 		self.sv = sv.pointee.refcntInc()
 		self.perl = perl
 	}
 
-	convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
+	public convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
 		self.init(noincUnchecked: sv, perl: perl)
 	}
 
-	convenience init(inc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
+	public convenience init(inc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
 		try self.init(noinc: sv.pointee.refcntInc(), perl: perl)
 	}
 
@@ -24,7 +24,7 @@ class PerlValue : AnyPerl, CustomDebugStringConvertible {
 		sv.pointee.refcntDec(perl: perl)
 	}
 
-	func withUnsafeSvPointer<R>(_ body: (UnsafeSvPointer, UnsafeInterpreterPointer) throws -> R) rethrows -> R {
+	public final func withUnsafeSvPointer<R>(_ body: (UnsafeSvPointer, UnsafeInterpreterPointer) throws -> R) rethrows -> R {
 		return try body(sv, perl)
 	}
 
@@ -57,7 +57,7 @@ class PerlValue : AnyPerl, CustomDebugStringConvertible {
 		return subclass.init(incUnchecked: sv, perl: perl)
 	}
 
-	var debugDescription: String {
+	public var debugDescription: String {
 		return "PerlValue(\(type))"
 	}
 }

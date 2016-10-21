@@ -1,11 +1,11 @@
 import CPerl
 import var Glibc.environ
 
-typealias UnsafeInterpreter = CPerl.PerlInterpreter
-typealias UnsafeInterpreterPointer = UnsafeMutablePointer<UnsafeInterpreter>
+public typealias UnsafeInterpreter = CPerl.PerlInterpreter
+public typealias UnsafeInterpreterPointer = UnsafeMutablePointer<UnsafeInterpreter>
 
 extension UnsafeInterpreter {
-	static var main: UnsafeInterpreterPointer {
+	public static var main: UnsafeInterpreterPointer {
 		get { return PL_curinterp }
 		set { PL_curinterp = newValue }
 	}
@@ -38,13 +38,13 @@ extension UnsafeInterpreter {
 		}
 	}
 
-	mutating func loadModule(_ module: String) {
+	public mutating func loadModule(_ module: String) {
 		let sv = newSV(module)
 		// Perl's load_module() decrements refcnt for each passed SV*
 		load_module_noargs(0, sv, nil)
 	}
 
-	mutating func getSV(_ name: String, flags: Int32 = 0) -> UnsafeSvPointer? {
+	public mutating func getSV(_ name: String, flags: Int32 = 0) -> UnsafeSvPointer? {
 		return get_sv(name, SVf_UTF8|flags)
 	}
 }

@@ -1,4 +1,4 @@
-protocol AnyPerl : class {}
+public protocol AnyPerl : class {}
 
 func fromUnsafeSvPointer(inc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) -> AnyPerl {
 	return sv.pointee.swiftObject(perl: perl) ?? PerlValue.initDerived(inc: sv, perl: perl)

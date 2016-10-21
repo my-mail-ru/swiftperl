@@ -1,7 +1,7 @@
 import CPerl
 
-final class PerlCV : PerlValue, PerlDerived {
-	typealias UnsafeValue = UnsafeCV
+public final class PerlCV : PerlValue, PerlDerived {
+	public typealias UnsafeValue = UnsafeCV
 
 	convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
 		try self.init(_noinc: sv, perl: perl)
@@ -29,7 +29,7 @@ final class PerlCV : PerlValue, PerlDerived {
 		return withUnsafeCvPointer { cv, _ in cv.pointee.file }
 	}
 
-	override var debugDescription: String {
+	public override var debugDescription: String {
 		let deparse: PerlObject = try! perl.pointee.eval("use B::Deparse; B::Deparse->new('-sCi0')")
 		var text: String = try! deparse.call(method: "coderef2text", self)
 		text = text.characters.split { $0 == "\n" } .map(String.init).joined(separator: " ")
@@ -62,7 +62,7 @@ extension PerlCV {
 %       for ro in optrange(r):
 
 	@discardableResult
-	convenience init${generic(p, r)}(name: String? = nil, file: StaticString = #file, body: @escaping ${tuple("P", p, po)} throws -> ${tuple("R", r, ro)}) {
+	public convenience init${generic(p, r)}(name: String? = nil, file: StaticString = #file, body: @escaping ${tuple("P", p, po)} throws -> ${tuple("R", r, ro)}) {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
 %         if r == 0:
@@ -87,12 +87,12 @@ extension PerlCV {
 
 extension PerlCV {
 	@discardableResult
-	convenience init<R: Collection>(name: String? = nil, file: StaticString = #file, body: @escaping ([PerlSV]) throws -> R)
+	public convenience init<R: Collection>(name: String? = nil, file: StaticString = #file, body: @escaping ([PerlSV], UnsafeInterpreterPointer) throws -> R)
 		where R.Iterator.Element == PerlSV {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
 			let args = try stack.args.map { try PerlSV.fromUnsafeSvPointer($0, perl: stack.perl) }
-			let result = try body(args)
+			let result = try body(args, stack.perl)
 			stack.xsReturn(result.map { $0.toUnsafeSvPointer(perl: stack.perl) })
 		}
 	}
@@ -105,7 +105,7 @@ extension PerlBridgedObject {
 %       for ro in optrange(r):
 
 	@discardableResult
-	static func createPerlMethod${generic(p, r)}(_ method: String, file: StaticString = #file, body: @escaping ${tuple("P", p, po)} throws -> ${tuple("R", r, ro)}) -> PerlCV {
+	public static func createPerlMethod${generic(p, r)}(_ method: String, file: StaticString = #file, body: @escaping ${tuple("P", p, po)} throws -> ${tuple("R", r, ro)}) -> PerlCV {
 		return PerlCV(name: perlClassName + "::" + method, file: file, body: body)
 	}
 
@@ -115,7 +115,7 @@ extension PerlBridgedObject {
 % end
 
 	@discardableResult
-	static func createPerlMethod<R: Collection>(_ method: String, file: StaticString = #file, body: @escaping ([PerlSV]) throws -> R) -> PerlCV
+	public static func createPerlMethod<R: Collection>(_ method: String, file: StaticString = #file, body: @escaping ([PerlSV], UnsafeInterpreterPointer) throws -> R) -> PerlCV
 		where R.Iterator.Element == PerlSV {
 		return PerlCV(name: perlClassName + "::" + method, file: file, body: body)
 	}

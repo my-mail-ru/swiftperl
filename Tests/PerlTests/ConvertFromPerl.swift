@@ -1,5 +1,5 @@
 import XCTest
-@testable import Perl
+import Perl
 
 class ConvertFromPerlTests : EmbeddedTestCase {
 	static var allTests: [(String, (ConvertFromPerlTests) -> () throws -> Void)] {
@@ -133,7 +133,7 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 
 	func testInterpreterMisc() throws {
 		try perl.eval("use utf8; $тест = 'OK'")
-		let sv = perl.pointer.pointee.getSV("тест")
+		let sv = perl.getSV("тест")
 		XCTAssertNotNil(sv)
 		XCTAssertEqual(try String(sv!), "OK")
 //		perl.pointer.pointee.loadModule("Nothing")
