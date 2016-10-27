@@ -1,5 +1,3 @@
-import CPerl
-
 public protocol PerlSvConvertible {
 	static func fromUnsafeSvPointer(_: UnsafeSvPointer, perl: UnsafeInterpreterPointer/* = UnsafeInterpreter.current */) throws -> Self
 	func toUnsafeSvPointer(perl: UnsafeInterpreterPointer/* = UnsafeInterpreter.current */) -> UnsafeSvPointer

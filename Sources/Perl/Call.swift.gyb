@@ -74,11 +74,33 @@ extension UnsafeInterpreter {
 }%
 
 extension UnsafeInterpreter {
+	/// Calls Perl subroutine identified by `sv` with empty arguments and without
+	/// return values.
+	///
+	/// This allows you to specify the Perl subroutine to be called either as string
+	/// (which has first been converted to an SV) or a reference to a subroutine.
+	///
+	/// - Parameter sv: SV* containing either a string or a reference to CV.
+	/// - Parameter flags: G_VOID by default.
 	public mutating func call(sv: UnsafeSvPointer, flags: Int32 = G_VOID) throws -> Void {
 		try unsafeCall(sv: sv, discardingResultWithArgs: EmptyCollection(), flags: flags)
 	}
 
 % for r in calls:
+	/// Calls Perl subroutine identified by `sv`.
+	///
+	/// This allows you to specify the Perl subroutine to be called either as string
+	/// (which has first been converted to an SV) or a reference to a subroutine.
+	///
+	/// Arguments of the call will be automagically converted to mortalized Perl scalar
+	/// values with the lifetime of the scope of this call. The similar thing will
+	/// happen to Perl return values: they will be destroyed before the call
+	/// returns (but after conversion to Swift values was done).
+	///
+	/// - Parameter sv: SV* containing either a string or a reference to CV.
+	/// - Parameter args: Arguments of the call.
+	/// - Parameter flags: ${context(r)} by default.
+	/// - Returns: Return value of the call.
 	public mutating func call<C : Collection${moreGeneric(r)}>(sv: UnsafeSvPointer, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
 		where C.Iterator.Element == PerlSvConvertible? {
 		enterScope()
@@ -96,6 +118,18 @@ extension UnsafeInterpreter {
 
 extension UnsafeInterpreter {
 % for r in calls:
+	/// Calls Perl method on the first argument of the call.
+	///
+	/// Arguments of the call will be automagically converted to mortalized Perl scalar
+	/// values with the lifetime of the scope of this call. The similar thing will
+	/// happen to Perl return values: they will be destroyed before the call
+	/// returns (but after conversion to Swift values was done).
+	///
+	/// - Parameter method: A name of the method.
+	/// - Parameter args: Arguments of the call. First argument should be either a
+	///   string (it will be interpreted as a class name) or an object.
+	/// - Parameter flags: ${context(r)} by default.
+	/// - Returns: Return value of the call.
 	public mutating func call<C : Collection${moreGeneric(r)}>(method: String, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
 		where C.Iterator.Element == PerlSvConvertible? {
 		return try call(sv: newSV(method, mortal: true), args: args, flags: G_METHOD|flags)
@@ -104,11 +138,26 @@ extension UnsafeInterpreter {
 }
 
 extension UnsafeInterpreter {
+	/// Calls Perl subroutine by its name.
+	///
+	/// - Parameter sub: A name of the subroutine.
+	/// - Parameter flags: G_VOID by default.
 	public mutating func call(sub: String, flags: Int32 = G_VOID) throws -> Void {
 		try call(sv: newSV(sub, mortal: true), flags: flags)
 	}
 
 % for r in calls:
+	/// Calls Perl subroutine by its name.
+	///
+	/// Arguments of the call will be automagically converted to mortalized Perl scalar
+	/// values with the lifetime of the scope of this call. The similar thing will
+	/// happen to Perl return values: they will be destroyed before the call
+	/// returns (but after conversion to Swift values was done).
+	///
+	/// - Parameter sub: A name of the subroutine.
+	/// - Parameter args: Arguments of the call.
+	/// - Parameter flags: ${context(r)} by default.
+	/// - Returns: Return value of the call.
 	public mutating func call<C : Collection${moreGeneric(r)}>(sub: String, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
 		where C.Iterator.Element == PerlSvConvertible? {
 		return try call(sv: newSV(sub, mortal: true), args: args, flags: flags)
@@ -117,11 +166,24 @@ extension UnsafeInterpreter {
 }
 
 extension PerlInterpreter {
+	/// Calls Perl subroutine by its name.
+	///
+	/// - Parameter sub: A name of the subroutine.
 	public func call(sub: String) throws -> Void {
 		try pointer.pointee.call(sub: sub)
 	}
 
 % for r in calls:
+	/// Calls Perl subroutine by its name.
+	///
+	/// Arguments of the call will be automagically converted to mortalized Perl scalar
+	/// values with the lifetime of the scope of this call. The similar thing will
+	/// happen to Perl return values: they will be destroyed before the call
+	/// returns (but after conversion to Swift values was done).
+	///
+	/// - Parameter sub: A name of the subroutine.
+	/// - Parameter args: Arguments of the call.
+	/// - Returns: Return value of the call.
 	public func call${fqGeneric(r)}(sub: String, _ args: PerlSvConvertible?...) throws -> ${r} {
 		return try pointer.pointee.call(sub: sub, args: args)
 	}
@@ -129,6 +191,7 @@ extension PerlInterpreter {
 }
 
 extension PerlCV {
+	/// Calls the underlain Perl subroutine.
 	public func call() throws -> Void {
 		try withUnsafeSvPointer { sv, perl in
 			try perl.pointee.call(sv: sv)
@@ -136,6 +199,15 @@ extension PerlCV {
 	}
 
 % for r in calls:
+	/// Calls the underlain Perl subroutine.
+	///
+	/// Arguments of the call will be automagically converted to mortalized Perl scalar
+	/// values with the lifetime of the scope of this call. The similar thing will
+	/// happen to Perl return values: they will be destroyed before the call
+	/// returns (but after conversion to Swift values was done).
+	///
+	/// - Parameter args: Arguments of the call.
+	/// - Returns: Return value of the call.
 	public func call${fqGeneric(r)}(_ args: PerlSvConvertible?...) throws -> ${r} {
 		return try withUnsafeSvPointer { sv, perl in
 			return try perl.pointee.call(sv: sv, args: args)
@@ -146,6 +218,7 @@ extension PerlCV {
 
 extension UnsafeInterpreter {
 % for r in calls:
+	/// Tells Perl to "eval" the string in the `sv`.
 	public mutating func eval${fqGeneric(r)}(sv: UnsafeSvPointer, flags: Int32 = ${context(r)}) throws -> ${r} {
 		enterScope()
 		defer { leaveScope() }
@@ -159,6 +232,7 @@ extension UnsafeInterpreter {
 % end
 
 % for r in calls:
+	/// Tells Perl to "eval" the string.
 	public mutating func eval${fqGeneric(r)}(_ string: String, flags: Int32 = ${context(r)}) throws -> ${r} {
 		return try eval(sv: newSV(string, mortal: true), flags: flags)
 	}
@@ -167,6 +241,7 @@ extension UnsafeInterpreter {
 
 extension PerlInterpreter {
 % for r in calls:
+	/// Tells Perl to "eval" the string.
 	public func eval${fqGeneric(r)}(_ string: String) throws -> ${r} {
 		return try pointer.pointee.eval(string)
 	}
@@ -174,11 +249,24 @@ extension PerlInterpreter {
 }
 
 extension PerlObject {
+	/// Calls Perl method on the current instance.
+	///
+	/// - Parameter name: A name of the method to call.
 	public func call(method: String) throws -> Void {
 		try perl.pointee.call(method: method, args: CollectionOfOne(.some(self)))
 	}
 
 % for r in calls:
+	/// Calls Perl method on the current instance.
+	///
+	/// Arguments of the call will be automagically converted to mortalized Perl scalar
+	/// values with the lifetime of the scope of this call. The similar thing will
+	/// happen to Perl return values: they will be destroyed before the call
+	/// returns (but after conversion to Swift values was done).
+	///
+	/// - Parameter name: A name of the method to call.
+	/// - Parameter args: A collection of arguments.
+	/// - Returns: Return value of the call.
 	public func call<C : Collection${moreGeneric(r)}>(method: String, args: C) throws -> ${r}
 		where C.Iterator.Element == PerlSvConvertible? {
 		var fullArgs = ContiguousArray<PerlSvConvertible?>()
@@ -188,6 +276,16 @@ extension PerlObject {
 		return try perl.pointee.call(method: method, args: fullArgs)
 	}
 
+	/// Calls Perl method on the current instance.
+	///
+	/// Arguments of the call will be automagically converted to mortalized Perl scalar
+	/// values with the lifetime of the scope of this call. The similar thing will
+	/// happen to Perl return values: they will be destroyed before the call
+	/// returns (but after conversion to Swift values was done).
+	///
+	/// - Parameter name: A name of the method to call.
+	/// - Parameter args: A variable list of arguments.
+	/// - Returns: Return value of the call.
 	public func call${fqGeneric(r)}(method: String, _ args: PerlSvConvertible?...) throws -> ${r} {
 		return try call(method: method, args: args)
 	}
@@ -195,11 +293,24 @@ extension PerlObject {
 }
 
 extension PerlNamedClass {
+	/// Calls Perl method on the class specified by `perlClassName` attribute.
+	///
+	/// - Parameter name: A name of the method to call.
 	public static func call(method: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Void {
 		return try perl.pointee.call(method: method, args: CollectionOfOne(.some(perlClassName)))
 	}
 
 % for r in calls:
+	/// Calls Perl method on the class specified by `perlClassName` attribute.
+	///
+	/// Arguments of the call will be automagically converted to mortalized Perl scalar
+	/// values with the lifetime of the scope of this call. The similar thing will
+	/// happen to Perl return values: they will be destroyed before the call
+	/// returns (but after conversion to Swift values was done).
+	///
+	/// - Parameter name: A name of the method to call.
+	/// - Parameter args: A collection of arguments.
+	/// - Returns: Return value of the call.
 	public static func call<C : Collection${moreGeneric(r)}>(method: String, args: C, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> ${r}
 		where C.Iterator.Element == PerlSvConvertible? {
 		var fullArgs = ContiguousArray<PerlSvConvertible?>()
@@ -209,6 +320,16 @@ extension PerlNamedClass {
 		return try perl.pointee.call(method: method, args: fullArgs)
 	}
 
+	/// Calls Perl method on the current instance.
+	///
+	/// Arguments of the call will be automagically converted to mortalized Perl scalar
+	/// values with the lifetime of the scope of this call. The similar thing will
+	/// happen to Perl return values: they will be destroyed before the call
+	/// returns (but after conversion to Swift values was done).
+	///
+	/// - Parameter name: A name of the method to call.
+	/// - Parameter args: A variable list of arguments.
+	/// - Returns: Return value of the call.
 	public static func call${fqGeneric(r)}(method: String, _ args: PerlSvConvertible?..., perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> ${r} {
 		return try call(method: method, args: args)
 	}

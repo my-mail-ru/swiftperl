@@ -38,6 +38,9 @@ extension UnsafeInterpreter {
 		}
 	}
 
+	/// Loads the module by name.
+	/// Note that the actual module name, not its filename, should be given.
+	/// Eg, `"Foo::Bar"` instead of `"Foo/Bar.pm"`.
 	public mutating func loadModule(_ module: String) {
 		let sv = newSV(module)
 		// Perl's load_module() decrements refcnt for each passed SV*
