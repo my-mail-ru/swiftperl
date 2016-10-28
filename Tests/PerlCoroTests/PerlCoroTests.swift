@@ -30,7 +30,7 @@ class PerlCoroTests : EmbeddedTestCase {
 		}
 		try PerlCoro.initialize()
 		var result = [Int]()
-		let c1 = PerlCoro(PerlCV {
+		let c1 = PerlCoro(PerlSub {
 			(a: Int, b: Int) -> Int in
 			result.append(1)
 			PerlCoro.cede()
@@ -38,7 +38,7 @@ class PerlCoroTests : EmbeddedTestCase {
 			return a + b
 		}, args: 10, 15)
 		c1.ready()
-		let c2 = PerlCoro(PerlCV {
+		let c2 = PerlCoro(PerlSub {
 			(a: Int, b: Int) -> Int in
 			result.append(2)
 			PerlCoro.cede()

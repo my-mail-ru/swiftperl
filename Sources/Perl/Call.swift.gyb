@@ -8,7 +8,7 @@ extension UnsafeInterpreter {
 		let result = stack.popReturned(count: Int(count))
 		let err = ERRSV
 		if Bool(err, perl: &self) {
-			throw PerlError.died(try PerlSV(copy: err, perl: &self))
+			throw PerlError.died(try PerlScalar(copy: err, perl: &self))
 		}
 		return result
 	}
@@ -19,7 +19,7 @@ extension UnsafeInterpreter {
 		_ = call_sv(sv, G_EVAL|G_DISCARD|flags)
 		let err = ERRSV
 		if Bool(err, perl: &self) {
-			throw PerlError.died(try PerlSV(copy: err, perl: &self))
+			throw PerlError.died(try PerlScalar(copy: err, perl: &self))
 		}
 	}
 
@@ -29,7 +29,7 @@ extension UnsafeInterpreter {
 		let result = stack.popReturned(count: Int(count))
 		let err = ERRSV
 		if Bool(err, perl: &self) {
-			throw PerlError.died(try PerlSV(copy: err, perl: &self))
+			throw PerlError.died(try PerlScalar(copy: err, perl: &self))
 		}
 		return result
 	}
@@ -190,7 +190,7 @@ extension PerlInterpreter {
 % end
 }
 
-extension PerlCV {
+extension PerlSub {
 	/// Calls the underlain Perl subroutine.
 	public func call() throws -> Void {
 		try withUnsafeSvPointer { sv, perl in

@@ -58,11 +58,11 @@ open class PerlValue : AnyPerl, CustomDebugStringConvertible {
 				if let classname = sv.pointee.classname(perl: perl) {
 					return PerlObject.derivedClass(for: classname)
 				} else {
-					return PerlSV.self
+					return PerlScalar.self
 				}
-			case .array: return PerlAV.self
-			case .hash: return PerlHV.self
-			case .code: return PerlCV.self
+			case .array: return PerlArray.self
+			case .hash: return PerlHash.self
+			case .code: return PerlSub.self
 			default: return PerlValue.self
 		}
 	}

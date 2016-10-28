@@ -47,13 +47,13 @@ public final class PerlInterpreter {
 
 	/// Returns the SV of the specified Perl global or package scalar with the given name.
 	/// If the variable does not exist then `nil` is returned.
-	public func getSV(_ name: String) -> PerlSV? {
-		return pointer.pointee.getSV(name).map { PerlSV(incUnchecked: $0, perl: pointer) }
+	public func getSV(_ name: String) -> PerlScalar? {
+		return pointer.pointee.getSV(name).map { PerlScalar(incUnchecked: $0, perl: pointer) }
 	}
 
 	/// Returns the SV of the specified Perl global or package scalar with the given name.
 	/// If the variable does not exist then it will be created.
-	public func getSV(add name: String) -> PerlSV {
-		return PerlSV(incUnchecked: pointer.pointee.getSV(name, flags: GV_ADD)!, perl: pointer)
+	public func getSV(add name: String) -> PerlScalar {
+		return PerlScalar(incUnchecked: pointer.pointee.getSV(name, flags: GV_ADD)!, perl: pointer)
 	}
 }

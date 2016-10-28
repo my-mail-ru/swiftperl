@@ -17,7 +17,7 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 	}
 
 	func testUndef() throws {
-		let v: PerlSV = try perl.eval("undef")
+		let v: PerlScalar = try perl.eval("undef")
 		XCTAssert(!v.defined)
 		XCTAssert(!v.isInt)
 		XCTAssert(!v.isString)
@@ -29,7 +29,7 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 	}
 
 	func testInt() throws {
-		let v: PerlSV = try perl.eval("42")
+		let v: PerlScalar = try perl.eval("42")
 		XCTAssert(v.defined)
 		XCTAssert(v.isInt)
 		XCTAssert(!v.isString)
@@ -39,7 +39,7 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 	}
 
 	func testString() throws {
-		let v: PerlSV = try perl.eval("'test'")
+		let v: PerlScalar = try perl.eval("'test'")
 		XCTAssert(v.defined)
 		XCTAssert(!v.isInt)
 		XCTAssert(v.isString)
@@ -47,32 +47,32 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssertEqual(try Int(v), 0)
 		XCTAssertEqual(try String(v), "test")
 		XCTAssertEqual(try String(v), "test")
-		let u: PerlSV = try perl.eval("'строченька'")
+		let u: PerlScalar = try perl.eval("'строченька'")
 		XCTAssertEqual(try String(u), "строченька")
-		let n: PerlSV = try perl.eval("'null' . chr(0) . 'sepparated'")
+		let n: PerlScalar = try perl.eval("'null' . chr(0) . 'sepparated'")
 		XCTAssertEqual(try String(n), "null\0sepparated")
 	}
 
 	func testScalarRef() throws {
-		let v: PerlSV = try perl.eval("\\42")
+		let v: PerlScalar = try perl.eval("\\42")
 		XCTAssert(v.defined)
 		XCTAssert(!v.isInt)
 		XCTAssert(!v.isString)
 		XCTAssert(v.isRef)
 		XCTAssertNotNil(v.referent)
-		let r = v.referent! as! PerlSV
+		let r = v.referent! as! PerlScalar
 		XCTAssert(r.isInt)
 		XCTAssertEqual(try Int(r), 42)
 	}
 
 	func testArrayRef() throws {
-		let sv: PerlSV = try perl.eval("[42, 'str']")
+		let sv: PerlScalar = try perl.eval("[42, 'str']")
 		XCTAssert(sv.defined)
 		XCTAssert(!sv.isInt)
 		XCTAssert(!sv.isString)
 		XCTAssert(sv.isRef)
 		XCTAssertNotNil(sv.referent)
-		let av: PerlAV = try PerlAV(sv)!
+		let av: PerlArray = try PerlArray(sv)!
 		XCTAssertEqual(av.count, 2)
 		XCTAssertEqual(try Int(av[0]), 42)
 		XCTAssertEqual(try String(av[1]), "str")
@@ -81,23 +81,23 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssertEqual(try [String](av), ["42", "str"])
 		XCTAssertEqual(try [String](sv)!, ["42", "str"])
 
-		let i: PerlSV = try perl.eval("[42, 15, 10]")
+		let i: PerlScalar = try perl.eval("[42, 15, 10]")
 		let ints: [Int] = try [Int](i)!
 		XCTAssertEqual(ints, [42, 15, 10])
 
-		let s: PerlSV = try perl.eval("[qw/one two three/]")
+		let s: PerlScalar = try perl.eval("[qw/one two three/]")
 		let strings: [String] = try [String](s)!
 		XCTAssertEqual(strings, ["one", "two", "three"])
 	}
 
 	func testHashRef() throws {
-		let sv: PerlSV = try perl.eval("{ one => 1, two => 2 }")
+		let sv: PerlScalar = try perl.eval("{ one => 1, two => 2 }")
 		XCTAssert(sv.defined)
 		XCTAssert(!sv.isInt)
 		XCTAssert(!sv.isString)
 		XCTAssert(sv.isRef)
 		XCTAssertNotNil(sv.referent)
-		let hv: PerlHV = try PerlHV(sv)!
+		let hv: PerlHash = try PerlHash(sv)!
 //		XCTAssertEqual(hv.count, 2)
 		XCTAssertEqual(try Int(hv["one"]!), 1)
 		XCTAssertEqual(try Int(hv["two"]!), 2)
@@ -111,19 +111,19 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 	}
 
 	func testCodeRef() throws {
-		let sv: PerlSV = try perl.eval("sub { my ($c, $d) = @_; return $c + $d }")
+		let sv: PerlScalar = try perl.eval("sub { my ($c, $d) = @_; return $c + $d }")
 		XCTAssert(sv.defined)
 		XCTAssert(!sv.isInt)
 		XCTAssert(!sv.isString)
 		XCTAssert(sv.isRef)
 		XCTAssertNotNil(sv.referent)
-		let cv: PerlCV = try PerlCV(sv)!
+		let cv: PerlSub = try PerlSub(sv)!
 		XCTAssertEqual(try cv.call(10, 15) as Int?, 25)
 //		XCTAssertEqual(try sv.call(10, 15) as Int, 25)
 	}
 
 	func testXSub() throws {
-		PerlCV(name: "testxsub") {
+		PerlSub(name: "testxsub") {
 			(a: Int, b: Int) -> Int in
 			return a + b
 		}

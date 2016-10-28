@@ -6,7 +6,7 @@
 /// references (`RV`), objects and others.
 /// Objects as exception have their own type `PerlObject` which
 /// provides more specific methods to work with them. Nevertheless
-/// objects are compatible with and can be represented as `PerlSV`.
+/// objects are compatible with and can be represented as `PerlScalar`.
 ///
 /// ## Cheat Sheet
 ///
@@ -21,13 +21,13 @@
 /// ```
 ///
 /// ```swift
-/// let int: PerlSV = 10
-/// let str: PerlSV = "Строченька"
-/// let intref = PerlSV(referenceTo: PerlSV(10))
-/// let arrayref: PerlSV = [200, "OK"];
-/// let hashref: PerlSV = ["type": "string", "value": 10]
+/// let int: PerlScalar = 10
+/// let str: PerlScalar = "Строченька"
+/// let intref = PerlScalar(referenceTo: PerlScalar(10))
+/// let arrayref: PerlScalar = [200, "OK"];
+/// let hashref: PerlScalar = ["type": "string", "value": 10]
 /// ```
-public final class PerlSV : PerlValue, PerlDerived {
+public final class PerlScalar : PerlValue, PerlDerived {
 	public typealias UnsafeValue = UnsafeSV
 
 	/// Creates a `SV` containing an undefined value.
@@ -134,33 +134,33 @@ public final class PerlSV : PerlValue, PerlDerived {
 		} else {
 			values.append("undef")
 		}
-		return "PerlSV(\(values.joined(separator: ", ")))"
+		return "PerlScalar(\(values.joined(separator: ", ")))"
 	}
 }
 
-extension PerlSV : ExpressibleByNilLiteral {
+extension PerlScalar : ExpressibleByNilLiteral {
 	/// Creates an instance which contains `undef`.
 	///
 	/// Do not call this initializer directly. It is used by the compiler when
-	/// you initialize an `PerlSV` instance with a `nil` literal. For example:
+	/// you initialize an `PerlScalar` instance with a `nil` literal. For example:
 	///
 	/// ```swift
-	/// let sv: PerlSV = nil
+	/// let sv: PerlScalar = nil
 	/// ```
 	public convenience init(nilLiteral: ()) {
 		self.init()
 	}
 }
 
-extension PerlSV: ExpressibleByBooleanLiteral {
+extension PerlScalar: ExpressibleByBooleanLiteral {
 	/// Creates an instance initialized to the specified boolean literal.
 	///
 	/// Do not call this initializer directly. It is used by the compiler when
-	/// you use a boolean literal. Instead, create a new `PerlSV` instance by
+	/// you use a boolean literal. Instead, create a new `PerlScalar` instance by
 	/// using one of the boolean literals `true` and `false`.
 	///
 	/// ```swift
-	/// let sv: PerlSV = true
+	/// let sv: PerlScalar = true
 	/// ```
 	///
 	/// - Parameter value: The value of the new instance.
@@ -169,15 +169,15 @@ extension PerlSV: ExpressibleByBooleanLiteral {
 	}
 }
 
-extension PerlSV : ExpressibleByIntegerLiteral {
+extension PerlScalar : ExpressibleByIntegerLiteral {
 	/// Creates an instance from the given integer literal.
 	///
 	/// Do not call this initializer directly. It is used by the compiler when
-	/// you create a new `PerlSV` instance by using an integer literal.
+	/// you create a new `PerlScalar` instance by using an integer literal.
 	/// Instead, create a new value by using a literal:
 	///
 	/// ```swift
-	/// let x: PerlSV = 100
+	/// let x: PerlScalar = 100
 	/// ```
 	///
 	/// - Parameter value: The new value.
@@ -186,37 +186,37 @@ extension PerlSV : ExpressibleByIntegerLiteral {
 	}
 }
 
-extension PerlSV : ExpressibleByUnicodeScalarLiteral {
+extension PerlScalar : ExpressibleByUnicodeScalarLiteral {
 	/// Creates an instance initialized to the given Unicode scalar value.
 	///
 	/// Don't call this initializer directly. It may be used by the compiler when
-	/// you initialize a `PerlSV` using a string literal that contains a single
+	/// you initialize a `PerlScalar` using a string literal that contains a single
 	/// Unicode scalar value.
 	public convenience init(unicodeScalarLiteral value: String) {
 		self.init(value)
 	}
 }
 
-extension PerlSV : ExpressibleByExtendedGraphemeClusterLiteral {
+extension PerlScalar : ExpressibleByExtendedGraphemeClusterLiteral {
 	/// Creates an instance initialized to the given extended grapheme cluster
 	/// literal.
 	///
 	/// Don't call this initializer directly. It may be used by the compiler when
-	/// you initialize a `PerlSV` using a string literal containing a single
+	/// you initialize a `PerlScalar` using a string literal containing a single
 	/// extended grapheme cluster.
 	public convenience init(extendedGraphemeClusterLiteral value: String) {
 		self.init(value)
 	}
 }
 
-extension PerlSV : ExpressibleByStringLiteral {
+extension PerlScalar : ExpressibleByStringLiteral {
 	/// Creates an instance initialized to the given string value.
 	///
 	/// Don't call this initializer directly. It is used by the compiler when you
-	/// initialize a `PerlSV` using a string literal. For example:
+	/// initialize a `PerlScalar` using a string literal. For example:
 	///
 	/// ```swift
-	/// let sv: PerlSV = "My World"
+	/// let sv: PerlScalar = "My World"
 	/// ```
 	///
 	/// This assignment to the `sv` calls this string literal
@@ -226,34 +226,34 @@ extension PerlSV : ExpressibleByStringLiteral {
 	}
 }
 
-extension PerlSV: ExpressibleByArrayLiteral {
+extension PerlScalar: ExpressibleByArrayLiteral {
 	/// Creates a reference to array from the given array literal.
 	///
 	/// Do not call this initializer directly. It is used by the compiler
-	/// when you use an array literal. Instead, create a new `PerlSV` by using an
+	/// when you use an array literal. Instead, create a new `PerlScalar` by using an
 	/// array literal as its value. To do this, enclose a comma-separated list of
 	/// values in square brackets. For example:
 	///
 	///	```swift
-	/// let mix: PerlSV = [nil, 100, "use perl or die"]
+	/// let mix: PerlScalar = [nil, 100, "use perl or die"]
 	/// ```
 	///
 	/// - Parameter elements: A variadic list of elements of the new array.
-	public convenience init (arrayLiteral elements: PerlSV...) {
-		self.init(PerlAV(elements))
+	public convenience init (arrayLiteral elements: PerlScalar...) {
+		self.init(PerlArray(elements))
 	}
 }
 
-extension PerlSV : ExpressibleByDictionaryLiteral {
+extension PerlScalar : ExpressibleByDictionaryLiteral {
 	/// Creates a reference to hash initialized with a dictionary literal.
 	///
 	/// Do not call this initializer directly. It is called by the compiler to
 	/// handle dictionary literals. To use a dictionary literal as the initial
-	/// value of a `PerlSV`, enclose a comma-separated list of key-value pairs
+	/// value of a `PerlScalar`, enclose a comma-separated list of key-value pairs
 	/// in square brackets. For example:
 	///
 	/// ```swift
-	/// let header: PerlSV = [
+	/// let header: PerlScalar = [
 	///		"Content-Length": 320,
 	///		"Content-Type": "application/json",
 	/// ]
@@ -261,31 +261,31 @@ extension PerlSV : ExpressibleByDictionaryLiteral {
 	///
 	/// - Parameter elements: The key-value pairs that will make up the new
 	///   dictionary. Each key in `elements` must be unique.
-	public convenience init(dictionaryLiteral elements: (String, PerlSV)...) {
-		self.init(PerlHV(elements))
+	public convenience init(dictionaryLiteral elements: (String, PerlScalar)...) {
+		self.init(PerlHash(elements))
 	}
 }
 
 extension Bool {
-	/// Creates a boolean from `PerlSV` using Perl macros `SvTRUE`.
+	/// Creates a boolean from `PerlScalar` using Perl macros `SvTRUE`.
 	///
 	/// False in Perl is any value that would look like `""` or `"0"` if evaluated
 	/// in a string context. Since undefined values evaluate to `""`, all undefined
 	/// values are false, but not all false values are undefined.
 	///
 	/// ```swift
-	/// let b = Bool(PerlSV())        // b == false
-	/// let b = Bool(PerlSV(0))       // b == false
-	/// let b = Bool(PerlSV(""))      // b == false
-	/// let b = Bool(PerlSV("0"))     // b == false
-	/// let b = Bool(PerlSV(1))       // b == true
-	/// let b = Bool(PerlSV(100))     // b == true
-	/// let b = Bool(PerlSV("100"))   // b == true
-	/// let b = Bool(PerlSV("000"))   // b == true
-	/// let b = Bool(PerlSV("any"))   // b == true
-	/// let b = Bool(PerlSV("false")) // b == true
+	/// let b = Bool(PerlScalar())        // b == false
+	/// let b = Bool(PerlScalar(0))       // b == false
+	/// let b = Bool(PerlScalar(""))      // b == false
+	/// let b = Bool(PerlScalar("0"))     // b == false
+	/// let b = Bool(PerlScalar(1))       // b == true
+	/// let b = Bool(PerlScalar(100))     // b == true
+	/// let b = Bool(PerlScalar("100"))   // b == true
+	/// let b = Bool(PerlScalar("000"))   // b == true
+	/// let b = Bool(PerlScalar("any"))   // b == true
+	/// let b = Bool(PerlScalar("false")) // b == true
 	///	```
-	public init(_ sv: PerlSV) {
+	public init(_ sv: PerlScalar) {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		self.init(usv, perl: perl)
@@ -294,48 +294,48 @@ extension Bool {
 
 extension Int {
 	// TODO think about throwing if !looks_like_number()
-	/// Creates an integer from `PerlSV` using Perl macros `SvIV`.
+	/// Creates an integer from `PerlScalar` using Perl macros `SvIV`.
 	/// Throws if `sv` contains `undef`.
 	///
 	/// ```swift
-	/// let i = Int(PerlSV(100))      // i == 100
-	/// let i = Int(PerlSV("100"))    // i == 100
-	/// let i = Int(PerlSV(""))       // i == 0
-	/// let i = Int(PerlSV("string")) // i == 0
+	/// let i = Int(PerlScalar(100))      // i == 100
+	/// let i = Int(PerlScalar("100"))    // i == 100
+	/// let i = Int(PerlScalar(""))       // i == 0
+	/// let i = Int(PerlScalar("string")) // i == 0
 	/// ```
-	public init(_ sv: PerlSV) throws {
+	public init(_ sv: PerlScalar) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		try self.init(usv, perl: perl)
 	}
 
 	// TODO think about throwing if !looks_like_number()
-	/// Creates an integer from `PerlSV` using Perl macros `SvIV`.
+	/// Creates an integer from `PerlScalar` using Perl macros `SvIV`.
 	/// Returns `nil` if `sv` contains `undef`.
 	///
 	/// ```swift
-	/// let i = Int(nilable: PerlSV(100))   // i == .some(100)
-	/// let i = Int(nilable: PerlSV("100")) // i == .some(100)
-	/// let i = Int(nilable: PerlSV())      // i == nil
+	/// let i = Int(nilable: PerlScalar(100))   // i == .some(100)
+	/// let i = Int(nilable: PerlScalar("100")) // i == .some(100)
+	/// let i = Int(nilable: PerlScalar())      // i == nil
 	/// ```
-	public init?(nilable sv: PerlSV) {
+	public init?(nilable sv: PerlScalar) {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		self.init(nilable: usv, perl: perl)
 	}
 
-	/// Creates an integer from `PerlSV` using Perl macros `SvIV`.
+	/// Creates an integer from `PerlScalar` using Perl macros `SvIV`.
 	/// Performs no additional checks.
 	///
 	/// ```swift
-	/// let i = Int(unchecked: PerlSV(100))        // i == 100
-	/// let i = Int(unchecked: PerlSV("100"))      // i == 100
-	/// let i = Int(unchecked: PerlSV())           // i == 0
-	/// let i = Int(unchecked: PerlSV(""))         // i == 0
-	/// let i = Int(unchecked: PerlSV("100picot")) // i == 100
-	/// let i = Int(unchecked: PerlSV("picot"))    // i == 0
+	/// let i = Int(unchecked: PerlScalar(100))        // i == 100
+	/// let i = Int(unchecked: PerlScalar("100"))      // i == 100
+	/// let i = Int(unchecked: PerlScalar())           // i == 0
+	/// let i = Int(unchecked: PerlScalar(""))         // i == 0
+	/// let i = Int(unchecked: PerlScalar("100picot")) // i == 100
+	/// let i = Int(unchecked: PerlScalar("picot"))    // i == 0
 	/// ```
-	public init(unchecked sv: PerlSV) {
+	public init(unchecked sv: PerlScalar) {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		self.init(unchecked: usv, perl: perl)
@@ -344,44 +344,44 @@ extension Int {
 
 extension String {
 	// TODO think about throwing if it's RV
-	/// Creates a string from `PerlSV` using Perl macros `SvPV`.
+	/// Creates a string from `PerlScalar` using Perl macros `SvPV`.
 	/// Throws if `sv` contains `undef`.
 	///
 	/// ```swift
-	/// let s = String(PerlSV())     // throws
-	/// let s = String(PerlSV(200))  // s == "200"
-	/// let s = String(PerlSV("OK")) // s == "OK"
+	/// let s = String(PerlScalar())     // throws
+	/// let s = String(PerlScalar(200))  // s == "200"
+	/// let s = String(PerlScalar("OK")) // s == "OK"
 	/// ```
-	public init(_ sv: PerlSV) throws {
+	public init(_ sv: PerlScalar) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		try self.init(usv, perl: perl)
 	}
 
 	// TODO think about throwing if it's RV
-	/// Creates a string from `PerlSV` using Perl macros `SvPV`.
+	/// Creates a string from `PerlScalar` using Perl macros `SvPV`.
 	/// Returns `nil` if `sv` contains `undef`.
 	///
 	/// ```swift
-	/// let s = String(PerlSV())     // s == nil
-	/// let s = String(PerlSV(200))  // s == .some("200")
-	/// let s = String(PerlSV("OK")) // s == .some("OK")
+	/// let s = String(PerlScalar())     // s == nil
+	/// let s = String(PerlScalar(200))  // s == .some("200")
+	/// let s = String(PerlScalar("OK")) // s == .some("OK")
 	/// ```
-	public init?(nilable sv: PerlSV) {
+	public init?(nilable sv: PerlScalar) {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		self.init(nilable: usv, perl: perl)
 	}
 
-	/// Creates a string from `PerlSV` using Perl macros `SvPV`.
+	/// Creates a string from `PerlScalar` using Perl macros `SvPV`.
 	/// Performs no additional checks.
 	///
 	/// ```swift
-	/// let s = String(PerlSV())     // s == ""
-	/// let s = String(PerlSV(200))  // s == "200"
-	/// let s = String(PerlSV("OK")) // s == "OK"
+	/// let s = String(PerlScalar())     // s == ""
+	/// let s = String(PerlScalar(200))  // s == "200"
+	/// let s = String(PerlScalar("OK")) // s == "OK"
 	/// ```
-	public init(unchecked sv: PerlSV) {
+	public init(unchecked sv: PerlScalar) {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		self.init(unchecked: usv, perl: perl)

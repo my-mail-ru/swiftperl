@@ -51,7 +51,7 @@ public final class PerlCoro : PerlObject, PerlNamedClass {
 		set { coroApi.pointee.readyhook = newValue }
 	}
 
-	public convenience init(_ cv: PerlCV, args: PerlSvConvertible?...) {
+	public convenience init(_ cv: PerlSub, args: PerlSvConvertible?...) {
 		var args = args
 		args.insert(cv, at: 0)
 		try! self.init(method: "new", args: args)

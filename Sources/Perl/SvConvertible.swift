@@ -18,9 +18,9 @@ extension String : PerlSvConvertible {
 	public func toUnsafeSvPointer(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
 }
 
-extension PerlSV : PerlSvConvertible {
-	public static func fromUnsafeSvPointer(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> PerlSV {
-		return try PerlSV(inc: sv, perl: perl)
+extension PerlScalar : PerlSvConvertible {
+	public static func fromUnsafeSvPointer(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> PerlScalar {
+		return try PerlScalar(inc: sv, perl: perl)
 	}
 
 	public func toUnsafeSvPointer(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer {

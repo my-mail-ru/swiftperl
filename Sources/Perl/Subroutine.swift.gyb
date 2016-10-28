@@ -15,7 +15,7 @@ import CPerl
 /// ```
 ///
 /// ```swift
-/// let summer = PerlCV {
+/// let summer = PerlSub {
 ///		(lv: Int, rv: Int) -> Int in
 ///		return lv + rv
 /// }
@@ -33,7 +33,7 @@ import CPerl
 /// ```
 ///
 /// ```swift
-///	PerlCV(name: "strlen") { (s: String) in
+///	PerlSub(name: "strlen") { (s: String) in
 ///		return s.characters.count
 /// }
 /// ```
@@ -47,7 +47,7 @@ import CPerl
 /// ```swift
 /// let sum = summer.call(10, 20)
 /// ```
-public final class PerlCV : PerlValue, PerlDerived {
+public final class PerlSub : PerlValue, PerlDerived {
 	public typealias UnsafeValue = UnsafeCV
 
 	convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
@@ -81,7 +81,7 @@ public final class PerlCV : PerlValue, PerlDerived {
 		let deparse: PerlObject = try! perl.pointee.eval("use B::Deparse; B::Deparse->new('-sCi0')")
 		var text: String = try! deparse.call(method: "coderef2text", self)
 		text = text.characters.split { $0 == "\n" } .map(String.init).joined(separator: " ")
-		return "PerlCV(\(text) at \(file))"
+		return "PerlSub(\(text) at \(file))"
 	}
 }
 
@@ -102,7 +102,7 @@ public final class PerlCV : PerlValue, PerlDerived {
 		return range(0, (count + 1) if count < 2 else 2)
 }%
 
-extension PerlCV {
+extension PerlSub {
 % for p in range(0, 8):
 %   for r in range(0, 3):
 %     args = ", ".join(map(lambda n: "P" + str(n) + ".fromUnsafeSvPointer(stack[" + str(n) + "], perl: stack.perl)", range(0, p)))
@@ -142,11 +142,11 @@ extension PerlCV {
 % end
 }
 
-extension PerlCV {
+extension PerlSub {
 	/// Creates a new Perl XSUB.
 	///
 	/// This is the last resort variant of subroutine construction. A body of the subroutine will receive all
-	/// subroutine's arguments as an array of `PerlSV` values and should return collection of `PerlSV`s as
+	/// subroutine's arguments as an array of `PerlScalar` values and should return collection of `PerlScalar`s as
 	/// its result. All examinations of concrete values' types should be performed manually.
 	///
 	/// - Parameter name: A fully qualified name of the subroutine under which it will be accessible in Perl.
@@ -154,11 +154,11 @@ extension PerlCV {
 	/// - Parameter file: A name of a source file subroutine was declared in. Used for debug purposes only.
 	/// - Parameter body: The body of the XSUB.
 	@discardableResult
-	public convenience init<R: Collection>(name: String? = nil, file: StaticString = #file, body: @escaping ([PerlSV], UnsafeInterpreterPointer) throws -> R)
-		where R.Iterator.Element == PerlSV {
+	public convenience init<R: Collection>(name: String? = nil, file: StaticString = #file, body: @escaping ([PerlScalar], UnsafeInterpreterPointer) throws -> R)
+		where R.Iterator.Element == PerlScalar {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
-			let args = try stack.args.map { try PerlSV.fromUnsafeSvPointer($0, perl: stack.perl) }
+			let args = try stack.args.map { try PerlScalar.fromUnsafeSvPointer($0, perl: stack.perl) }
 			let result = try body(args, stack.perl)
 			stack.xsReturn(result.map { $0.toUnsafeSvPointer(perl: stack.perl) })
 		}
@@ -182,8 +182,8 @@ extension PerlBridgedObject {
 	/// - Parameter file: A name of a source file subroutine was declared in. Used for debug purposes only.
 	/// - Parameter body: The body of the XSUB.
 	@discardableResult
-	public static func createPerlMethod${generic(p, r)}(_ method: String, file: StaticString = #file, body: @escaping ${tuple("P", p, po)} throws -> ${tuple("R", r, ro)}) -> PerlCV {
-		return PerlCV(name: perlClassName + "::" + method, file: file, body: body)
+	public static func createPerlMethod${generic(p, r)}(_ method: String, file: StaticString = #file, body: @escaping ${tuple("P", p, po)} throws -> ${tuple("R", r, ro)}) -> PerlSub {
+		return PerlSub(name: perlClassName + "::" + method, file: file, body: body)
 	}
 
 %       end
@@ -194,15 +194,15 @@ extension PerlBridgedObject {
 	/// Creates a new method in the Perl class specified in `perlClassName` attribute.
 	///
 	/// This is the last resort variant of subroutine construction. A body of the subroutine will receive all
-	/// subroutine arguments as an array of `PerlSV` values and should return collection of `PerlSV`s as
+	/// subroutine arguments as an array of `PerlScalar` values and should return collection of `PerlScalar`s as
 	/// its result. All examinations of concrete values types should be performed manually.
 	///
 	/// - Parameter name: A name of the method under which it will be accessible in Perl.
 	/// - Parameter file: A name of a source file subroutine was declared in. Used for debug purposes only.
 	/// - Parameter body: The body of the XSUB.
 	@discardableResult
-	public static func createPerlMethod<R: Collection>(_ method: String, file: StaticString = #file, body: @escaping ([PerlSV], UnsafeInterpreterPointer) throws -> R) -> PerlCV
-		where R.Iterator.Element == PerlSV {
-		return PerlCV(name: perlClassName + "::" + method, file: file, body: body)
+	public static func createPerlMethod<R: Collection>(_ method: String, file: StaticString = #file, body: @escaping ([PerlScalar], UnsafeInterpreterPointer) throws -> R) -> PerlSub
+		where R.Iterator.Element == PerlScalar {
+		return PerlSub(name: perlClassName + "::" + method, file: file, body: body)
 	}
 }

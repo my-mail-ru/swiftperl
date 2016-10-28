@@ -2,7 +2,7 @@
 public enum PerlError : Error {
 	/// A `die` occurred in Perl. Text of the error or a SV die was called with
 	/// will be in an associated value.
-	case died(_: PerlSV)
+	case died(_: PerlScalar)
 
 	/// An undefined value was received in place not supposed to.
 	case unexpectedUndef(_: AnyPerl)

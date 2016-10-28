@@ -14,7 +14,7 @@
 /// ```
 ///
 /// ```swift
-/// let hash: PerlHV = [
+/// let hash: PerlHash = [
 ///		"id": 42,
 ///		"name": "Иван",
 ///		"aliases": ["Ваня", "John"],
@@ -33,17 +33,17 @@
 ///
 /// ```swift
 /// hash["age"] = 10
-/// let age = hash["age"] ?? PerlSV()
+/// let age = hash["age"] ?? PerlScalar()
 /// hash["age"] = nil
 /// let hasAge = hash["age"] != nil
-/// hash["age"] = PerlSV()
+/// hash["age"] = PerlScalar()
 /// ```
 ///
 /// The difference between Perl and Swift hash element access APIs is the result of
 /// Swiftification. It was done to make subscript behavior match behavior of
 /// subscripts in `Dictionary`. So, when a key does not exist subscript returns
 /// `nil` not an undefined SV as a Perl programmer could expect.
-public final class PerlHV : PerlValue, PerlDerived {
+public final class PerlHash : PerlValue, PerlDerived {
 	public typealias UnsafeValue = UnsafeHV
 
 	/// Creates an empty Perl hash.
@@ -68,14 +68,14 @@ public final class PerlHV : PerlValue, PerlDerived {
 	///
 	/// ```swift
 	/// let dict = ["one": 1, "two": 2, "three": 3]
-	/// let hv = PerlHV(dict) // my %hv = (one => 1, two => 2, three => 3);
+	/// let hv = PerlHash(dict) // my %hv = (one => 1, two => 2, three => 3);
 	/// ```
 	///
 	/// More then that arrays, dictionaries, references and objects are also possible:
 	///
 	/// ```swift
 	/// let dict = ["odd": [1, 3], "even": [2, 4]]
-	/// let hv = PerlHV(dict) // my %hv = (odd => [1, 3], even => [2, 4]);
+	/// let hv = PerlHash(dict) // my %hv = (odd => [1, 3], even => [2, 4]);
 	/// ```
 	///
 	/// - Parameter dict: a dictionary with `String` keys and values
@@ -83,7 +83,7 @@ public final class PerlHV : PerlValue, PerlDerived {
 	public convenience init<T : PerlSvConvertible>(_ dict: [String: T]) {
 		self.init()
 		for (k, v) in dict {
-			self[k] = v as? PerlSV ?? PerlSV(v)
+			self[k] = v as? PerlScalar ?? PerlScalar(v)
 		}
 	}
 
@@ -104,25 +104,25 @@ public final class PerlHV : PerlValue, PerlDerived {
 	/// A textual representation of the HV, suitable for debugging.
 	public override var debugDescription: String {
 		let values = map { "\($0.key.debugDescription): \($0.value.debugDescription)" } .joined(separator: ", ")
-		return "PerlHV([\(values)])"
+		return "PerlHash([\(values)])"
 	}
 }
 
-extension PerlHV: Sequence, IteratorProtocol {
+extension PerlHash: Sequence, IteratorProtocol {
 	public typealias Key = String
-	public typealias Value = PerlSV
+	public typealias Value = PerlScalar
 	public typealias Element = (key: Key, value: Value)
 
 	/// Returns an iterator over the elements of this hash.
 	///
-	/// `PerlHV` conforms to `IteratorProtocol` itself. So a returned value
+	/// `PerlHash` conforms to `IteratorProtocol` itself. So a returned value
 	/// is always `self`. Behind the scenes it calls Perl macro `hv_iterinit`
 	/// and prepares a starting point to traverse the hash table.
 	///
 	/// - Returns: `self`
 	/// - Attention: Only one iterator is possible at any time.
 	/// - SeeAlso: `Sequence`
-	public func makeIterator() -> PerlHV {
+	public func makeIterator() -> PerlHash {
 		withUnsafeCollection { _ = $0.makeIterator() }
 		return self
 	}
@@ -136,7 +136,7 @@ extension PerlHV: Sequence, IteratorProtocol {
 	public func next() -> Element? {
 		return withUnsafeCollection {
 			guard let u = $0.next() else { return nil }
-			return (key: u.key, value: try! PerlSV(inc: u.value, perl: $0.perl))
+			return (key: u.key, value: try! PerlScalar(inc: u.value, perl: $0.perl))
 		}
 	}
 
@@ -157,11 +157,11 @@ extension PerlHV: Sequence, IteratorProtocol {
 	///   otherwise, `nil`.
 	///
 	/// - SeeAlso: `Dictionary`
-	public subscript(key: Key) -> PerlSV? {
+	public subscript(key: Key) -> PerlScalar? {
 		get {
 			return withUnsafeCollection {
 				guard let sv = $0[key] else { return nil }
-				return try! PerlSV(inc: sv, perl: $0.perl)
+				return try! PerlScalar(inc: sv, perl: $0.perl)
 			}
 		}
 		set {
@@ -178,7 +178,7 @@ extension PerlHV: Sequence, IteratorProtocol {
 	}
 }
 
-extension PerlHV {
+extension PerlHash {
 	public convenience init(_ dict: [Key: Value]) {
 		self.init()
 		for (k, v) in dict {
@@ -194,7 +194,7 @@ extension PerlHV {
 	}
 }
 
-extension PerlHV : ExpressibleByDictionaryLiteral {
+extension PerlHash : ExpressibleByDictionaryLiteral {
 	/// Creates a Perl hash initialized with a dictionary literal.
 	///
 	/// Do not call this initializer directly. It is called by the compiler to
@@ -203,7 +203,7 @@ extension PerlHV : ExpressibleByDictionaryLiteral {
 	/// in square brackets. For example:
 	///
 	/// ```swift
-	/// let header: PerlHV = [
+	/// let header: PerlHash = [
 	///     "Content-Length": 320,
 	///     "Content-Type": "application/json"
 	/// ]
@@ -220,7 +220,7 @@ extension PerlHV : ExpressibleByDictionaryLiteral {
 
 // where Key == String, but it is unsupported
 extension Dictionary where Value : PerlSvConvertible {
-	public init(_ hv: PerlHV) throws {
+	public init(_ hv: PerlHash) throws {
 		self.init()
 		try hv.withUnsafeCollection {
 			for (k, v) in $0 {
@@ -229,7 +229,7 @@ extension Dictionary where Value : PerlSvConvertible {
 		}
 	}
 
-	public init?(_ sv: PerlSV) throws {
+	public init?(_ sv: PerlScalar) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		guard let hv = try UnsafeHvPointer(autoDeref: usv, perl: perl) else { return nil }

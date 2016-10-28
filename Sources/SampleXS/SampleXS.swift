@@ -3,28 +3,28 @@ import Perl
 @_cdecl("boot_SampleXS")
 func boot(_ p: UnsafeInterpreterPointer) {
 	print("OK")
-	PerlCV(name: "Swift::test") {
-		(args: [PerlSV], _) -> [PerlSV] in
+	PerlSub(name: "Swift::test") {
+		(args: [PerlScalar], _) -> [PerlScalar] in
 		print("args: \(try args.map { try String($0) })")
-		return [PerlSV(MyTest())]
+		return [PerlScalar(MyTest())]
 	}
 	MyTest.createPerlMethod("test") {
-		(args: [PerlSV], perl: UnsafeInterpreterPointer) -> [PerlSV] in
+		(args: [PerlScalar], perl: UnsafeInterpreterPointer) -> [PerlScalar] in
 //		let slf: MyTest = try! args[0].value()
 //		slf.test(value: args[1].value())
 //		slf.test2(value: try! args[2].value() as PerlTestMouse)
-//		let bInt: PerlSV = 99
-//		let bTrue: PerlSV = true
-//		let arr: PerlAV = [1, 2, 3, 4, 5]
+//		let bInt: PerlScalar = 99
+//		let bTrue: PerlScalar = true
+//		let arr: PerlArray = [1, 2, 3, 4, 5]
 		return [101, "Строченька", nil, true, false, [8, [], "string"], ["key": "value", "k2": 34]]
 //		return [[[1]]]
 	}
 	MyTest.createPerlMethod("test2") {
 		(str: String) throws -> Int in
-		throw PerlError.died(PerlSV("Throwing from Swift"))
+		throw PerlError.died(PerlScalar("Throwing from Swift"))
 	}
-	PerlCV(name: "Swift::test_die") {
-		(args: [PerlSV], perl: UnsafeInterpreterPointer) -> [PerlSV] in
+	PerlSub(name: "Swift::test_die") {
+		(args: [PerlScalar], perl: UnsafeInterpreterPointer) -> [PerlScalar] in
 		do {
 			try perl.pointee.call(sub: "main::die_now")
 		} catch PerlError.died(let err) {
@@ -33,7 +33,7 @@ func boot(_ p: UnsafeInterpreterPointer) {
 			print("Other error")
 		}
 		print("DONE")
-		return [PerlSV]()
+		return [PerlScalar]()
 	}
 	PerlTestMouse.register()
 }
@@ -94,10 +94,10 @@ final class PerlTestMouse: PerlObject, PerlNamedClass {
 	var `maybe_class`: String? {
 		get { return try! call(method: "maybe_class") }
 	}
-	var `list`: PerlAV {
+	var `list`: PerlArray {
 		get { return try! call(method: "list") }
 	}
-	var `hash`: PerlHV {
+	var `hash`: PerlHash {
 		get { return try! call(method: "hash") }
 	}
 }

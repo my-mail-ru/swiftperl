@@ -27,7 +27,7 @@ import CPerl
 /// 	}
 /// 
 /// 	convenience init(copyOf uri: URI) {
-/// 		try! self.init(uri.call(method: "clone") as PerlSV)
+/// 		try! self.init(uri.call(method: "clone") as PerlScalar)
 /// 	}
 /// 
 /// 	var scheme: String? { return try! call(method: "scheme") }
@@ -61,7 +61,7 @@ open class PerlObject : PerlValue, PerlDerived {
 		self.init(noincUnchecked: sv, perl: perl)
 	}
 
-	public convenience init(_ sv: PerlSV) throws {
+	public convenience init(_ sv: PerlScalar) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		try self.init(inc: usv, perl: perl)

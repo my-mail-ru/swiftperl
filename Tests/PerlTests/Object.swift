@@ -53,7 +53,7 @@ final class URI : PerlObject, PerlNamedClass {
 	}
 
 	convenience init(copyOf uri: URI) {
-		try! self.init(uri.call(method: "clone") as PerlSV)
+		try! self.init(uri.call(method: "clone") as PerlScalar)
 	}
 
 	var scheme: String? { return try! call(method: "scheme") }

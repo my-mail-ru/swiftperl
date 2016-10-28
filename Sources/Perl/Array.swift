@@ -10,7 +10,7 @@
 /// ```
 ///
 /// ```swift
-/// let list: PerlAV = ["one", "two", "three"]
+/// let list: PerlArray = ["one", "two", "three"]
 /// ```
 ///
 /// ### Array of mixed type data (PSGI response)
@@ -20,7 +20,7 @@
 /// ```
 ///
 /// ```swift
-/// let response: PerlAV = [200, ["Content-Type", "application/json"], ["{}"]]
+/// let response: PerlArray = [200, ["Content-Type", "application/json"], ["{}"]]
 /// ```
 ///
 /// ### Accessing elements of the array
@@ -34,13 +34,13 @@
 /// ```
 ///
 /// ```swift
-/// let list: PerlAV = []
+/// let list: PerlArray = []
 /// list[0] = 10
 /// list.append(20)
 /// let first = list.removeFirst()
 /// let second = list[0]
 /// ```
-public final class PerlAV : PerlValue, PerlDerived {
+public final class PerlArray : PerlValue, PerlDerived {
 	public typealias UnsafeValue = UnsafeAV
 
 	/// Creates an empty Perl array.
@@ -64,7 +64,7 @@ public final class PerlAV : PerlValue, PerlDerived {
 		self.init(perl: perl)
 		reserveCapacity(numericCast(c.count))
 		for (i, v) in c.enumerated() {
-			self[i] = v as? PerlSV ?? PerlSV(v, perl: perl)
+			self[i] = v as? PerlScalar ?? PerlScalar(v, perl: perl)
 		}
 	}
 
@@ -85,15 +85,15 @@ public final class PerlAV : PerlValue, PerlDerived {
 	/// A textual representation of the AV, suitable for debugging.
 	public override var debugDescription: String {
 		let values = map { $0.debugDescription } .joined(separator: ", ")
-		return "PerlAV([\(values)])"
+		return "PerlArray([\(values)])"
 	}
 }
 
-//struct PerlAV: MutableCollection {
-extension PerlAV : RandomAccessCollection {
-	public typealias Element = PerlSV
+//struct PerlArray: MutableCollection {
+extension PerlArray : RandomAccessCollection {
+	public typealias Element = PerlScalar
 	public typealias Index = Int
-	public typealias Iterator = IndexingIterator<PerlAV>
+	public typealias Iterator = IndexingIterator<PerlArray>
 	public typealias Indices = CountableRange<Int>
 
 	/// The position of the first element in a nonempty array.
@@ -115,8 +115,8 @@ extension PerlAV : RandomAccessCollection {
 	///   greater than or equal to `startIndex` and less than `endIndex`.
 	///
 	/// - Complexity: Reading an element from an array is O(1). Writing is O(1), too.
-	public subscript(i: Int) -> PerlSV {
-		get { return withUnsafeCollection { try! PerlSV(inc: $0[i], perl: $0.perl) } }
+	public subscript(i: Int) -> PerlScalar {
+		get { return withUnsafeCollection { try! PerlScalar(inc: $0[i], perl: $0.perl) } }
 		set {
 			withUnsafeCollection { c in
 				newValue.withUnsafeSvPointer { sv, _ in
@@ -127,8 +127,8 @@ extension PerlAV : RandomAccessCollection {
 	}
 }
 
-extension PerlAV {
-	/// Creates a Perl array from a Swift array of `PerlSV`s.
+extension PerlArray {
+	/// Creates a Perl array from a Swift array of `PerlScalar`s.
 	public convenience init(_ array: [Element]) {
 		self.init()
 		for (i, v) in array.enumerated() {
@@ -137,7 +137,7 @@ extension PerlAV {
 	}
 }
 
-extension PerlAV {
+extension PerlArray {
 	func extend(to count: Int) {
 		withUnsafeCollection { $0.extend(to: count) }
 	}
@@ -184,17 +184,17 @@ extension PerlAV {
 	// TODO - SeeAlso: `popFirst()`
 	/// Removes and returns the first element of the array.
 	///
-	/// The array can be empty. In this case undefined `PerlSV` is returned.
+	/// The array can be empty. In this case undefined `PerlScalar` is returned.
 	///
 	/// - Returns: The first element of the array.
 	///
 	/// - Complexity: O(1)
 	public func removeFirst() -> Element {
-		return withUnsafeCollection { try! PerlSV(noinc: $0.removeFirst(), perl: $0.perl) }
+		return withUnsafeCollection { try! PerlScalar(noinc: $0.removeFirst(), perl: $0.perl) }
 	}
 }
 
-extension PerlAV: ExpressibleByArrayLiteral {
+extension PerlArray: ExpressibleByArrayLiteral {
 	/// Creates Perl array from the given array literal.
 	///
 	/// Do not call this initializer directly. It is used by the compiler
@@ -203,7 +203,7 @@ extension PerlAV: ExpressibleByArrayLiteral {
 	/// values in square brackets. For example:
 	///
 	/// ```swift
-	/// let array: PerlAV = [200, "OK"]
+	/// let array: PerlArray = [200, "OK"]
 	/// ```
 	///
 	/// - Parameter elements: A variadic list of elements of the new array.
@@ -220,15 +220,15 @@ extension Array where Element : PerlSvConvertible {
 	///   an error is thrown.
 	///
 	/// - Complexity: O(*n*), where *n* is the count of the array.
-	public init(_ av: PerlAV) throws {
+	public init(_ av: PerlArray) throws {
 		self = try av.withUnsafeCollection { uc in
 			try uc.map { try Element.fromUnsafeSvPointer($0, perl: uc.perl) }
 		}
 	}
 
 	// TODO something with this constructor. It either shouldn't use autoDeref,
-	// because PerlSV cannot contain AV, or should take PerlValue as an argument.
-	public init?(_ sv: PerlSV) throws {
+	// because PerlScalar cannot contain AV, or should take PerlValue as an argument.
+	public init?(_ sv: PerlScalar) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		guard let av = try UnsafeAvPointer(autoDeref: usv, perl: perl) else { return nil }
