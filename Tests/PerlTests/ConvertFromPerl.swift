@@ -5,6 +5,7 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 	static var allTests: [(String, (ConvertFromPerlTests) -> () throws -> Void)] {
 		return [
 			("testUndef", testUndef),
+			("testBool", testBool),
 			("testInt", testInt),
 			("testString", testString),
 			("testScalarRef", testScalarRef),
@@ -22,10 +23,35 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssert(!v.isInt)
 		XCTAssert(!v.isString)
 		XCTAssert(!v.isRef)
-		XCTAssertNil(Int(nilable: v))
-		XCTAssertNil(String(nilable: v))
+		XCTAssertNil(try Int(nilable: v))
+		XCTAssertNil(try String(nilable: v))
 		XCTAssertEqual(Int(unchecked: v), 0)
 		XCTAssertEqual(String(unchecked: v), "")
+	}
+
+	func testBool() throws {
+		// Conversion directly from UnsafeSvPointer
+		XCTAssertFalse(try perl.eval("undef"))
+		XCTAssertFalse(try perl.eval("0"))
+		XCTAssertFalse(try perl.eval("''"))
+		XCTAssertFalse(try perl.eval("'0'"))
+		XCTAssertTrue(try perl.eval("1"))
+		XCTAssertTrue(try perl.eval("'1'"))
+		XCTAssertTrue(try perl.eval("100"))
+		XCTAssertTrue(try perl.eval("'100'"))
+		XCTAssertTrue(try perl.eval("'000'"))
+		XCTAssertTrue(try perl.eval("'anything'"))
+		// Convertion from PerlScalar
+		XCTAssertFalse(Bool(try perl.eval("undef") as PerlScalar))
+		XCTAssertFalse(Bool(try perl.eval("0") as PerlScalar))
+		XCTAssertFalse(Bool(try perl.eval("''") as PerlScalar))
+		XCTAssertFalse(Bool(try perl.eval("'0'") as PerlScalar))
+		XCTAssertTrue(Bool(try perl.eval("1") as PerlScalar))
+		XCTAssertTrue(Bool(try perl.eval("'1'") as PerlScalar))
+		XCTAssertTrue(Bool(try perl.eval("100") as PerlScalar))
+		XCTAssertTrue(Bool(try perl.eval("'100'") as PerlScalar))
+		XCTAssertTrue(Bool(try perl.eval("'000'") as PerlScalar))
+		XCTAssertTrue(Bool(try perl.eval("'anything'") as PerlScalar))
 	}
 
 	func testInt() throws {
@@ -36,6 +62,46 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssert(!v.isRef)
 		XCTAssertEqual(try Int(v), 42)
 		XCTAssertEqual(try String(v), "42")
+		// Implicit conversion from UnsafeSvPointer
+		XCTAssertEqual(try perl.eval("42") as Int, 42)
+		XCTAssertEqual(try perl.eval("'42'") as Int, 42)
+		XCTAssertEqual(try perl.eval("42.5") as Int, 42)
+		XCTAssertThrowsError(try perl.eval("undef") as Int)
+		XCTAssertThrowsError(try perl.eval("''") as Int)
+		XCTAssertThrowsError(try perl.eval("'ololo'") as Int)
+		XCTAssertThrowsError(try perl.eval("'50sec'") as Int)
+		// Nilable implicit conversion from UnsafeSvPointer
+		XCTAssertEqual(try perl.eval("42") as Int?, 42)
+		XCTAssertEqual(try perl.eval("'42'") as Int?, 42)
+		XCTAssertEqual(try perl.eval("42.5") as Int?, 42)
+		XCTAssertNil(try perl.eval("undef") as Int?)
+		XCTAssertThrowsError(try perl.eval("''") as Int?)
+		XCTAssertThrowsError(try perl.eval("'ololo'") as Int?)
+		XCTAssertThrowsError(try perl.eval("'50sec'") as Int?)
+		// Conversion from PerlScalar
+		XCTAssertEqual(try Int(try perl.eval("42") as PerlScalar), 42)
+		XCTAssertEqual(try Int(try perl.eval("'42'") as PerlScalar), 42)
+		XCTAssertEqual(try Int(try perl.eval("42.5") as PerlScalar), 42)
+		XCTAssertThrowsError(try Int(try perl.eval("undef") as PerlScalar))
+		XCTAssertThrowsError(try Int(try perl.eval("''") as PerlScalar))
+		XCTAssertThrowsError(try Int(try perl.eval("'ololo'") as PerlScalar))
+		XCTAssertThrowsError(try Int(try perl.eval("'50sec'") as PerlScalar))
+		// Nilable conversion from PerlScalar
+		XCTAssertEqual(try Int(nilable: try perl.eval("42") as PerlScalar), 42)
+		XCTAssertEqual(try Int(nilable: try perl.eval("'42'") as PerlScalar), 42)
+		XCTAssertEqual(try Int(nilable: try perl.eval("42.5") as PerlScalar), 42)
+		XCTAssertNil(try Int(nilable: try perl.eval("undef") as PerlScalar))
+		XCTAssertThrowsError(try Int(nilable: try perl.eval("''") as PerlScalar))
+		XCTAssertThrowsError(try Int(nilable: try perl.eval("'ololo'") as PerlScalar))
+		XCTAssertThrowsError(try Int(nilable: try perl.eval("'50sec'") as PerlScalar))
+		// Unchecked conversion from PerlScalar
+		XCTAssertEqual(Int(unchecked: try perl.eval("42") as PerlScalar), 42)
+		XCTAssertEqual(Int(unchecked: try perl.eval("'42'") as PerlScalar), 42)
+		XCTAssertEqual(Int(unchecked: try perl.eval("42.5") as PerlScalar), 42)
+		XCTAssertEqual(Int(unchecked: try perl.eval("undef") as PerlScalar), 0)
+		XCTAssertEqual(Int(unchecked: try perl.eval("''") as PerlScalar), 0)
+		XCTAssertEqual(Int(unchecked: try perl.eval("'ololo'") as PerlScalar), 0)
+		XCTAssertEqual(Int(unchecked: try perl.eval("'50sec'") as PerlScalar), 50)
 	}
 
 	func testString() throws {
@@ -44,13 +110,43 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssert(!v.isInt)
 		XCTAssert(v.isString)
 		XCTAssert(!v.isRef)
-		XCTAssertEqual(try Int(v), 0)
+		XCTAssertThrowsError(try Int(v))
 		XCTAssertEqual(try String(v), "test")
 		XCTAssertEqual(try String(v), "test")
 		let u: PerlScalar = try perl.eval("'строченька'")
 		XCTAssertEqual(try String(u), "строченька")
 		let n: PerlScalar = try perl.eval("'null' . chr(0) . 'sepparated'")
 		XCTAssertEqual(try String(n), "null\0sepparated")
+		// Implicit conversion from UnsafeSvPointer
+		XCTAssertEqual(try perl.eval("'anything'") as String, "anything")
+		XCTAssertEqual(try perl.eval("42") as String, "42")
+		XCTAssertEqual(try perl.eval("42.5") as String, "42.5")
+		XCTAssertThrowsError(try perl.eval("undef") as String)
+		XCTAssertThrowsError(try perl.eval("\\10") as String)
+		// Nilable implicit conversion from UnsafeSvPointer
+		XCTAssertEqual(try perl.eval("'anything'") as String?, "anything")
+		XCTAssertEqual(try perl.eval("42") as String?, "42")
+		XCTAssertEqual(try perl.eval("42.5") as String?, "42.5")
+		XCTAssertNil(try perl.eval("undef") as String?)
+		XCTAssertThrowsError(try perl.eval("\\10") as String?)
+		// Conversion from PerlScalar
+		XCTAssertEqual(try String(try perl.eval("'anything'") as PerlScalar), "anything")
+		XCTAssertEqual(try String(try perl.eval("42") as PerlScalar), "42")
+		XCTAssertEqual(try String(try perl.eval("42.5") as PerlScalar), "42.5")
+		XCTAssertThrowsError(try String(try perl.eval("undef") as PerlScalar))
+		XCTAssertThrowsError(try String(try perl.eval("\\10") as PerlScalar))
+		// Nilable conversion from PerlScalar
+		XCTAssertEqual(try String(nilable: try perl.eval("'anything'") as PerlScalar), "anything")
+		XCTAssertEqual(try String(nilable: try perl.eval("42") as PerlScalar), "42")
+		XCTAssertEqual(try String(nilable: try perl.eval("42.5") as PerlScalar), "42.5")
+		XCTAssertNil(try String(nilable: try perl.eval("undef") as PerlScalar))
+		XCTAssertThrowsError(try String(nilable: try perl.eval("\\10") as PerlScalar))
+		// Unchecked conversion from PerlScalar
+		XCTAssertEqual(String(unchecked: try perl.eval("'anything'") as PerlScalar), "anything")
+		XCTAssertEqual(String(unchecked: try perl.eval("42") as PerlScalar), "42")
+		XCTAssertEqual(String(unchecked: try perl.eval("42.5") as PerlScalar), "42.5")
+		XCTAssertEqual(String(unchecked: try perl.eval("undef") as PerlScalar), "")
+		XCTAssert(String(unchecked: try perl.eval("\\10") as PerlScalar).hasPrefix("SCALAR"))
 	}
 
 	func testScalarRef() throws {

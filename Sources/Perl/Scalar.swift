@@ -293,15 +293,16 @@ extension Bool {
 }
 
 extension Int {
-	// TODO think about throwing if !looks_like_number()
-	/// Creates an integer from `PerlScalar` using Perl macros `SvIV`.
-	/// Throws if `sv` contains `undef`.
+	/// Creates an integer from `PerlScalar`.
+	/// Throws if `sv` contains something that not looks like a number.
 	///
 	/// ```swift
-	/// let i = Int(PerlScalar(100))      // i == 100
-	/// let i = Int(PerlScalar("100"))    // i == 100
-	/// let i = Int(PerlScalar(""))       // i == 0
-	/// let i = Int(PerlScalar("string")) // i == 0
+	/// let i = try Int(PerlScalar(100))      // i == 100
+	/// let i = try Int(PerlScalar("100"))    // i == 100
+	/// let i = try Int(PerlScalar())         // throws
+	/// let i = try Int(PerlScalar(""))       // throws
+	/// let i = try Int(PerlScalar("any"))    // throws
+	/// let i = try Int(PerlScalar("50sec"))  // throws
 	/// ```
 	public init(_ sv: PerlScalar) throws {
 		defer { _fixLifetime(sv) }
@@ -309,19 +310,22 @@ extension Int {
 		try self.init(usv, perl: perl)
 	}
 
-	// TODO think about throwing if !looks_like_number()
-	/// Creates an integer from `PerlScalar` using Perl macros `SvIV`.
-	/// Returns `nil` if `sv` contains `undef`.
+	/// Creates an integer from `PerlScalar`.
+	/// Returns `nil` if `sv` contains `undef`;
+	/// throws if `sv` contains something that not looks like a number.
 	///
 	/// ```swift
-	/// let i = Int(nilable: PerlScalar(100))   // i == .some(100)
-	/// let i = Int(nilable: PerlScalar("100")) // i == .some(100)
-	/// let i = Int(nilable: PerlScalar())      // i == nil
+	/// let i = try Int(nilable: PerlScalar(100))      // i == .some(100)
+	/// let i = try Int(nilable: PerlScalar("100"))    // i == .some(100)
+	/// let i = try Int(nilable: PerlScalar())         // i == nil
+	/// let i = try Int(nilable: PerlScalar(""))       // throws
+	/// let i = try Int(nilable: PerlScalar("any"))    // throws
+	/// let i = try Int(nilable: PerlScalar("50sec"))  // throws
 	/// ```
-	public init?(nilable sv: PerlScalar) {
+	public init?(nilable sv: PerlScalar) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		self.init(nilable: usv, perl: perl)
+		try self.init(nilable: usv, perl: perl)
 	}
 
 	/// Creates an integer from `PerlScalar` using Perl macros `SvIV`.
@@ -332,8 +336,8 @@ extension Int {
 	/// let i = Int(unchecked: PerlScalar("100"))      // i == 100
 	/// let i = Int(unchecked: PerlScalar())           // i == 0
 	/// let i = Int(unchecked: PerlScalar(""))         // i == 0
-	/// let i = Int(unchecked: PerlScalar("100picot")) // i == 100
-	/// let i = Int(unchecked: PerlScalar("picot"))    // i == 0
+	/// let i = Int(unchecked: PerlScalar("any"))      // i == 0
+	/// let i = Int(unchecked: PerlScalar("50sec"))    // i == 50
 	/// ```
 	public init(unchecked sv: PerlScalar) {
 		defer { _fixLifetime(sv) }
@@ -343,14 +347,14 @@ extension Int {
 }
 
 extension String {
-	// TODO think about throwing if it's RV
-	/// Creates a string from `PerlScalar` using Perl macros `SvPV`.
-	/// Throws if `sv` contains `undef`.
+	/// Creates a string from `PerlScalar`.
+	/// Throws if `sv` does not contain a string or a number.
 	///
 	/// ```swift
-	/// let s = String(PerlScalar())     // throws
-	/// let s = String(PerlScalar(200))  // s == "200"
-	/// let s = String(PerlScalar("OK")) // s == "OK"
+	/// let s = try String(PerlScalar())                             // throws
+	/// let s = try String(PerlScalar(200))                          // s == "200"
+	/// let s = try String(PerlScalar("OK"))                         // s == "OK"
+	/// let s = try String(PerlScalar(referenceTo: PerlScalar(10)))  // throws
 	/// ```
 	public init(_ sv: PerlScalar) throws {
 		defer { _fixLifetime(sv) }
@@ -358,28 +362,30 @@ extension String {
 		try self.init(usv, perl: perl)
 	}
 
-	// TODO think about throwing if it's RV
-	/// Creates a string from `PerlScalar` using Perl macros `SvPV`.
-	/// Returns `nil` if `sv` contains `undef`.
+	/// Creates a string from `PerlScalar`.
+	/// Returns `nil` if `sv` contains `undef`;
+	/// throws if `sv` does not contain a string or a number.
 	///
 	/// ```swift
-	/// let s = String(PerlScalar())     // s == nil
-	/// let s = String(PerlScalar(200))  // s == .some("200")
-	/// let s = String(PerlScalar("OK")) // s == .some("OK")
+	/// let s = try String(PerlScalar())                             // s == nil
+	/// let s = try String(PerlScalar(200))                          // s == .some("200")
+	/// let s = try String(PerlScalar("OK"))                         // s == .some("OK")
+	/// let s = try String(PerlScalar(referenceTo: PerlScalar(10)))  // throws
 	/// ```
-	public init?(nilable sv: PerlScalar) {
+	public init?(nilable sv: PerlScalar) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		self.init(nilable: usv, perl: perl)
+		try self.init(nilable: usv, perl: perl)
 	}
 
 	/// Creates a string from `PerlScalar` using Perl macros `SvPV`.
 	/// Performs no additional checks.
 	///
 	/// ```swift
-	/// let s = String(PerlScalar())     // s == ""
-	/// let s = String(PerlScalar(200))  // s == "200"
-	/// let s = String(PerlScalar("OK")) // s == "OK"
+	/// let s = String(PerlScalar())                             // s == ""
+	/// let s = String(PerlScalar(200))                          // s == "200"
+	/// let s = String(PerlScalar("OK"))                         // s == "OK"
+	/// let s = String(PerlScalar(referenceTo: PerlScalar(10)))  // s == "SCALAR(0x12345678)"
 	/// ```
 	public init(unchecked sv: PerlScalar) {
 		defer { _fixLifetime(sv) }

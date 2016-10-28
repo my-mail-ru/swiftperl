@@ -199,6 +199,11 @@ PERL_STATIC_INLINE bool sPerl_SvIOK_UV(_Nonnull SV *sv) {
 	return SvIOK_UV(sv);
 }
 
+SWIFT_NAME(SvNIOK(_:))
+PERL_STATIC_INLINE bool sPerl_SvNIOK(_Nonnull SV *sv) {
+	return SvNIOK(sv);
+}
+
 SWIFT_NAME(SvROK(_:))
 PERL_STATIC_INLINE bool sPerl_SvROK(_Nonnull SV *sv) {
 	return SvROK(sv);
@@ -252,6 +257,11 @@ PERL_STATIC_INLINE _Nonnull SV *sPerl_sv_setref_iv(pTHX_ _Nonnull SV *const rv, 
 SWIFT_NAME(PerlInterpreter.sv_derived_from(self:_:_:))
 PERL_STATIC_INLINE bool sPerl_sv_derived_from(pTHX_ _Nonnull SV* sv, _Nonnull const char *const name) {
 	return sv_derived_from(sv, name);
+}
+
+SWIFT_NAME(PerlInterpreter.looks_like_number(self:_:))
+PERL_STATIC_INLINE bool sPerl_looks_like_number(pTHX_ SV *const sv) {
+	return looks_like_number(sv);
 }
 
 // AV

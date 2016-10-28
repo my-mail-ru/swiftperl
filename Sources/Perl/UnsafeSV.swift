@@ -132,18 +132,15 @@ extension Bool {
 
 extension Int {
 	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		guard sv.pointee.type == .scalar else {
-			throw PerlError.unexpectedSvType(fromUnsafeSvPointer(inc: sv, perl: perl), want: .scalar)
-		}
-		guard SvOK(sv) else {
-			throw PerlError.unexpectedUndef(fromUnsafeSvPointer(inc: sv, perl: perl))
+		guard SvNIOK(sv) || perl.pointee.looks_like_number(sv) else {
+			throw PerlError.notNumber(fromUnsafeSvPointer(inc: sv, perl: perl))
 		}
 		self.init(unchecked: sv, perl: perl)
 	}
 
-	public init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
 		guard SvOK(sv) else { return nil }
-		self.init(unchecked: sv, perl: perl)
+		try self.init(sv, perl: perl)
 	}
 
 	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
@@ -153,18 +150,15 @@ extension Int {
 
 extension String {
 	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		guard sv.pointee.type == .scalar else {
-			throw PerlError.unexpectedSvType(fromUnsafeSvPointer(inc: sv, perl: perl), want: .scalar)
-		}
-		guard SvOK(sv) else {
-			throw PerlError.unexpectedUndef(fromUnsafeSvPointer(inc: sv, perl: perl))
+		guard SvPOK(sv) || SvNIOK(sv) else {
+			throw PerlError.notStringOrNumber(fromUnsafeSvPointer(inc: sv, perl: perl))
 		}
 		self.init(unchecked: sv, perl: perl)
 	}
 
-	public init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
 		guard SvOK(sv) else { return nil }
-		self.init(unchecked: sv, perl: perl)
+		try self.init(sv, perl: perl)
 	}
 
 	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
