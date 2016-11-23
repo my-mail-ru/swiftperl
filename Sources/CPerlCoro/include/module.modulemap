@@ -1,4 +1,0 @@
-module CPerlCoro [system] {
-	header "shim.h"
-	export *
-}

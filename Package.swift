@@ -1,12 +1,10 @@
 import PackageDescription
 
 let package = Package(
-	name: "SwiftPerl",
+	name: "Perl",
 	targets: [
 		Target(name: "CPerl"),
 		Target(name: "Perl", dependencies: [.Target(name: "CPerl")]),
-		Target(name: "CPerlCoro"),
-		Target(name: "PerlCoro", dependencies: [.Target(name: "Perl"), .Target(name: "CPerlCoro")]),
 		Target(name: "SampleXS", dependencies: [.Target(name: "Perl")])
 	]
 )
