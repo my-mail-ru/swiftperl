@@ -1,10 +1,6 @@
 module CPerl [system] {
 	header "shim.h"
+	header "macro.h"
 	link "perl"
 	export *
-
-	module macro {
-		header "macro.h"
-		link "CPerl"
-	}
 }
