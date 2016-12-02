@@ -1,6 +1,0 @@
-module CPerl [system] {
-	header "shim.h"
-	header "macro.h"
-	link "perl"
-	export *
-}
