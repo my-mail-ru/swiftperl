@@ -3,8 +3,11 @@
 use strict;
 use warnings;
 use Config;
+use FindBin;
 
 my $format = "%-40s";
+my $root = $FindBin::Bin;
+
 write_modulemap();
 expand_gyb();
 
@@ -18,7 +21,7 @@ sub write_modulemap {
 		die "Cannot find libperl.so\n" unless -f $perl;
 	}
 
-	my $filename = "Sources/CPerl/include/module.modulemap";
+	my $filename = "$root/Sources/CPerl/include/module.modulemap";
 	open my $file, '>', "$filename.tmp"
 		or die "Cannot write $filename.tmp\n";
 	print $file qq#module CPerl [system] {
@@ -35,23 +38,24 @@ sub write_modulemap {
 }
 
 sub expand_gyb {
-	unless (-d ".build/gyb") {
+	unless (-d "$root/.build/gyb") {
 		printf $format, "Downloading gyb";
-		system("mkdir -p .build/gyb") == 0
-			or die "Cannot mdkir .build/gyb";
+		system("mkdir -p $root/.build/gyb") == 0
+			or die "Cannot mdkir $root/.build/gyb";
 		foreach my $f (qw/ gyb gyb.py /) {
-			system("curl -f -s https://raw.githubusercontent.com/apple/swift/master/utils/$f -o .build/gyb/$f") == 0
+			system("curl -f -s https://raw.githubusercontent.com/apple/swift/master/utils/$f -o $root/.build/gyb/$f") == 0
 				or die "Failed to download gyb";
 		}
-		chmod 0755, ".build/gyb/gyb" or die $!;
+		chmod 0755, "$root/.build/gyb/gyb" or die $!;
 		print "[done]\n"
 	}
 
 	foreach my $f (qw# Sources/Perl/Call.swift Sources/Perl/Subroutine.swift #) {
 		printf $format, $f;
-		system(".build/gyb/gyb $f.gyb > $f.tmp") == 0
+		my $filename = "$root/$f";
+		system("$root/.build/gyb/gyb $filename.gyb > $filename.tmp") == 0
 			or die "Failed to expand gyb template\n";
-		commit_file($f);
+		commit_file($filename);
 	}
 }
 

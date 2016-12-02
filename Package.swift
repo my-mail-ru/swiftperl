@@ -12,6 +12,11 @@ let package = Package(
 
 products.append(Product(name: "SampleXS", type: .Library(.Dynamic), modules: "SampleXS"))
 
-guard system("./prepare") == 0 else {
-	fatalError("Failed to execute ./prepare")
+let me = CommandLine.arguments[0]
+var parts = me.characters.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
+parts[parts.endIndex - 1] = "prepare"
+let command = parts.joined(separator: "/")
+
+guard system(command) == 0 else {
+	fatalError("Failed to execute \(command)")
 }
