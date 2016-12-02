@@ -2,5 +2,6 @@
 /.build
 /Packages
 /*.xcodeproj
+/Sources/CPerl/include/module.modulemap
 /Sources/Perl/Call.swift
 /Sources/Perl/Subroutine.swift

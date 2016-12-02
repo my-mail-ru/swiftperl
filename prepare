@@ -1,0 +1,68 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Config;
+
+my $format = "%-40s";
+write_modulemap();
+expand_gyb();
+
+sub write_modulemap {
+	printf $format, "Writing module.modulemap";
+	my $archlib = $Config{installarchlib};
+
+	my $perl = 'perl';
+	if (system('ldconfig -p | grep -q libperl.so') != 0) {
+		$perl = "$archlib/CORE/libperl.so";
+		die "Cannot find libperl.so\n" unless -f $perl;
+	}
+
+	my $filename = "Sources/CPerl/include/module.modulemap";
+	open my $file, '>', "$filename.tmp"
+		or die "Cannot write $filename.tmp\n";
+	print $file qq#module CPerl [system] {
+	header "shim.h"
+	header "$archlib/CORE/EXTERN.h"
+	header "$archlib/CORE/perl.h"
+	header "$archlib/CORE/XSUB.h"
+	header "macro.h"
+	link "$perl"
+	export *
+}#;
+	close $file;
+	commit_file($filename);
+}
+
+sub expand_gyb {
+	unless (-d ".build/gyb") {
+		printf $format, "Downloading gyb";
+		system("mkdir -p .build/gyb") == 0
+			or die "Cannot mdkir .build/gyb";
+		foreach my $f (qw/ gyb gyb.py /) {
+			system("curl -f -s https://raw.githubusercontent.com/apple/swift/master/utils/$f -o .build/gyb/$f") == 0
+				or die "Failed to download gyb";
+		}
+		chmod 0755, ".build/gyb/gyb" or die $!;
+		print "[done]\n"
+	}
+
+	foreach my $f (qw# Sources/Perl/Call.swift Sources/Perl/Subroutine.swift #) {
+		printf $format, $f;
+		system(".build/gyb/gyb $f.gyb > $f.tmp") == 0
+			or die "Failed to expand gyb template\n";
+		commit_file($f);
+	}
+}
+
+sub commit_file {
+	my ($filename) = @_;
+	if (system("cmp -s $filename.tmp $filename") == 0) {
+		unlink "$filename.tmp" or die $!;
+		print "[not changed]\n";
+	} else {
+		rename "$filename.tmp", $filename or die $!;
+		print "[done]\n";
+	}
+	return;
+}
