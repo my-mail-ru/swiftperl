@@ -4,6 +4,9 @@ public enum PerlError : Error {
 	/// will be in an associated value.
 	case died(_: PerlScalar)
 
+	/// A stack count is lower then an `at`.
+	case noArgumentOnStack(at: Int)
+
 	/// An undefined value was received in place not supposed to.
 	case unexpectedUndef(_: AnyPerl)
 
@@ -24,4 +27,7 @@ public enum PerlError : Error {
 
 	/// SV bridges to an object of an unexpected type.
 	case unexpectedObjectType(_: AnyPerl, want: AnyPerl.Type)
+
+	/// Odd number of elements in hash assignment.
+	case oddElementsHash
 }

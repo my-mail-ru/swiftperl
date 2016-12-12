@@ -10,6 +10,7 @@ class ConvertToPerlTests : EmbeddedTestCase {
 			("testScalarRef", testScalarRef),
 			("testArrayRef", testArrayRef),
 			("testHashRef", testHashRef),
+			("testXSub", testXSub),
 		]
 	}
 
@@ -67,5 +68,58 @@ class ConvertToPerlTests : EmbeddedTestCase {
 		XCTAssert(try perl.call(sub: "is_hash", v2))
 		let v3 = PerlScalar(dict)
 		XCTAssert(try perl.call(sub: "is_hash", v3))
+	}
+
+	func testXSub() throws {
+		PerlSub(name: "testxsub") {
+			(a: Int, b: Int) -> Int in
+			XCTAssertEqual(a, 10)
+			XCTAssertEqual(b, 15)
+			return a + b
+		}
+		XCTAssertEqual(try perl.eval("testxsub(10, 15) == 25 ? 'OK' : 'FAIL'"), "OK")
+		PerlSub(name: "testxsub2") {
+			(a: Int?, b: Int?) -> Int in
+			XCTAssertEqual(a, 10)
+			XCTAssertNil(b)
+			return a! + (b ?? 15)
+		}
+		XCTAssertEqual(try perl.eval("testxsub2(10, undef) == 25 ? 'OK' : 'FAIL'"), "OK")
+
+		PerlSub(name: "testarraytail") {
+			(a: Int, b: Int, extra: [String]) -> Int in
+			XCTAssertEqual(a, 10)
+			XCTAssertEqual(b, 15)
+			XCTAssertEqual(extra, ["uno", "dos", "tres"])
+			return a + b
+		}
+		XCTAssertEqual(try perl.eval("testarraytail(10, 15, qw/uno dos tres/) == 25 ? 'OK' : 'FAIL'"), "OK")
+
+		PerlSub(name: "testhashtail") {
+			(a: Int, b: Int, options: [String: String]) -> Int in
+			XCTAssertEqual(a, 10)
+			XCTAssertEqual(b, 15)
+			XCTAssertEqual(options, ["from": "master", "timeout": "10"])
+			return a + b
+		}
+		XCTAssertEqual(try perl.eval("testhashtail(10, 15, from => 'master', timeout => 10) == 25 ? 'OK' : 'FAIL'"), "OK")
+
+		PerlSub(name: "testplain") {
+			(args: [PerlScalar]) -> Int in
+			XCTAssertEqual(try Int(args[0]), 10)
+			XCTAssertEqual(try Int(args[1]), 15)
+			XCTAssertEqual(try String(args[2]), "extra")
+			return try Int(args[0]) + Int(args[1])
+		}
+		XCTAssertEqual(try perl.eval("testplain(10, 15, 'extra') == 25 ? 'OK' : 'FAIL'"), "OK")
+
+		PerlSub(name: "testlast") {
+			(args: [PerlScalar], perl: UnsafeInterpreterPointer) -> [PerlScalar] in
+			XCTAssertEqual(try Int(args[0]), 10)
+			XCTAssertEqual(try Int(args[1]), 15)
+			XCTAssertEqual(try String(args[2]), "extra")
+			return [PerlScalar(try Int(args[0]) + Int(args[1]))]
+		}
+		XCTAssertEqual(try perl.eval("testlast(10, 15, 'extra') == 25 ? 'OK' : 'FAIL'"), "OK")
 	}
 }

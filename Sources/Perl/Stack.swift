@@ -47,6 +47,32 @@ struct UnsafeXSubStack : UnsafeStack {
 		}
 		return args[i]
 	}
+
+	func fetch<T : PerlSvConvertible>(at index: Int) throws -> T {
+		guard index < args.count else { throw PerlError.noArgumentOnStack(at: index) }
+		return try T.fromUnsafeSvPointer(args[index], perl: perl)
+	}
+
+	func fetch<T : PerlSvConvertible>(at index: Int) throws -> T? {
+		guard index < args.count else { return nil }
+		return try Optional<T>.fromUnsafeSvPointer(args[index], perl: perl)
+	}
+
+	func fetchTail<T : PerlSvConvertible>(startingAt index: Int) throws -> [T] {
+		guard index < args.count else { return [] }
+		return try args[index..<args.count].map { try T.fromUnsafeSvPointer($0, perl: perl) }
+	}
+
+	func fetchTail<T : PerlSvConvertible>(startingAt index: Int) throws -> [String: T] {
+		guard index < args.count else { return [:] }
+		var tail: [String: T] = [:]
+		var i = args[index..<args.count].makeIterator()
+		while let name = i.next() {
+			guard let value = i.next() else { throw PerlError.oddElementsHash }
+			tail[try String(name, perl: perl)] = try T.fromUnsafeSvPointer(value, perl: perl)
+		}
+		return tail
+	}
 }
 
 struct UnsafeCallStack : UnsafeStack {

@@ -12,7 +12,6 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 			("testArrayRef", testArrayRef),
 			("testHashRef", testHashRef),
 			("testCodeRef", testCodeRef),
-			("testXSub", testXSub),
 			("testInterpreterMisc", testInterpreterMisc),
 		]
 	}
@@ -216,15 +215,6 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		let cv: PerlSub = try PerlSub(sv)!
 		XCTAssertEqual(try cv.call(10, 15) as Int?, 25)
 //		XCTAssertEqual(try sv.call(10, 15) as Int, 25)
-	}
-
-	func testXSub() throws {
-		PerlSub(name: "testxsub") {
-			(a: Int, b: Int) -> Int in
-			return a + b
-		}
-		let ok: String? = try perl.eval("testxsub(10, 15) == 25 ? 'OK' : 'FAIL'")
-		XCTAssertEqual(ok, "OK")
 	}
 
 	func testInterpreterMisc() throws {
