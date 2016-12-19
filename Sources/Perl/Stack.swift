@@ -23,12 +23,13 @@ extension UnsafeStack {
 struct UnsafeXSubStack : UnsafeStack {
 	let args: UnsafeStackBufferPointer
 	let perl: UnsafeInterpreterPointer
+	let ax: Int32
 
 	init(perl: UnsafeInterpreterPointer) {
 		self.perl = perl
 		//SV **sp = (my_perl->Istack_sp); I32 ax = (*(my_perl->Imarkstack_ptr)--); SV **mark = (my_perl->Istack_base) + ax++; I32 items = (I32)(sp - mark);
 		var sp = perl.pointee.Istack_sp!
-		let ax = perl.pointee.POPMARK()
+		ax = perl.pointee.POPMARK()
 		let mark = perl.pointee.Istack_base + Int(ax)
 		let items = sp - mark
 		sp -= items
@@ -37,7 +38,7 @@ struct UnsafeXSubStack : UnsafeStack {
 
 	func xsReturn<C : Collection>(_ result: C)
 		where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int {
-		var sp = UnsafeMutableRawPointer(args.baseAddress!).assumingMemoryBound(to: Optional<UnsafeSvPointer>.self) - 1
+		var sp = perl.pointee.Istack_base! + Int(ax)
 		pushTo(sp: &sp, from: result)
 	}
 
