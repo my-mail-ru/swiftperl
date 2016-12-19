@@ -61,13 +61,21 @@ extension UnsafeInterpreter {
 let PERL_MAGIC_ext = Int32(UnicodeScalar("~").value) // mg_vtable.h
 
 private func cvResolver(perl: UnsafeInterpreterPointer, cv: UnsafeCvPointer) -> Void {
+	let errsv: UnsafeSvPointer?
 	do {
 		let stack = UnsafeXSubStack(perl: perl)
 		try cv.pointee.body(stack)
+		errsv = nil
 	} catch PerlError.died(let sv) {
 		let usv = sv.withUnsafeSvPointer { sv, perl in perl.pointee.newSV(sv)! }
-		perl.pointee.croak_sv(perl.pointee.sv_2mortal(usv)) // FIXME check: sv must die before croak_sv is called
+		errsv = perl.pointee.sv_2mortal(usv)
 	} catch {
-		perl.pointee.croak_sv(perl.pointee.newSV("Exception: \(error)", mortal: true))
+		errsv = perl.pointee.newSV("Exception: \(error)", mortal: true)
+	}
+	if let e = errsv {
+		perl.pointee.croak_sv(e)
+		// croak_sv() function never returns. It unwinds stack instead.
+		// No memory managment SIL operations should exist after it.
+		// Check it using --emit-sil if modification of this function required.
 	}
 }
