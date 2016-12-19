@@ -24,9 +24,8 @@ extension UnsafeInterpreter {
 	}
 
 	mutating func unsafeEval(sv: UnsafeSvPointer, flags: Int32 = 0) throws -> UnsafeStackBufferPointer {
-		let stack = UnsafeCallStack(perl: &self, args: EmptyCollection())
 		let count = eval_sv(sv, flags)
-		let result = stack.popReturned(count: Int(count))
+		let result = popFromStack(count: Int(count))
 		let err = ERRSV
 		if Bool(err, perl: &self) {
 			throw PerlError.died(try PerlScalar(copy: err, perl: &self))

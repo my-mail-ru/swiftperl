@@ -87,10 +87,16 @@ struct UnsafeCallStack : UnsafeStack {
 	}
 
 	func popReturned(count: Int) -> UnsafeStackBufferPointer {
-		var sp = perl.pointee.Istack_sp!
+		return perl.pointee.popFromStack(count: count)
+	}
+}
+
+extension UnsafeInterpreter {
+	mutating func popFromStack(count: Int) -> UnsafeStackBufferPointer {
+		var sp = Istack_sp!
 		sp -= count
 		let result = UnsafeStackBufferPointer(start: UnsafeMutableRawPointer(sp + 1).assumingMemoryBound(to: UnsafeSvPointer.self), count: count)
-		perl.pointee.Istack_sp = sp
+		Istack_sp = sp
 		return result
 	}
 }
