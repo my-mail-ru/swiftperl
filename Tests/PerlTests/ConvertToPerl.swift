@@ -37,6 +37,11 @@ class ConvertToPerlTests : EmbeddedTestCase {
 		XCTAssert(u.isString)
 		try perl.eval("sub is_utf8_string { return $_[0] eq 'строченька' }")
 		XCTAssert(try perl.call(sub: "is_utf8_string", u))
+		try perl.eval("sub is_byte_string { return $_[0] eq pack('C256', 0..255) }")
+		let b = [UInt8](0...255).withUnsafeBytes { PerlScalar($0) }
+		XCTAssert(try perl.call(sub: "is_byte_string", b))
+		let c = [UInt8]("строченька".utf8).withUnsafeBytes { PerlScalar($0, containing: .characters) }
+		XCTAssert(try perl.call(sub: "is_utf8_string", c))
 	}
 
 	func testScalarRef() throws {

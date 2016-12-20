@@ -51,6 +51,19 @@ public final class PerlScalar : PerlValue, PerlDerived {
 		self.init(noincUnchecked: v.toUnsafeSvPointer(perl: perl), perl: perl)
 	}
 
+	/// Semantics of a Perl string data.
+	public enum StringUnits {
+		/// A string contains bytes (octets) and interpreted as a binary buffer.
+		case bytes
+		/// A string contains characters and interpreted as a text.
+		case characters
+	}
+
+	/// Creates a Perl string containing a copy of bytes or characters from `v`.
+	public convenience init(_ v: UnsafeRawBufferPointer, containing: StringUnits = .bytes, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		self.init(noincUnchecked: perl.pointee.newSV(v, utf8: containing == .characters), perl: perl)
+	}
+
 	/// Creates a `RV` pointing to a `sv`.
 	public convenience init<T : PerlValue>(referenceTo sv: T) {
 		let rv = sv.withUnsafeSvPointer { sv, perl in
