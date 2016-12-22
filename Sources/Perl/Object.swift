@@ -168,4 +168,10 @@ extension PerlNamedClass where Self : PerlObject {
 	public static func register() {
 		PerlObject.register(self, as: (self as PerlNamedClass.Type).perlClassName)
 	}
+
+	/// Assuming that the Perl class is in the module with the same name, loads it and registers.
+	public static func loadAndRegister(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		loadModule(perl: perl)
+		register()
+	}
 }

@@ -68,9 +68,12 @@ extension PerlObject {
 		return withUnsafeSvPointer { sv, _ in sv.pointee.refcntInc() }
 	}
 
-	public static func _fromUnsafeSvPointerNonFinalClassWorkaround<T>(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> T {
+	public static func _fromUnsafeSvPointerNonFinalClassWorkaround<T : PerlObject>(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> T {
 		guard let classname = sv.pointee.classname(perl: perl) else {
 			throw PerlError.notObject(Perl.fromUnsafeSvPointer(inc: sv, perl: perl))
+		}
+		if let nc = T.self as? PerlNamedClass.Type, nc.perlClassName == classname {
+			return T(incUnchecked: sv, perl: perl)
 		}
 		let base = PerlObject.derivedClass(for: classname).init(incUnchecked: sv, perl: perl)
 		guard let obj = base as? T else {
