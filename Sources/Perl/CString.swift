@@ -2,7 +2,7 @@ extension String {
 	init(cString: UnsafePointer<CChar>, withLength length: Int) {
 //		self = String.decodeCString(UnsafePointer(cString), withLength: length, as: UTF8.self, repairingInvalidCodeUnits: true)!.result
 		self = cString.withMemoryRebound(to: UInt8.self, capacity: length) {
-			String._fromWellFormedCodeUnitSequence(UTF8.self, input: UnsafeBufferPointer(start: $0, count: length))
+			String._fromCodeUnitSequenceWithRepair(UTF8.self, input: UnsafeBufferPointer(start: $0, count: length)).0
 		}
 	}
 
