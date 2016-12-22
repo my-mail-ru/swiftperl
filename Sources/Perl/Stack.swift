@@ -50,7 +50,13 @@ struct UnsafeXSubStack : UnsafeStack {
 	}
 
 	func fetch<T : PerlSvConvertible>(at index: Int) throws -> T {
-		guard index < args.count else { throw PerlError.noArgumentOnStack(at: index) }
+		guard index < args.count else {
+			if T.self == PerlScalar.self {
+				return PerlScalar() as! T
+			} else {
+				throw PerlError.noArgumentOnStack(at: index)
+			}
+		}
 		return try T.fromUnsafeSvPointer(args[index], perl: perl)
 	}
 

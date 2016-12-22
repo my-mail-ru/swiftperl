@@ -126,5 +126,13 @@ class ConvertToPerlTests : EmbeddedTestCase {
 			return [PerlScalar(try Int(args[0]) + Int(args[1]))]
 		}
 		XCTAssertEqual(try perl.eval("testlast(10, 15, 'extra') == 25 ? 'OK' : 'FAIL'"), "OK")
+
+		PerlSub(name: "testnoarg") {
+			(a: Int, b: PerlScalar) -> Int in
+			XCTAssertEqual(a, 10)
+			XCTAssertTrue(!b.defined)
+			return 25
+		}
+		XCTAssertEqual(try perl.eval("testnoarg(10) == 25 ? 'OK' : 'FAIL'"), "OK")
 	}
 }
