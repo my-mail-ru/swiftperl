@@ -106,7 +106,7 @@ public final class PerlScalar : PerlValue, PerlDerived {
 		return withUnsafeSvPointer { sv, _ in sv.pointee.isInt }
 	}
 
-	/// A boolean value indicating whether the `SV` contains an double.
+	/// A boolean value indicating whether the `SV` contains a double.
 	public var isDouble: Bool {
 		return withUnsafeSvPointer { sv, _ in sv.pointee.isDouble }
 	}
@@ -404,7 +404,7 @@ extension Double {
 		try self.init(nilable: usv, perl: perl)
 	}
 
-	/// Creates a double from `PerlScalar` using Perl macros `SvIV`.
+	/// Creates a double from `PerlScalar` using Perl macros `SvNV`.
 	/// Performs no additional checks.
 	///
 	/// ```swift
