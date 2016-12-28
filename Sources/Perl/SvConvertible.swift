@@ -13,6 +13,11 @@ extension Int : PerlSvConvertible {
 	public func toUnsafeSvPointer(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
 }
 
+extension Double : PerlSvConvertible {
+	public static func fromUnsafeSvPointer(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Double { return try Double(sv, perl: perl) }
+	public func toUnsafeSvPointer(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
+}
+
 extension String : PerlSvConvertible {
 	public static func fromUnsafeSvPointer(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> String { return try String(sv, perl: perl) }
 	public func toUnsafeSvPointer(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> UnsafeSvPointer { return perl.pointee.newSV(self) }

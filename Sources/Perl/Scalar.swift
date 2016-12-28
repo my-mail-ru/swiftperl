@@ -106,6 +106,11 @@ public final class PerlScalar : PerlValue, PerlDerived {
 		return withUnsafeSvPointer { sv, _ in sv.pointee.isInt }
 	}
 
+	/// A boolean value indicating whether the `SV` contains a double.
+	public var isDouble: Bool {
+		return withUnsafeSvPointer { sv, _ in sv.pointee.isDouble }
+	}
+
 	/// A boolean value indicating whether the `SV` contains a character string.
 	public var isString: Bool {
 		return withUnsafeSvPointer { sv, _ in sv.pointee.isString }
@@ -138,6 +143,9 @@ public final class PerlScalar : PerlValue, PerlDerived {
 			}
 			if isString {
 				values.append("pv: \(String(unchecked: self).debugDescription)")
+			}
+			if isDouble {
+				values.append("nv: \(Double(unchecked: self).debugDescription)")
 			}
 			if let ref = referent {
 				var str = "rv: "
@@ -359,6 +367,61 @@ extension Int {
 	}
 }
 
+
+extension Double {
+	/// Creates a double from `PerlScalar`.
+	/// Throws if `sv` contains something that not looks like a number.
+	///
+	/// ```swift
+	/// let i = try Double(PerlScalar(42.3))     // i == 42.3
+	/// let i = try Double(PerlScalar("42.3"))   // i == 42.3
+	/// let i = try Double(PerlScalar())         // throws
+	/// let i = try Double(PerlScalar(""))       // throws
+	/// let i = try Double(PerlScalar("any"))    // throws
+	/// let i = try Double(PerlScalar("50sec"))  // throws
+	/// ```
+	public init(_ sv: PerlScalar) throws {
+		defer { _fixLifetime(sv) }
+		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
+		try self.init(usv, perl: perl)
+	}
+
+	/// Creates a double from `PerlScalar`.
+	/// Returns `nil` if `sv` contains `undef`;
+	/// throws if `sv` contains something that not looks like a number.
+	///
+	/// ```swift
+	/// let i = try Double(nilable: PerlScalar(42.3))     // i == .some(42.3)
+	/// let i = try Double(nilable: PerlScalar("42.3"))   // i == .some(42.3)
+	/// let i = try Double(nilable: PerlScalar())         // i == nil
+	/// let i = try Double(nilable: PerlScalar(""))       // throws
+	/// let i = try Double(nilable: PerlScalar("any"))    // throws
+	/// let i = try Double(nilable: PerlScalar("50sec"))  // throws
+	/// ```
+	public init?(nilable sv: PerlScalar) throws {
+		defer { _fixLifetime(sv) }
+		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
+		try self.init(nilable: usv, perl: perl)
+	}
+
+	/// Creates a double from `PerlScalar` using Perl macros `SvNV`.
+	/// Performs no additional checks.
+	///
+	/// ```swift
+	/// let i = Double(unchecked: PerlScalar(42.3))        // i == 42.3
+	/// let i = Double(unchecked: PerlScalar("42.3"))      // i == 42.3
+	/// let i = Double(unchecked: PerlScalar())            // i == 0
+	/// let i = Double(unchecked: PerlScalar(""))          // i == 0
+	/// let i = Double(unchecked: PerlScalar("any"))       // i == 0
+	/// let i = Double(unchecked: PerlScalar("50sec"))     // i == 50
+	/// let i = Double(unchecked: PerlScalar("50.3sec"))   // i == 50.3
+	/// ```
+	public init(unchecked sv: PerlScalar) {
+		defer { _fixLifetime(sv) }
+		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
+		self.init(unchecked: usv, perl: perl)
+	}
+}
 extension String {
 	/// Creates a string from `PerlScalar`.
 	/// Throws if `sv` does not contain a string or a number.

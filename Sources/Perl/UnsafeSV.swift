@@ -37,6 +37,7 @@ extension UnsafeSV {
 	var type: SvType { mutating get { return SvType(SvTYPE(&self)) } }
 	var defined: Bool { mutating get { return SvOK(&self) } }
 	var isInt: Bool { mutating get { return SvIOK(&self) } }
+	var isDouble: Bool { mutating get { return SvNOK(&self) } }
 	var isString: Bool { mutating get { return SvPOK(&self) } }
 	var isRef: Bool { mutating get { return SvROK(&self) } }
 
@@ -150,6 +151,24 @@ extension Int {
 
 	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		self = perl.pointee.SvIV(sv)
+	}
+}
+
+extension Double {
+	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+		guard SvNIOK(sv) || perl.pointee.looks_like_number(sv) else {
+			throw PerlError.notNumber(fromUnsafeSvPointer(inc: sv, perl: perl))
+		}
+		self.init(unchecked: sv, perl: perl)
+	}
+
+	public init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+		guard SvOK(sv) else { return nil }
+		try self.init(sv, perl: perl)
+	}
+
+	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		self = perl.pointee.SvNV(sv)
 	}
 }
 
