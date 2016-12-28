@@ -6,6 +6,7 @@ class ConvertToPerlTests : EmbeddedTestCase {
 		return [
 			("testUndef", testUndef),
 			("testInt", testInt),
+			("testDouble", testDouble),
 			("testString", testString),
 			("testScalarRef", testScalarRef),
 			("testArrayRef", testArrayRef),
@@ -26,6 +27,13 @@ class ConvertToPerlTests : EmbeddedTestCase {
 		XCTAssert(v.isInt)
 		try perl.eval("sub is_10 { return $_[0] == 10 }")
 		XCTAssert(try perl.call(sub: "is_10", v))
+	}
+
+	func testDouble() throws {
+		let v = PerlScalar(10.3)
+		XCTAssert(v.isDouble)
+		try perl.eval("sub is_10dot3 { return $_[0] == 10.3 }")
+		XCTAssert(try perl.call(sub: "is_10dot3", v))
 	}
 
 	func testString() throws {
