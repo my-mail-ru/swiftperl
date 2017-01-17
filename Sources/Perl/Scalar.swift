@@ -207,6 +207,23 @@ extension PerlScalar : ExpressibleByIntegerLiteral {
 	}
 }
 
+extension PerlScalar : ExpressibleByFloatLiteral {
+	/// Creates an instance from the given floating-point literal.
+	///
+	/// Do not call this initializer directly. It is used by the compiler when
+	/// you create a new `PerlScalar` instance by using a floating-point literal.
+	/// Instead, create a new value by using a literal:
+	///
+	/// ```swift
+	/// let x: PerlScalar = 1.1
+	/// ```
+	///
+	/// - Parameter value: The new value.
+	public convenience init(floatLiteral value: Double) {
+		self.init(value)
+	}
+}
+
 extension PerlScalar : ExpressibleByUnicodeScalarLiteral {
 	/// Creates an instance initialized to the given Unicode scalar value.
 	///
