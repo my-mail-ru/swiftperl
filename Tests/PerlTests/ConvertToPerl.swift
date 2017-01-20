@@ -5,6 +5,7 @@ class ConvertToPerlTests : EmbeddedTestCase {
 	static var allTests: [(String, (ConvertToPerlTests) -> () throws -> Void)] {
 		return [
 			("testUndef", testUndef),
+			("testBool", testBool),
 			("testInt", testInt),
 			("testDouble", testDouble),
 			("testString", testString),
@@ -20,6 +21,13 @@ class ConvertToPerlTests : EmbeddedTestCase {
 		XCTAssert(!v.defined)
 		try perl.eval("sub is_defined { return defined $_[0] }")
 		XCTAssert(try !perl.call(sub: "is_defined", v))
+	}
+
+	func testBool() throws {
+		try perl.eval("sub is_true { return $_[0] eq '1' }")
+		try perl.eval("sub is_false { return $_[0] eq '' }")
+		XCTAssert(try perl.call(sub: "is_true", PerlScalar(true)))
+		XCTAssert(try perl.call(sub: "is_false", PerlScalar(false)))
 	}
 
 	func testInt() throws {
