@@ -110,6 +110,12 @@ public protocol PerlNamedClass : class {
 
 extension PerlNamedClass {
 	/// Loads the module which name is in `perlClassName` attribute.
+	public static func require(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+		try perl.pointee.require(perlClassName)
+	}
+
+	/// Loads the module which name is in `perlClassName` attribute.
+	@available(*, deprecated, renamed: "require(perl:)")
 	public static func loadModule(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		perl.pointee.loadModule(perlClassName)
 	}
@@ -170,6 +176,12 @@ extension PerlNamedClass where Self : PerlObject {
 	}
 
 	/// Assuming that the Perl class is in the module with the same name, loads it and registers.
+	public static func initialize(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+		try require(perl: perl)
+		register()
+	}
+
+	@available(*, deprecated, renamed: "initialize(perl:)")
 	public static func loadAndRegister(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		loadModule(perl: perl)
 		register()

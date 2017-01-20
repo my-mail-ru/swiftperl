@@ -12,7 +12,7 @@ class ObjectTests : EmbeddedTestCase {
 	}
 
 	func testPerlObject() throws {
-		URI.loadModule()
+		try URI.require()
 		let uri = try URI("https://my.mail.ru/music")
 		XCTAssertEqual(uri.path, "/music")
 		uri.path = "/video"

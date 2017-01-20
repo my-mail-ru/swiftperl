@@ -285,6 +285,5 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		let sv = perl.getSV("тест")
 		XCTAssertNotNil(sv)
 		XCTAssertEqual(try String(sv!), "OK")
-//		perl.pointer.pointee.loadModule("Nothing")
 	}
 }

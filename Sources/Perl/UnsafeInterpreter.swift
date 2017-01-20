@@ -38,13 +38,23 @@ extension UnsafeInterpreter {
 		}
 	}
 
-	/// Loads the module by name.
-	/// Note that the actual module name, not its filename, should be given.
-	/// Eg, `"Foo::Bar"` instead of `"Foo/Bar.pm"`.
+	@available(*, deprecated, renamed: "require(_:)")
 	public mutating func loadModule(_ module: String) {
 		let sv = newSV(module)
 		// Perl's load_module() decrements refcnt for each passed SV*
 		load_module_noargs(0, sv, nil)
+	}
+
+	/// Loads the module by name.
+	/// It is analogous to Perl code `eval "require $module"` and even implemented that way.
+	public mutating func require(_ module: String) throws {
+		try eval("require \(module)")
+	}
+
+	/// Loads the module by its file name.
+	/// It is analogous to Perl code `eval "require '$file'"` and even implemented that way.
+	public mutating func require(file: String) throws {
+		try eval("require q\0\(file)\0")
 	}
 
 	public mutating func getSV(_ name: String, flags: Int32 = 0) -> UnsafeSvPointer? {
