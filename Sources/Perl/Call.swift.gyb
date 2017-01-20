@@ -190,6 +190,29 @@ extension PerlInterpreter {
 }
 
 extension PerlSub {
+	/// Calls Perl subroutine by its name.
+	///
+	/// - Parameter name: A name of the subroutine.
+	public static func call(_ name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Void {
+		try perl.pointee.call(sub: name)
+	}
+
+% for r in calls:
+	/// Calls Perl subroutine by its name.
+	///
+	/// Arguments of the call will be automagically converted to mortalized Perl scalar
+	/// values with the lifetime of the scope of this call. The similar thing will
+	/// happen to Perl return values: they will be destroyed before the call
+	/// returns (but after conversion to Swift values was done).
+	///
+	/// - Parameter name: A name of the subroutine.
+	/// - Parameter args: Arguments of the call.
+	/// - Returns: Return value of the call.
+	public static func call${fqGeneric(r)}(_ name: String, _ args: PerlSvConvertible?..., perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> ${r} {
+		return try perl.pointee.call(sub: name, args: args)
+	}
+% end
+
 	/// Calls the underlain Perl subroutine.
 	public func call() throws -> Void {
 		try withUnsafeSvPointer { sv, perl in
