@@ -64,6 +64,13 @@ public final class PerlSub : PerlValue, PerlDerived {
 		}
 	}
 
+	/// Returns the specified Perl subroutine with the given name.
+	/// If the subroutine does not exist then `nil` is returned.
+	public convenience init?(get name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		guard let cv = perl.pointee.getCV(name) else { return nil }
+		self.init(inc: cv, perl: perl)
+	}
+
 	func withUnsafeCvPointer<R>(_ body: (UnsafeCvPointer, UnsafeInterpreterPointer) throws -> R) rethrows -> R {
 		return try withUnsafeSvPointer { sv, perl in
 			return try sv.withMemoryRebound(to: UnsafeCV.self, capacity: 1) {

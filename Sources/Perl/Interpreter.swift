@@ -1,5 +1,4 @@
 import func Glibc.atexit
-import var CPerl.GV_ADD
 
 /// A safe Perl Interpreter.
 ///
@@ -45,15 +44,13 @@ public final class PerlInterpreter {
 		return try body(pointer)
 	}
 
-	/// Returns the SV of the specified Perl global or package scalar with the given name.
-	/// If the variable does not exist then `nil` is returned.
+	@available(*, deprecated, renamed: "PerlScalar(get:)")
 	public func getSV(_ name: String) -> PerlScalar? {
-		return pointer.pointee.getSV(name).map { PerlScalar(incUnchecked: $0, perl: pointer) }
+		return PerlScalar(get: name)
 	}
 
-	/// Returns the SV of the specified Perl global or package scalar with the given name.
-	/// If the variable does not exist then it will be created.
+	@available(*, deprecated, renamed: "PerlScalar(getCreating:)")
 	public func getSV(add name: String) -> PerlScalar {
-		return PerlScalar(incUnchecked: pointer.pointee.getSV(name, flags: GV_ADD)!, perl: pointer)
+		return PerlScalar(getCreating: name)
 	}
 }

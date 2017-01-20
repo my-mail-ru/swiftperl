@@ -281,6 +281,11 @@ PERL_STATIC_INLINE bool sPerl_looks_like_number(pTHX_ SV *const sv) {
 
 // AV
 
+SWIFT_NAME(PerlInterpreter.get_av(self:_:_:))
+PERL_STATIC_INLINE _Nullable AV *sPerl_get_av(pTHX_ _Nonnull const char *name, I32 flags) {
+	return get_av(name, flags);
+}
+
 SWIFT_NAME(PerlInterpreter.newAV(self:))
 PERL_STATIC_INLINE AV *sPerl_newAV(pTHX) {
 	return newAV();
@@ -321,6 +326,11 @@ PERL_STATIC_INLINE SV *sPerl_av_shift(pTHX_ _Nonnull AV *av) {
 }
 
 // HV
+
+SWIFT_NAME(PerlInterpreter.get_hv(self:_:_:))
+PERL_STATIC_INLINE _Nullable HV *sPerl_get_hv(pTHX_ _Nonnull const char *name, I32 flags) {
+	return get_hv(name, flags);
+}
 
 SWIFT_NAME(PerlInterpreter.newHV(self:))
 PERL_STATIC_INLINE HV *sPerl_newHV(pTHX) {
@@ -363,6 +373,11 @@ PERL_STATIC_INLINE SV *sPerl_HeVAL(_Nonnull HE *he) {
 }
 
 // CV
+
+SWIFT_NAME(PerlInterpreter.get_cv(self:_:_:))
+PERL_STATIC_INLINE _Nullable CV *sPerl_get_cv(pTHX_ _Nonnull const char *name, I32 flags) {
+	return get_cv(name, flags);
+}
 
 SWIFT_NAME(CvXSUBANY(_:))
 PERL_STATIC_INLINE ANY *sPerl_CvXSUBANY(_Nonnull CV *cv) {

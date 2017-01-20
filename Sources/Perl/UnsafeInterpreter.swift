@@ -57,7 +57,32 @@ extension UnsafeInterpreter {
 		try eval("require q\0\(file)\0")
 	}
 
+	/// Returns the SV of the specified Perl scalar.
+	/// If `GV_ADD` is set in `flags` and the Perl variable does not exist then it will be created.
+	/// If `flags` is zero and the variable does not exist then `nil` is returned.
 	public mutating func getSV(_ name: String, flags: Int32 = 0) -> UnsafeSvPointer? {
 		return get_sv(name, SVf_UTF8|flags)
+	}
+
+	/// Returns the AV of the specified Perl array.
+	/// If `GV_ADD` is set in `flags` and the Perl variable does not exist then it will be created.
+	/// If `flags` is zero and the variable does not exist then `nil` is returned.
+	public mutating func getAV(_ name: String, flags: Int32 = 0) -> UnsafeAvPointer? {
+		return get_av(name, SVf_UTF8|flags)
+	}
+
+	/// Returns the HV of the specified Perl hash.
+	/// If `GV_ADD` is set in `flags` and the Perl variable does not exist then it will be created.
+	/// If `flags` is zero and the variable does not exist then `nil` is returned.
+	public mutating func getHV(_ name: String, flags: Int32 = 0) -> UnsafeHvPointer? {
+		return get_hv(name, SVf_UTF8|flags)
+	}
+
+	/// Returns the CV of the specified Perl subroutine.
+	/// If `GV_ADD` is set in `flags` and the Perl subroutine does not exist then it will be declared
+	/// (which has the same effect as saying `sub name;`).
+	/// If `GV_ADD` is not set and the subroutine does not exist then `nil` is returned.
+	public mutating func getCV(_ name: String, flags: Int32 = 0) -> UnsafeCvPointer? {
+		return get_cv(name, SVf_UTF8|flags)
 	}
 }

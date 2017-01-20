@@ -1,3 +1,5 @@
+import var CPerl.GV_ADD
+
 /// Provides a safe wrapper for Perl scalar (`SV`).
 /// Performs reference counting on initialization and deinitialization.
 ///
@@ -94,6 +96,20 @@ public final class PerlScalar : PerlValue, PerlDerived {
 		} else {
 			self.init(perl: perl)
 		}
+	}
+
+	/// Returns the specified Perl global or package scalar with the given name (so it won't work on lexical variables).
+	/// If the variable does not exist then `nil` is returned.
+	public convenience init?(get name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		guard let sv = perl.pointee.getSV(name) else { return nil }
+		self.init(incUnchecked: sv, perl: perl)
+	}
+
+	/// Returns the specified Perl global or package scalar with the given name (so it won't work on lexical variables).
+	/// If the variable does not exist then it will be created.
+	public convenience init(getCreating name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		let sv = perl.pointee.getSV(name, flags: GV_ADD)!
+		self.init(incUnchecked: sv, perl: perl)
 	}
 
 	/// A boolean value indicating whether the `SV` is defined.

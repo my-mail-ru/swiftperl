@@ -282,7 +282,7 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 
 	func testInterpreterMisc() throws {
 		try perl.eval("use utf8; $тест = 'OK'")
-		let sv = perl.getSV("тест")
+		let sv = PerlScalar(get: "тест")
 		XCTAssertNotNil(sv)
 		XCTAssertEqual(try String(sv!), "OK")
 	}

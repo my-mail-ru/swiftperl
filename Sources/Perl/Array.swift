@@ -1,3 +1,5 @@
+import var CPerl.GV_ADD
+
 /// Provides a safe wrapper for Perl array (`AV`).
 /// Performs reference counting on initialization and deinitialization.
 ///
@@ -66,6 +68,20 @@ public final class PerlArray : PerlValue, PerlDerived {
 		for (i, v) in c.enumerated() {
 			self[i] = v as? PerlScalar ?? PerlScalar(v, perl: perl)
 		}
+	}
+
+	/// Returns the specified Perl global or package array with the given name (so it won't work on lexical variables).
+	/// If the variable does not exist then `nil` is returned.
+	public convenience init?(get name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		guard let av = perl.pointee.getAV(name) else { return nil }
+		self.init(inc: av, perl: perl)
+	}
+
+	/// Returns the specified Perl global or package array with the given name (so it won't work on lexical variables).
+	/// If the variable does not exist then it will be created.
+	public convenience init(getCreating name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		let av = perl.pointee.getAV(name, flags: GV_ADD)!
+		self.init(inc: av, perl: perl)
 	}
 
 	func withUnsafeAvPointer<R>(_ body: (UnsafeAvPointer, UnsafeInterpreterPointer) throws -> R) rethrows -> R {
