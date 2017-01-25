@@ -310,6 +310,16 @@ PERL_STATIC_INLINE SV **sPerl_av_fetch(pTHX_ _Nonnull AV *av, SSize_t key, I32 l
     return av_fetch(av, key, lval);
 }
 
+SWIFT_NAME(PerlInterpreter.av_delete(self:_:_:_:))
+PERL_STATIC_INLINE SV *sPerl_av_delete(pTHX_ _Nonnull AV *av, SSize_t key, I32 flags) {
+    return av_delete(av, key, flags);
+}
+
+SWIFT_NAME(PerlInterpreter.av_exists(self:_:_:))
+PERL_STATIC_INLINE bool sPerl_av_exists(pTHX_ _Nonnull AV *av, SSize_t key) {
+    return av_exists(av, key);
+}
+
 SWIFT_NAME(PerlInterpreter.av_extend(self:_:_:))
 PERL_STATIC_INLINE void sPerl_av_extend(pTHX_ _Nonnull AV *av, SSize_t key) {
     return av_extend(av, key);

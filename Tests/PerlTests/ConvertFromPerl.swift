@@ -232,10 +232,24 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssertEqual(av.count, 2)
 		XCTAssertEqual(try Int(av[0]), 42)
 		XCTAssertEqual(try String(av[1]), "str")
+		XCTAssertEqual(try av.fetch(0), 42)
+		XCTAssertEqual(try av.fetch(1), "str")
+		XCTAssertNil(try av.fetch(5) as Int?)
+		XCTAssertFalse(av[7].defined)
 		let strs: [String] = try [String](sv)!
 		XCTAssertEqual(strs, ["42", "str"])
 		XCTAssertEqual(try [String](av), ["42", "str"])
 		XCTAssertEqual(try [String](sv)!, ["42", "str"])
+
+		av[9] = 100
+		XCTAssertEqual(try Int(av[9]), 100)
+		av.store(11, value: 200)
+		XCTAssertEqual(try av.fetch(11), 200)
+		av.delete(11)
+		XCTAssertNil(try av.fetch(11) as Int?)
+		av.store(11, value: 200)
+		XCTAssertEqual(try av.delete(11), 200)
+		XCTAssertNil(try av.fetch(11) as Int?)
 
 		let i: PerlScalar = try perl.eval("[42, 15, 10]")
 		let ints: [Int] = try [Int](i)!

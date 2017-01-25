@@ -28,6 +28,9 @@ public enum PerlError : Error {
 	/// SV bridges to an object of an unexpected type.
 	case unexpectedObjectType(_: AnyPerl, want: AnyPerl.Type)
 
+	/// Element with the index `at` not exists in the array.
+	case elementNotExists(_: PerlArray, at: Int)
+
 	/// Odd number of elements in hash assignment.
 	case oddElementsHash
 }

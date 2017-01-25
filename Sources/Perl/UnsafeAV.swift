@@ -24,13 +24,33 @@ struct UnsafeAvCollection : RandomAccessCollection {
 		return perl.pointee.av_fetch(av, i, lval ? 1 : 0)?.pointee
 	}
 
-	func store(_ i: Index, newValue: Element) -> Element? {
-		return perl.pointee.av_store(av, i, newValue)?.pointee
+	func store(_ i: Index, value: Element) -> Element? {
+		return perl.pointee.av_store(av, i, value)?.pointee
 	}
 
-	subscript (i: Index) -> Element { // FIXME maybe -> Element? or maybe not
-		get { return fetch(i)! }
-		set { _ = store(i, newValue: newValue) }
+	func delete(_ i: Index) -> Element? {
+		return perl.pointee.av_delete(av, i, 0)
+	}
+
+	func delete(discarding i: Index) {
+		perl.pointee.av_delete(av, i, G_DISCARD)
+	}
+
+	func exists(_ i: Index) -> Bool {
+		return perl.pointee.av_exists(av, i)
+	}
+
+	subscript(i: Index) -> Element? {
+		get {
+			return fetch(i)
+		}
+		set {
+			if let newValue = newValue {
+				_ = store(i, value: newValue)
+			} else {
+				delete(discarding: i)
+			}
+		}
 	}
 
 	func extend(to count: Int) {

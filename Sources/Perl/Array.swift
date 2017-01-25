@@ -100,8 +100,64 @@ public final class PerlArray : PerlValue, PerlDerived {
 
 	/// A textual representation of the AV, suitable for debugging.
 	public override var debugDescription: String {
-		let values = map { $0.debugDescription } .joined(separator: ", ")
+		let values = withUnsafeCollection { c in
+			c.map { $0.map { try! PerlScalar(inc: $0, perl: c.perl).debugDescription } ?? "nil" }
+				.joined(separator: ", ")
+		}
 		return "PerlArray([\(values)])"
+	}
+}
+
+extension PerlArray {
+	/// Fetches the element at the specified position.
+	///
+	/// - Parameter index: The position of the element to fetch.
+	/// - Returns: `nil` if the element not exists or is undefined.
+	///
+	/// - Complexity: O(1).
+	public func fetch<T : PerlSvConvertible>(_ index: Int) throws -> T? {
+		return try withUnsafeCollection { c in
+			try c.fetch(index).flatMap {
+				try T?.fromUnsafeSvPointer($0, perl: c.perl)
+			}
+		}
+	}
+
+	/// Stores the element at the specified position.
+	///
+	/// - Parameter index: The position of the element to fetch.
+	/// - Parameter value: The value to store in the array.
+	///
+	/// - Complexity: O(1).
+	public func store<T : PerlSvConvertible>(_ index: Int, value: T) {
+		withUnsafeCollection { c in
+			let sv = value.toUnsafeSvPointer(perl: c.perl)
+			if c.store(index, value: sv) == nil {
+				sv.pointee.refcntDec(perl: c.perl)
+			}
+		}
+	}
+
+	/// Deletes the element at the specified position.
+	///
+	/// - Parameter index: The position of the element to fetch.
+	/// - Returns: Deleted element or `nil` if the element not exists or is undefined.
+	public func delete<T : PerlSvConvertible>(_ index: Int) throws -> T? {
+		return try withUnsafeCollection { c in
+			try c.delete(index).flatMap {
+				try T?.fromUnsafeSvPointer($0, perl: c.perl)
+			}
+		}
+	}
+
+	/// Deletes the element at the specified position.
+	public func delete(_ index: Int) {
+		withUnsafeCollection { $0.delete(discarding: index) }
+	}
+
+	/// Returns true if the element at the specified position is initialized.
+	public func exists(_ index: Int) -> Bool {
+		return withUnsafeCollection { $0.exists(index) }
 	}
 }
 
@@ -124,19 +180,24 @@ extension PerlArray : RandomAccessCollection {
 	/// If the array is empty, `endIndex` is equal to `startIndex`.
 	public var endIndex: Int { return withUnsafeCollection { $0.endIndex } }
 
-	// TODO think about accessing array beyound its lenth
 	/// Accesses the element at the specified position.
 	///
-	/// - Parameter index: The position of the element to access. `index` must be
-	///   greater than or equal to `startIndex` and less than `endIndex`.
+	/// - Parameter index: The position of the element to access.
+	///
+	///   If the element not exists then an undefined scalar is returned.
+	///   Setting a value to the nonexistent element creates that element.
 	///
 	/// - Complexity: Reading an element from an array is O(1). Writing is O(1), too.
-	public subscript(i: Int) -> PerlScalar {
-		get { return withUnsafeCollection { try! PerlScalar(inc: $0[i], perl: $0.perl) } }
+	public subscript(index: Int) -> PerlScalar {
+		get {
+			return withUnsafeCollection { c in
+				c.fetch(index).map { try! PerlScalar(inc: $0, perl: c.perl) } ?? PerlScalar(perl: c.perl)
+			}
+		}
 		set {
 			withUnsafeCollection { c in
 				newValue.withUnsafeSvPointer { sv, _ in
-					_ = c.store(i, newValue: sv)?.pointee.refcntInc()
+					_ = c.store(index, value: sv)?.pointee.refcntInc()
 				}
 			}
 		}
@@ -232,13 +293,16 @@ extension Array where Element : PerlSvConvertible {
 	/// Creates an array from the Perl array.
 	///
 	/// - Parameter av: Perl array with elements compatible with `Element`.
-	///   If some of elements cannot be converted to `Element` then
+	///   If some of elements not exist or cannot be converted to `Element` then
 	///   an error is thrown.
 	///
 	/// - Complexity: O(*n*), where *n* is the count of the array.
 	public init(_ av: PerlArray) throws {
 		self = try av.withUnsafeCollection { uc in
-			try uc.map { try Element.fromUnsafeSvPointer($0, perl: uc.perl) }
+			try uc.enumerated().map {
+				guard let sv = $1 else { throw PerlError.elementNotExists(av, at: $0) }
+				return try Element.fromUnsafeSvPointer(sv, perl: uc.perl)
+			}
 		}
 	}
 
@@ -248,6 +312,9 @@ extension Array where Element : PerlSvConvertible {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
 		guard let av = try UnsafeAvPointer(autoDeref: usv, perl: perl) else { return nil }
-		self = try av.pointee.collection(perl: perl).map { try Element.fromUnsafeSvPointer($0, perl: perl) }
+		self = try av.pointee.collection(perl: perl).enumerated().map {
+			guard let sv = $1 else { throw PerlError.elementNotExists(PerlArray(inc: av, perl: perl), at: $0) }
+			return try Element.fromUnsafeSvPointer(sv, perl: perl)
+		}
 	}
 }
