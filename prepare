@@ -8,6 +8,8 @@ use FindBin;
 my $format = "%-40s";
 my $root = $FindBin::Bin;
 
+delete $ENV{LD_LIBRARY_PATH};
+
 write_modulemap();
 expand_gyb();
 
