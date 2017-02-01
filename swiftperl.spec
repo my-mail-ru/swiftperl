@@ -1,7 +1,7 @@
 Name:          swiftperl
 Version:       %{__version}
 Release:       %{!?__release:1}%{?__release}%{?dist}
-Summary:       Swift and Perl Interoperability
+Summary:       Swift and Perl Interoperability library
 
 Group:         Development/Libraries
 License:       MIT
@@ -9,10 +9,11 @@ URL:           https://github.com/my-mail-ru/%{name}
 Source0:       https://github.com/my-mail-ru/%{name}/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires: swift
-BuildRequires: swift-packaging
+BuildRequires: swift >= 3.0.2
+BuildRequires: swift-packaging >= 0.6
 BuildRequires: perl-devel
 BuildRequires: perl-libs
+
 Requires:      perl-libs
 
 %swift_find_provides_and_requires
@@ -57,6 +58,21 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %{swift_libdir}/*.so
+
+
+%package devel
+Summary:  Swift and Perl Interoperability module and header files
+Requires: swiftperl = %{version}-%{release}
+Requires: perl-devel
+
+%description devel
+swiftperl is designed to provide an easy and smooth interoperability between Swift and Perl languages. The primary goal is to write XS modules for Perl entirely in Swift, though running Perl Interpreter in Swift environment is also possible.
+
+%{?__revision:Built from revision %{__revision}.}
+
+
+%files devel
+%defattr(-,root,root,-)
 %{swift_moduledir}/*.swiftmodule
 %{swift_moduledir}/*.swiftdoc
 %{swift_clangmoduleroot}/CPerl
