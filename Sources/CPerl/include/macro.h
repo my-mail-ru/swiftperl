@@ -320,6 +320,11 @@ PERL_STATIC_INLINE bool sPerl_av_exists(pTHX_ _Nonnull AV *av, SSize_t key) {
     return av_exists(av, key);
 }
 
+SWIFT_NAME(PerlInterpreter.av_clear(self:_:))
+PERL_STATIC_INLINE void sPerl_av_clear(pTHX_ AV *av) {
+	av_clear(av);
+}
+
 SWIFT_NAME(PerlInterpreter.av_extend(self:_:_:))
 PERL_STATIC_INLINE void sPerl_av_extend(pTHX_ _Nonnull AV *av, SSize_t key) {
     return av_extend(av, key);
@@ -348,18 +353,48 @@ PERL_STATIC_INLINE HV *sPerl_newHV(pTHX) {
 }
 
 SWIFT_NAME(PerlInterpreter.hv_store(self:_:_:_:_:_:))
-PERL_STATIC_INLINE SV **sPerl_hv_store(pTHX_ _Nonnull HV *hv, _Nonnull const char *key, U32 keylen, SV *val, U32 hash) {
+PERL_STATIC_INLINE SV **sPerl_hv_store(pTHX_ _Nonnull HV *hv, _Nonnull const char *key, I32 keylen, SV *val, U32 hash) {
 	return hv_store(hv, key, keylen, val, hash);
 }
 
 SWIFT_NAME(PerlInterpreter.hv_fetch(self:_:_:_:_:))
-PERL_STATIC_INLINE SV **sPerl_hv_fetch(pTHX_ _Nonnull HV *hv, _Nonnull const char *key, U32 keylen, I32 lval) {
+PERL_STATIC_INLINE SV **sPerl_hv_fetch(pTHX_ _Nonnull HV *hv, _Nonnull const char *key, I32 keylen, I32 lval) {
 	return hv_fetch(hv, key, keylen, lval);
 }
 
 SWIFT_NAME(PerlInterpreter.hv_delete(self:_:_:_:_:))
-PERL_STATIC_INLINE SV *sPerl_hv_delete(pTHX_ _Nonnull HV *hv, _Nonnull const char *key, U32 keylen, I32 flags) {
+PERL_STATIC_INLINE SV *sPerl_hv_delete(pTHX_ _Nonnull HV *hv, _Nonnull const char *key, I32 keylen, I32 flags) {
 	return hv_delete(hv, key, keylen, flags);
+}
+
+SWIFT_NAME(PerlInterpreter.hv_exists(self:_:_:_:))
+PERL_STATIC_INLINE bool sPerl_hv_exists(pTHX_ _Nonnull HV *hv, _Nonnull const char *key, I32 keylen) {
+	return hv_exists(hv, key, keylen);
+}
+
+SWIFT_NAME(PerlInterpreter.hv_store_ent(self:_:_:_:_:))
+PERL_STATIC_INLINE _Nullable HE *sPerl_hv_store_ent(pTHX_ _Nonnull HV *hv, _Nonnull SV *key, SV *val, U32 hash) {
+	return hv_store_ent(hv, key, val, hash);
+}
+
+SWIFT_NAME(PerlInterpreter.hv_fetch_ent(self:_:_:_:_:))
+PERL_STATIC_INLINE _Nullable HE *sPerl_hv_fetch_ent(pTHX_ _Nonnull HV *hv, _Nonnull SV *key, I32 lval, U32 hash) {
+	return hv_fetch_ent(hv, key, lval, hash);
+}
+
+SWIFT_NAME(PerlInterpreter.hv_delete_ent(self:_:_:_:_:))
+PERL_STATIC_INLINE SV *sPerl_hv_delete_ent(pTHX_ _Nonnull HV *hv, _Nonnull SV *key, I32 flags, U32 hash) {
+	return hv_delete_ent(hv, key, flags, hash);
+}
+
+SWIFT_NAME(PerlInterpreter.hv_exists_ent(self:_:_:_:))
+PERL_STATIC_INLINE bool sPerl_hv_exists_ent(pTHX_ _Nonnull HV *hv, _Nonnull SV *key, U32 hash) {
+	return hv_exists_ent(hv, key, hash);
+}
+
+SWIFT_NAME(PerlInterpreter.hv_clear(self:_:))
+PERL_STATIC_INLINE void sPerl_hv_clear(pTHX_ HV *hv) {
+	hv_clear(hv);
 }
 
 SWIFT_NAME(PerlInterpreter.hv_iterinit(self:_:))
@@ -378,7 +413,7 @@ PERL_STATIC_INLINE char *sPerl_HePV(pTHX_ _Nonnull HE *he, STRLEN *len) {
 }
 
 SWIFT_NAME(HeVAL(_:))
-PERL_STATIC_INLINE SV *sPerl_HeVAL(_Nonnull HE *he) {
+PERL_STATIC_INLINE _Nonnull SV *sPerl_HeVAL(_Nonnull HE *he) {
 	return HeVAL(he);
 }
 

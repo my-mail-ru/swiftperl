@@ -159,6 +159,11 @@ extension PerlArray {
 	public func exists(_ index: Int) -> Bool {
 		return withUnsafeCollection { $0.exists(index) }
 	}
+
+	/// Frees the all the elements of an array, leaving it empty.
+	public func clear() {
+		withUnsafeCollection { $0.clear() }
+	}
 }
 
 //struct PerlArray: MutableCollection {

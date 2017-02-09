@@ -53,6 +53,10 @@ struct UnsafeAvCollection : RandomAccessCollection {
 		}
 	}
 
+	func clear() {
+		perl.pointee.av_clear(av)
+	}
+
 	func extend(to count: Int) {
 		perl.pointee.av_extend(av, count - 1)
 	}

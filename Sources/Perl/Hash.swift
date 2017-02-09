@@ -124,6 +124,109 @@ public final class PerlHash : PerlValue, PerlDerived {
 	}
 }
 
+extension PerlHash {
+	/// Fetches the value associated with the given key.
+	///
+	/// - Parameter key: The key to find in the hash.
+	/// - Returns: The value associated with `key` if `key` is in the hash;
+	///   otherwise, `nil`.
+	public func fetch<T : PerlSvConvertible>(_ key: String) throws -> T? {
+		return try withUnsafeCollection { c in
+			try c.fetch(key).flatMap { try T?.fromUnsafeSvPointer($0, perl: c.perl) }
+		}
+	}
+
+	/// Stores the value in the hash for the given key.
+	///
+	/// - Parameter key: The key to associate with `value`.
+	/// - Parameter value: The value to store in the hash.
+	public func store<T : PerlSvConvertible>(key: String, value: T) {
+		withUnsafeCollection { c in
+			let v = value.toUnsafeSvPointer(perl: c.perl)
+			guard c.store(key, newValue: v) != nil else {
+				v.pointee.refcntDec(perl: perl)
+				return
+			}
+		}
+	}
+
+	/// Deletes the given key and its associated value from the hash.
+	///
+	/// - Parameter key: The key to remove along with its associated value.
+	/// - Returns: The value that was removed, or `nil` if the key was not found in the hash.
+	public func delete<T : PerlSvConvertible>(_ key: String) throws -> T? {
+		return try withUnsafeCollection { c in
+			try c.delete(key).flatMap { try T?.fromUnsafeSvPointer($0, perl: c.perl) }
+		}
+	}
+
+	/// Deletes the given key and its associated value from the hash.
+	public func delete(_ key: String) {
+		withUnsafeCollection { $0.delete(discarding: key) }
+	}
+
+	/// Returns a boolean indicating whether the specified hash key exists.
+	public func exists(_ key: String) -> Bool {
+		return withUnsafeCollection { $0.exists(key) }
+	}
+
+	/// Fetches the value associated with the given key.
+	///
+	/// - Parameter key: The key to find in the hash.
+	/// - Returns: The value associated with `key` if `key` is in the hash;
+	///   otherwise, `nil`.
+	public func fetch<T : PerlSvConvertible>(_ key: PerlScalar) throws -> T? {
+		return try withUnsafeCollection { c in
+			try key.withUnsafeSvPointer { keysv, _ in
+				try c.fetch(keysv).flatMap { try T?.fromUnsafeSvPointer($0, perl: c.perl) }
+			}
+		}
+	}
+
+	/// Stores the value in the hash for the given key.
+	///
+	/// - Parameter key: The key to associate with `value`.
+	/// - Parameter value: The value to store in the hash.
+	public func store<T : PerlSvConvertible>(key: PerlScalar, value: T) {
+		withUnsafeCollection { c in
+			key.withUnsafeSvPointer { keysv, _ in
+				let v = value.toUnsafeSvPointer(perl: c.perl)
+				guard c.store(keysv, newValue: v) != nil else {
+					v.pointee.refcntDec(perl: perl)
+					return
+				}
+			}
+		}
+	}
+
+	/// Deletes the given key and its associated value from the hash.
+	///
+	/// - Parameter key: The key to remove along with its associated value.
+	/// - Returns: The value that was removed, or `nil` if the key was not found in the hash.
+	public func delete<T : PerlSvConvertible>(_ key: PerlScalar) throws -> T? {
+		return try withUnsafeCollection { c in
+			try key.withUnsafeSvPointer { keysv, _ in
+				try c.delete(keysv).flatMap { try T?.fromUnsafeSvPointer($0, perl: c.perl) }
+			}
+		}
+	}
+
+	/// Deletes the given key and its associated value from the hash.
+	public func delete(_ key: PerlScalar) {
+		withUnsafeCollection { c in key.withUnsafeSvPointer { keysv, _ in c.delete(discarding: keysv) } }
+	}
+
+	/// Returns a boolean indicating whether the specified hash key exists.
+	public func exists(_ key: PerlScalar) -> Bool {
+		return withUnsafeCollection { c in key.withUnsafeSvPointer { keysv, _ in c.exists(keysv) } }
+	}
+
+	/// Frees the all the elements of a hash, leaving it empty.
+	public func clear() {
+		withUnsafeCollection { $0.clear() }
+	}
+}
+
 extension PerlHash: Sequence, IteratorProtocol {
 	public typealias Key = String
 	public typealias Value = PerlScalar
@@ -176,7 +279,7 @@ extension PerlHash: Sequence, IteratorProtocol {
 	public subscript(key: Key) -> PerlScalar? {
 		get {
 			return withUnsafeCollection {
-				guard let sv = $0[key] else { return nil }
+				guard let sv = $0.fetch(key) else { return nil }
 				return try! PerlScalar(inc: sv, perl: $0.perl)
 			}
 		}
@@ -187,7 +290,46 @@ extension PerlHash: Sequence, IteratorProtocol {
 						_ = c.store(key, newValue: sv)?.pointee.refcntInc()
 					}
 				} else {
-					c.delete(key)
+					c.delete(discarding: key)
+				}
+			}
+		}
+	}
+
+	/// Accesses the value associated with the given key for reading and writing.
+	///
+	/// This *key-based* subscript returns the value for the given key if the key
+	/// is found in the hash, or `nil` if the key is not found.
+	///
+	/// When you assign a value for a key and that key already exists, the
+	/// hash overwrites the existing value. If the hash doesn't
+	/// contain the key, the key and value are added as a new key-value pair.
+	///
+	/// If you assign `nil` as the value for the given key, the hash
+	/// removes that key and its associated value.
+	///
+	/// - Parameter key: The key to find in the hash.
+	/// - Returns: The value associated with `key` if `key` is in the hash;
+	///   otherwise, `nil`.
+	///
+	/// - SeeAlso: `Dictionary`
+	public subscript(key: PerlScalar) -> PerlScalar? {
+		get {
+			return withUnsafeCollection { c in
+				guard let sv = key.withUnsafeSvPointer({ c.fetch($0.0) }) else { return nil }
+				return try! PerlScalar(inc: sv, perl: c.perl)
+			}
+		}
+		set {
+			withUnsafeCollection { c in
+				key.withUnsafeSvPointer { keysv, _ in
+					if let value = newValue {
+						value.withUnsafeSvPointer { sv, _ in
+							_ = c.store(keysv, newValue: sv)?.pointee.refcntInc()
+						}
+					} else {
+						c.delete(discarding: keysv)
+					}
 				}
 			}
 		}

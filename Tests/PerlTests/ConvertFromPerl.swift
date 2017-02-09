@@ -261,7 +261,7 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 	}
 
 	func testHashRef() throws {
-		let sv: PerlScalar = try perl.eval("{ one => 1, two => 2 }")
+		let sv: PerlScalar = try perl.eval("{ one => 1, two => 2, три => 3 }")
 		XCTAssert(sv.defined)
 		XCTAssert(!sv.isInt)
 		XCTAssert(!sv.isDouble)
@@ -272,13 +272,14 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 //		XCTAssertEqual(hv.count, 2)
 		XCTAssertEqual(try Int(hv["one"]!), 1)
 		XCTAssertEqual(try Int(hv["two"]!), 2)
+		XCTAssertEqual(try Int(hv["три"]!), 3)
 //		let hd: [String: Int] = try [String: Int](hv)
 //		XCTAssertEqual(hd, ["one": 1, "two": 2])
 		let sd: [String: Int] = try [String: Int](sv)!
-		XCTAssertEqual(sd, ["one": 1, "two": 2])
-		XCTAssertEqual(sd, ["one": 1, "two": 2])
-		XCTAssertEqual(try [String: Int](hv), ["one": 1, "two": 2])
-		XCTAssertEqual(try [String: Int](sv)!, ["one": 1, "two": 2])
+		XCTAssertEqual(sd, ["one": 1, "two": 2, "три": 3])
+		XCTAssertEqual(sd, ["one": 1, "two": 2, "три": 3])
+		XCTAssertEqual(try [String: Int](hv), ["one": 1, "two": 2, "три": 3])
+		XCTAssertEqual(try [String: Int](sv)!, ["one": 1, "two": 2, "три": 3])
 	}
 
 	func testCodeRef() throws {
