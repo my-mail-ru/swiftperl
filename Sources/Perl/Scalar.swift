@@ -150,6 +150,12 @@ public final class PerlScalar : PerlValue, PerlDerived {
 		}
 	}
 
+	/// Calls the closure with `UnsafeRawBufferPointer` to the string in the SV,
+	/// or a stringified form of the SV if the SV does not contain a string.
+	public func withUnsafeBytes<R>(_ body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R {
+		return try withUnsafeSvPointer { sv, perl in try sv.pointee.withUnsafeBytes(perl: perl, body: body)}
+	}
+
 	/// A textual representation of the SV, suitable for debugging.
 	public override var debugDescription: String {
 		var values = [String]()

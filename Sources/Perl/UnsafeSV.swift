@@ -45,6 +45,13 @@ extension UnsafeSV {
 		mutating get { return SvROK(&self) ? SvRV(&self) : nil }
 	}
 
+	mutating func withUnsafeBytes<R>(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current, body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R {
+		var clen = 0
+		let cstr = perl.pointee.SvPV(&self, &clen)!
+		let bytes = UnsafeRawBufferPointer(start: cstr, count: clen)
+		return try body(bytes)
+	}
+
 	mutating func isObject(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> Bool {
 		return perl.pointee.sv_isobject(&self)
 	}
