@@ -188,7 +188,7 @@ extension PerlSub {
 	}
 }
 
-extension PerlBridgedObject {
+extension PerlNamedClass {
 % for tail in ("fixed", "array", "hash"):
 %   for p in range(0, 8):
 %     for r in range(0, 3):
