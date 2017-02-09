@@ -297,9 +297,8 @@ extension PerlArray: ExpressibleByArrayLiteral {
 extension Array where Element : PerlSvConvertible {
 	/// Creates an array from the Perl array.
 	///
-	/// - Parameter av: Perl array with elements compatible with `Element`.
-	///   If some of elements not exist or cannot be converted to `Element` then
-	///   an error is thrown.
+	/// - Parameter av: The Perl array with the elements compatible with `Element`.
+	/// - Throws: If some of the elements not exist or cannot be converted to `Element`.
 	///
 	/// - Complexity: O(*n*), where *n* is the count of the array.
 	public init(_ av: PerlArray) throws {
@@ -311,15 +310,22 @@ extension Array where Element : PerlSvConvertible {
 		}
 	}
 
-	// TODO something with this constructor. It either shouldn't use autoDeref,
-	// because PerlScalar cannot contain AV, or should take PerlValue as an argument.
-	public init?(_ sv: PerlScalar) throws {
-		defer { _fixLifetime(sv) }
-		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		guard let av = try UnsafeAvPointer(autoDeref: usv, perl: perl) else { return nil }
-		self = try av.pointee.collection(perl: perl).enumerated().map {
-			guard let sv = $1 else { throw PerlError.elementNotExists(PerlArray(inc: av, perl: perl), at: $0) }
-			return try Element.fromUnsafeSvPointer(sv, perl: perl)
+	/// Creates an array from the reference to the Perl array.
+	///
+	/// - Parameter ref: The reference to the Perl array with the elements
+	///   compatible with `Element`.
+	/// - Throws: If `ref` is not a reference to a Perl array or
+	///   some of the elements not exist or cannot be converted to `Element`.
+	///
+	/// - Complexity: O(*n*), where *n* is the count of the array.
+	public init(_ ref: PerlScalar) throws {
+		self = try ref.withReferentUnsafeSvPointer(type: .array) { sv, perl in
+			try sv.withMemoryRebound(to: UnsafeAV.self, capacity: 1) { av in
+				try av.pointee.collection(perl: perl).enumerated().map {
+					guard let sv = $1 else { throw PerlError.elementNotExists(PerlArray(inc: av, perl: perl), at: $0) }
+					return try Element.fromUnsafeSvPointer(sv, perl: perl)
+				}
+			}
 		}
 	}
 }

@@ -378,6 +378,12 @@ extension PerlHash : ExpressibleByDictionaryLiteral {
 
 // where Key == String, but it is unsupported
 extension Dictionary where Value : PerlSvConvertible {
+	/// Creates a dictionary from the Perl hash.
+	///
+	/// - Parameter hv: The Perl hash with the values compatible with `Value`.
+	/// - Throws: If some of the values cannot be converted to `Value`.
+	///
+	/// - Complexity: O(*n*), where *n* is the count of the hash.
 	public init(_ hv: PerlHash) throws {
 		self.init()
 		try hv.withUnsafeCollection {
@@ -387,13 +393,22 @@ extension Dictionary where Value : PerlSvConvertible {
 		}
 	}
 
-	public init?(_ sv: PerlScalar) throws {
-		defer { _fixLifetime(sv) }
-		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		guard let hv = try UnsafeHvPointer(autoDeref: usv, perl: perl) else { return nil }
+	/// Creates a dictionary from the reference to the Perl hash.
+	///
+	/// - Parameter ref: The reference to the Perl hash with the values
+	///   compatible with `Value`.
+	/// - Throws: If `ref` is not a reference to a Perl hash or
+	///   some of the values cannot be converted to `Value`.
+	///
+	/// - Complexity: O(*n*), where *n* is the count of the hash.
+	public init(_ ref: PerlScalar) throws {
 		self.init()
-		for (k, v) in hv.pointee.collection(perl: perl) {
-			self[k as! Key] = try Value.fromUnsafeSvPointer(v, perl: perl)
+		try ref.withReferentUnsafeSvPointer(type: .hash) { sv, perl in
+			try sv.withMemoryRebound(to: UnsafeHV.self, capacity: 1) { hv in
+				for (k, v) in hv.pointee.collection(perl: perl) {
+					self[k as! Key] = try Value.fromUnsafeSvPointer(v, perl: perl)
+				}
+			}
 		}
 	}
 }

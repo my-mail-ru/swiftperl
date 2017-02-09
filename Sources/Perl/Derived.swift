@@ -22,10 +22,9 @@ extension PerlDerived where Self : PerlValue, UnsafeValue : UnsafeSvCastable {
 		self.init(noincUnchecked: sv, perl: perl)
 	}
 
-	public init?(_ sv: PerlScalar) throws {
-		defer { _fixLifetime(sv) }
-		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		guard let uxv = try UnsafeMutablePointer<UnsafeValue>(autoDeref: usv, perl: perl) else { return nil }
-		self.init(inc: uxv, perl: perl)
+	public init(_ ref: PerlScalar) throws {
+		defer { _fixLifetime(ref) }
+		let (sv, perl) = try ref.withReferentUnsafeSvPointer(type: UnsafeValue.type) { $0 }
+		self.init(incUnchecked: sv, perl: perl)
 	}
 }

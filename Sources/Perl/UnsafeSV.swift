@@ -136,11 +136,6 @@ extension Bool {
 	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		self = perl.pointee.SvTRUE(sv)
 	}
-
-	public init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		guard SvOK(sv) else { return nil }
-		self = perl.pointee.SvTRUE(sv)
-	}
 }
 
 extension Int {
@@ -149,11 +144,6 @@ extension Int {
 			throw PerlError.notNumber(fromUnsafeSvPointer(inc: sv, perl: perl))
 		}
 		self.init(unchecked: sv, perl: perl)
-	}
-
-	public init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		guard SvOK(sv) else { return nil }
-		try self.init(sv, perl: perl)
 	}
 
 	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
@@ -169,11 +159,6 @@ extension Double {
 		self.init(unchecked: sv, perl: perl)
 	}
 
-	public init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		guard SvOK(sv) else { return nil }
-		try self.init(sv, perl: perl)
-	}
-
 	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		self = perl.pointee.SvNV(sv)
 	}
@@ -185,11 +170,6 @@ extension String {
 			throw PerlError.notStringOrNumber(fromUnsafeSvPointer(inc: sv, perl: perl))
 		}
 		self.init(unchecked: sv, perl: perl)
-	}
-
-	public init?(nilable sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		guard SvOK(sv) else { return nil }
-		try self.init(sv, perl: perl)
 	}
 
 	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {

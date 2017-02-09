@@ -19,6 +19,9 @@ public enum PerlError : Error {
 	/// SV is not a string or a number, but we suppose it to be.
 	case notStringOrNumber(_: AnyPerl)
 
+	/// SV is not a reference.
+	case notReference(_: AnyPerl)
+
 	/// SV is not an object, but we suppose it to be.
 	case notObject(_: AnyPerl)
 
