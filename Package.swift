@@ -1,6 +1,8 @@
 import PackageDescription
 import Glibc
 
+let buildBenchmark = false
+
 let package = Package(
 	name: "Perl",
 	targets: [
@@ -9,6 +11,13 @@ let package = Package(
 		Target(name: "SampleXS", dependencies: [.Target(name: "Perl")])
 	]
 )
+
+if buildBenchmark {
+	package.targets.append(Target(name: "swiftperl-benchmark", dependencies: [.Target(name: "Perl")]))
+	package.dependencies.append(.Package(url: "https://github.com/my-mail-ru/swift-Benchmark.git", majorVersion: 0))
+} else {
+	package.exclude.append("Sources/swiftperl-benchmark")
+}
 
 products.append(Product(name: "SampleXS", type: .Library(.Dynamic), modules: "SampleXS"))
 

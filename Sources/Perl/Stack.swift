@@ -65,11 +65,18 @@ struct UnsafeXSubStack : UnsafeStack {
 		return try Optional<T>.fromUnsafeSvPointer(args[index], perl: perl)
 	}
 
+	@_specialize(Bool) @_specialize(Int) @_specialize(Double) @_specialize(String) @_specialize(PerlScalar)
 	func fetchTail<T : PerlSvConvertible>(startingAt index: Int) throws -> [T] {
 		guard index < args.count else { return [] }
-		return try args[index..<args.count].map { try T.fromUnsafeSvPointer($0, perl: perl) }
+		var tail: [T] = []
+		tail.reserveCapacity(args.count - index)
+		for value in args[index..<args.count] {
+			tail.append(try T.fromUnsafeSvPointer(value, perl: perl))
+		}
+		return tail
 	}
 
+	@_specialize(Bool) @_specialize(Int) @_specialize(Double) @_specialize(String) @_specialize(PerlScalar)
 	func fetchTail<T : PerlSvConvertible>(startingAt index: Int) throws -> [String: T] {
 		guard index < args.count else { return [:] }
 		var tail: [String: T] = [:]
