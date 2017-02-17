@@ -1,4 +1,4 @@
-import var CPerl.GV_ADD
+import CPerl
 
 /// Provides a safe wrapper for Perl scalar (`SV`).
 /// Performs reference counting on initialization and deinitialization.
@@ -219,6 +219,25 @@ public final class PerlScalar : PerlValue, PerlDerived {
 				throw PerlError.unexpectedSvType(fromUnsafeSvPointer(inc: sv, perl: perl), want: type)
 			}
 			return try body(sv, perl)
+		}
+	}
+}
+
+extension PerlScalar : Equatable, Hashable {
+	/// The hash value of the stringified form of the scalar.
+	///
+	/// Hash values are not guaranteed to be equal across different executions of
+	/// your program. Do not save hash values to use during a future execution.
+	public var hashValue: Int {
+		return withUnsafeSvPointer { sv, perl in Int(perl.pointee.SvHASH(sv)) }
+	}
+
+	/// Returns a Boolean value indicating whether two scalars stringify to identical strings.
+	public static func == (lhs: PerlScalar, rhs: PerlScalar) -> Bool {
+		return rhs.withUnsafeSvPointer { sv2, _ in
+			lhs.withUnsafeSvPointer { sv1, perl in
+				perl.pointee.sv_eq(sv1, sv2)
+			}
 		}
 	}
 }
