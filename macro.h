@@ -279,6 +279,20 @@ PERL_STATIC_INLINE bool sPerl_looks_like_number(pTHX_ SV *const sv) {
 	return looks_like_number(sv);
 }
 
+SWIFT_NAME(PerlInterpreter.SvHASH(self:_:))
+PERL_STATIC_INLINE U32 sPerl_SvHASH(pTHX_ _Nonnull SV *sv) {
+	U32 hash;
+	STRLEN len;
+	char *str = SvPV(sv, len);
+	PERL_HASH(hash, str, len);
+	return hash;
+}
+
+SWIFT_NAME(PerlInterpreter.sv_eq(self:_:_:))
+PERL_STATIC_INLINE bool sPerl_sv_eq(pTHX_ _Nonnull SV *sv1, _Nonnull SV *sv2) {
+	return sv_eq(sv1, sv2);
+}
+
 // AV
 
 SWIFT_NAME(PerlInterpreter.get_av(self:_:_:))
