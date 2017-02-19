@@ -224,6 +224,21 @@ PERL_STATIC_INLINE bool sPerl_SvPOK(_Nonnull SV *sv) {
 	return SvPOK(sv);
 }
 
+SWIFT_NAME(SvUTF8(_:))
+PERL_STATIC_INLINE bool sPerl_SvUTF8(_Nonnull SV *sv) {
+	return SvUTF8(sv);
+}
+
+SWIFT_NAME(SvUTF8_on(_:))
+PERL_STATIC_INLINE void sPerl_SvUTF8_on(_Nonnull SV *sv) {
+	SvUTF8_on(sv);
+}
+
+SWIFT_NAME(SvUTF8_off(_:))
+PERL_STATIC_INLINE void sPerl_SvUTF8_off(_Nonnull SV *sv) {
+	SvUTF8_off(sv);
+}
+
 SWIFT_NAME(SvRV(_:))
 PERL_STATIC_INLINE SV *sPerl_SvRV(_Nonnull SV *sv) {
 	return SvRV(sv);
@@ -262,6 +277,26 @@ PERL_STATIC_INLINE const char *sPerl_sv_reftype(pTHX_ _Nonnull const SV *const s
 SWIFT_NAME(PerlInterpreter.sv_isobject(self:_:))
 PERL_STATIC_INLINE bool sPerl_sv_isobject(pTHX_ SV* sv) {
 	return sv_isobject(sv);
+}
+
+SWIFT_NAME(PerlInterpreter.sv_setsv(self:_:_:))
+PERL_STATIC_INLINE void sPerl_sv_setsv(pTHX_ _Nonnull SV *dsv, SV *ssv) {
+	return sv_setsv(dsv, ssv);
+}
+
+SWIFT_NAME(PerlInterpreter.sv_setiv(self:_:_:))
+PERL_STATIC_INLINE void sPerl_sv_setiv(pTHX_ _Nonnull SV *const sv, const IV num) {
+	return sv_setiv(sv, num);
+}
+
+SWIFT_NAME(PerlInterpreter.sv_setnv(self:_:_:))
+PERL_STATIC_INLINE void sPerl_sv_setnv(pTHX_ _Nonnull SV *const sv, const NV num) {
+	return sv_setnv(sv, num);
+}
+
+SWIFT_NAME(PerlInterpreter.sv_setpvn(self:_:_:_:))
+PERL_STATIC_INLINE void sPerl_sv_setpvn(pTHX_ _Nonnull SV *const sv, const char *const ptr, const STRLEN len) {
+	return sv_setpvn(sv, ptr, len);
 }
 
 SWIFT_NAME(PerlInterpreter.sv_setref_iv(self:_:_:_:))
