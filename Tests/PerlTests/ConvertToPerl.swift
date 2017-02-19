@@ -21,6 +21,9 @@ class ConvertToPerlTests : EmbeddedTestCase {
 		XCTAssert(!v.defined)
 		try perl.eval("sub is_defined { return defined $_[0] }")
 		XCTAssert(try !perl.call(sub: "is_defined", v))
+		let s = PerlScalar(10)
+		s.set(nil)
+		XCTAssert(try !perl.call(sub: "is_defined", s))
 	}
 
 	func testBool() throws {
@@ -28,6 +31,11 @@ class ConvertToPerlTests : EmbeddedTestCase {
 		try perl.eval("sub is_false { return $_[0] eq '' }")
 		XCTAssert(try perl.call(sub: "is_true", PerlScalar(true)))
 		XCTAssert(try perl.call(sub: "is_false", PerlScalar(false)))
+		let s = PerlScalar()
+		s.set(true)
+		XCTAssert(try perl.call(sub: "is_true", s))
+		s.set(false)
+		XCTAssert(try perl.call(sub: "is_false", s))
 	}
 
 	func testInt() throws {
@@ -35,6 +43,9 @@ class ConvertToPerlTests : EmbeddedTestCase {
 		XCTAssert(v.isInt)
 		try perl.eval("sub is_10 { return $_[0] == 10 }")
 		XCTAssert(try perl.call(sub: "is_10", v))
+		let s = PerlScalar()
+		s.set(10)
+		XCTAssert(try perl.call(sub: "is_10", s))
 	}
 
 	func testDouble() throws {
@@ -42,6 +53,9 @@ class ConvertToPerlTests : EmbeddedTestCase {
 		XCTAssert(v.isDouble)
 		try perl.eval("sub is_10dot3 { return $_[0] == 10.3 }")
 		XCTAssert(try perl.call(sub: "is_10dot3", v))
+		let s = PerlScalar()
+		s.set(10.3)
+		XCTAssert(try perl.call(sub: "is_10dot3", s))
 	}
 
 	func testString() throws {
@@ -58,6 +72,11 @@ class ConvertToPerlTests : EmbeddedTestCase {
 		XCTAssert(try perl.call(sub: "is_byte_string", b))
 		let c = [UInt8]("строченька".utf8).withUnsafeBytes { PerlScalar($0, containing: .characters) }
 		XCTAssert(try perl.call(sub: "is_utf8_string", c))
+		let s = PerlScalar()
+		s.set("строченька")
+		XCTAssert(try perl.call(sub: "is_utf8_string", s))
+		[UInt8](0...255).withUnsafeBytes { s.set($0) }
+		XCTAssert(try perl.call(sub: "is_byte_string", s))
 	}
 
 	func testScalarRef() throws {

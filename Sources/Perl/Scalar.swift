@@ -186,6 +186,56 @@ public final class PerlScalar : PerlValue, PerlDerived {
 		return scalar.defined ? scalar : try defaultValue()
 	}
 
+	/// Copies the contents of the source SV `value` into the destination SV `self`.
+	/// Does not handle 'set' magic on destination SV. Calls 'get' magic on source SV.
+	/// Loosely speaking, it performs a copy-by-value, obliterating any previous content of the destination.
+	public func set(_ value: PerlScalar) {
+		value.withUnsafeSvPointer { ssv, _ in
+			withUnsafeSvPointer { dsv, perl in
+				perl.pointee.sv_setsv(dsv, ssv)
+			}
+		}
+	}
+
+	/// Copies a boolean into `self`.
+	/// Does not handle 'set' magic.
+	public func set(_ value: Bool) {
+		withUnsafeSvPointer { sv, perl in perl.pointee.sv_setsv(sv, perl.pointee.boolSV(value)) }
+	}
+
+	/// Copies an integer into `self`, upgrading first if necessary.
+	/// Does not handle 'set' magic.
+	public func set(_ value: Int) {
+		withUnsafeSvPointer { sv, perl in perl.pointee.sv_setiv(sv, value) }
+	}
+
+	/// Copies a double into `self`, upgrading first if necessary.
+	/// Does not handle 'set' magic.
+	public func set(_ value: Double) {
+		withUnsafeSvPointer { sv, perl in perl.pointee.sv_setnv(sv, value) }
+	}
+
+	/// Copies a string (possibly containing embedded `NUL` characters) into `self`.
+	/// Does not handle 'set' magic.
+	public func set(_ value: String) {
+		withUnsafeSvPointer { sv, perl in
+			value.withCStringWithLength { perl.pointee.sv_setpvn(sv, $0, $1) }
+			SvUTF8_on(sv)
+		}
+	}
+
+	/// Copies bytes or characters from `value` into `self`.
+	/// Does not handle 'set' magic.
+	public func set(_ value: UnsafeRawBufferPointer, containing: StringUnits = .bytes) {
+		withUnsafeSvPointer { sv, perl in
+			perl.pointee.sv_setpvn(sv, value.baseAddress?.assumingMemoryBound(to: CChar.self), value.count)
+			switch containing {
+				case .bytes: SvUTF8_off(sv)
+				case .characters: SvUTF8_on(sv)
+			}
+		}
+	}
+
 	/// A textual representation of the SV, suitable for debugging.
 	public override var debugDescription: String {
 		var values = [String]()
