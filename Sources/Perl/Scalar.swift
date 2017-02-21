@@ -35,8 +35,19 @@ public final class PerlScalar : PerlValue, PerlDerived {
 	/// Creates a `SV` containing an undefined value.
 	public convenience init() { self.init(perl: UnsafeInterpreter.current) } // default bellow doesn't work...
 
+	convenience init(copyUnchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) {
+		// newSV() and sv_setsv() are used instead of newSVsv() to allow
+		// stealing temporary buffers and enable COW-optimizations.
+		let csv = perl.pointee.newSV()!
+		perl.pointee.sv_setsv(csv, sv)
+		self.init(noincUnchecked: csv, perl: perl)
+	}
+
 	convenience init(copy sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		try self.init(noinc: perl.pointee.newSV(sv), perl: perl)
+		guard sv.pointee.type == UnsafeValue.type else {
+			throw PerlError.unexpectedSvType(fromUnsafeSvPointer(inc: sv, perl: perl), want: UnsafeValue.type)
+		}
+		self.init(copyUnchecked: sv, perl: perl)
 	}
 
 	/// Creates a `SV` containing an undefined value.
@@ -64,6 +75,12 @@ public final class PerlScalar : PerlValue, PerlDerived {
 	/// Creates a Perl string containing a copy of bytes or characters from `v`.
 	public convenience init(_ v: UnsafeRawBufferPointer, containing: StringUnits = .bytes, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		self.init(noincUnchecked: perl.pointee.newSV(v, utf8: containing == .characters), perl: perl)
+	}
+
+	/// Creates a new SV which is an exact duplicate of the original SV.
+	public convenience init(copy scalar: PerlScalar) {
+		let sv = scalar.withUnsafeSvPointer { sv, perl in perl.pointee.newSV(sv)! }
+		self.init(noincUnchecked: sv, perl: scalar.perl)
 	}
 
 	/// Creates a `RV` pointing to a `sv`.

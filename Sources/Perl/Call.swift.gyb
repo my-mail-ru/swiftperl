@@ -67,7 +67,7 @@ extension UnsafeInterpreter {
 		return "" if g == "" else ", " + g
 	
 	def result(r):
-		return re.sub("(R(\\d*)\\??)", lambda m: m.group(1) + ".fromUnsafeSvPointer(svResult[" + (m.group(2) or "0") + "], perl: &self)", r)
+		return re.sub("(R(\\d*)\\??)", lambda m: m.group(1) + ".fromUnsafeSvPointer(copy: svResult[" + (m.group(2) or "0") + "], perl: &self)", r)
 
 	calls = ["Void", "R", "R?", "(R0?, R1?)"]
 }%

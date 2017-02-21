@@ -118,7 +118,7 @@ extension PerlArray {
 	public func fetch<T : PerlSvConvertible>(_ index: Int) throws -> T? {
 		return try withUnsafeCollection { c in
 			try c.fetch(index).flatMap {
-				try T?.fromUnsafeSvPointer($0, perl: c.perl)
+				try T?.fromUnsafeSvPointer(inc: $0, perl: c.perl)
 			}
 		}
 	}
@@ -145,7 +145,7 @@ extension PerlArray {
 	public func delete<T : PerlSvConvertible>(_ index: Int) throws -> T? {
 		return try withUnsafeCollection { c in
 			try c.delete(index).flatMap {
-				try T?.fromUnsafeSvPointer($0, perl: c.perl)
+				try T?.fromUnsafeSvPointer(inc: $0, perl: c.perl)
 			}
 		}
 	}
@@ -305,7 +305,7 @@ extension Array where Element : PerlSvConvertible {
 		self = try av.withUnsafeCollection { uc in
 			try uc.enumerated().map {
 				guard let sv = $1 else { throw PerlError.elementNotExists(av, at: $0) }
-				return try Element.fromUnsafeSvPointer(sv, perl: uc.perl)
+				return try Element.fromUnsafeSvPointer(inc: sv, perl: uc.perl)
 			}
 		}
 	}
@@ -323,7 +323,7 @@ extension Array where Element : PerlSvConvertible {
 			try sv.withMemoryRebound(to: UnsafeAV.self, capacity: 1) { av in
 				try av.pointee.collection(perl: perl).enumerated().map {
 					guard let sv = $1 else { throw PerlError.elementNotExists(PerlArray(inc: av, perl: perl), at: $0) }
-					return try Element.fromUnsafeSvPointer(sv, perl: perl)
+					return try Element.fromUnsafeSvPointer(inc: sv, perl: perl)
 				}
 			}
 		}

@@ -169,5 +169,22 @@ class ConvertToPerlTests : EmbeddedTestCase {
 			return 25
 		}
 		XCTAssertEqual(try perl.eval("testnoarg(10) == 25 ? 'OK' : 'FAIL'"), "OK")
+
+		let orig = PerlScalar("ololo")
+		let origsv = orig.withUnsafeSvPointer { sv, _ in sv }
+		try PerlSub { (arg: PerlScalar) -> Void in
+			arg.withUnsafeSvPointer { sv, _ in XCTAssertNotEqual(sv, origsv, "Argument SV is not copied") }
+		}.call(orig)
+
+		var storedIn: PerlScalar?
+		let storedOut: PerlScalar = 40
+		PerlSub(name: "teststored") {
+			(arg: PerlScalar) -> PerlScalar in
+			storedIn = arg
+			return storedOut
+		}
+		try perl.eval("my $si = 10; my $so = teststored($si); $si = 20; $so = 50")
+		XCTAssertEqual(try Int(storedIn!), 10)
+		XCTAssertEqual(try Int(storedOut), 40)
 	}
 }

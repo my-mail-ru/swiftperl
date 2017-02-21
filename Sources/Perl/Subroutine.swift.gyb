@@ -134,7 +134,8 @@ extension PerlSub {
 	/// Creates a new Perl XSUB.
 	///
 	/// A body of the XSUB requires a fully qualified prototype of function to correctly convert Perl values
-	/// to their Swift counterparts. If a body throws then an error is propagated to Perl as a Perl exception (`die`).
+	/// to their Swift counterparts. Arguments of the subroutine are copied.
+	/// If a body throws then an error is propagated to Perl as a Perl exception (`die`).
 	///
 	/// - Parameter name: A fully qualified name of the subroutine under which it will be accessible in Perl.
 	///   If not specified (or `nil` passed) then anonymous subroutine will be created.
@@ -171,6 +172,7 @@ extension PerlSub {
 	/// This is the last resort variant of subroutine construction. A body of the subroutine will receive all
 	/// subroutine's arguments as an array of `PerlScalar` values and should return collection of `PerlScalar`s as
 	/// its result. All examinations of concrete values' types should be performed manually.
+	/// Arguments of the subroutine are not copied. Any modification of them will be visible outside the call.
 	///
 	/// - Parameter name: A fully qualified name of the subroutine under which it will be accessible in Perl.
 	///   If not specified (or `nil` passed) then anonymous subroutine will be created.
@@ -181,7 +183,7 @@ extension PerlSub {
 		where R.Iterator.Element == PerlScalar {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
-			let args = try stack.args.map { try PerlScalar.fromUnsafeSvPointer($0, perl: stack.perl) }
+			let args = try stack.args.map { try PerlScalar.fromUnsafeSvPointer(inc: $0, perl: stack.perl) }
 			let result = try body(args, stack.perl)
 			stack.xsReturn(result.map { $0.toUnsafeSvPointer(perl: stack.perl) })
 		}
@@ -200,6 +202,7 @@ extension PerlNamedClass {
 	/// A body of the method requires a fully qualified prototype of function to correctly convert Perl values
 	/// to their Swift counterparts. The first argument should follow Perl OOP conventions and contain
 	/// object `$self` in case of an instance method or string `$class` in case of a class.
+	/// Arguments of the subroutine are copied.
 	/// If a body throws then an error is propagated to Perl as a Perl exception (`die`).
 	///
 	/// - Parameter method: A name of the method under which it will be accessible in Perl.
@@ -221,6 +224,7 @@ extension PerlNamedClass {
 	/// This is the last resort variant of subroutine construction. A body of the subroutine will receive all
 	/// subroutine arguments as an array of `PerlScalar` values and should return collection of `PerlScalar`s as
 	/// its result. All examinations of concrete values types should be performed manually.
+	/// Arguments of the subroutine are not copied. Any modification of them will be visible outside the call.
 	///
 	/// - Parameter name: A name of the method under which it will be accessible in Perl.
 	/// - Parameter file: A name of a source file subroutine was declared in. Used for debug purposes only.

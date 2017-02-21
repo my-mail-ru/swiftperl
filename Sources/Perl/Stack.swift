@@ -57,12 +57,12 @@ struct UnsafeXSubStack : UnsafeStack {
 				throw PerlError.noArgumentOnStack(at: index)
 			}
 		}
-		return try T.fromUnsafeSvPointer(args[index], perl: perl)
+		return try T.fromUnsafeSvPointer(copy: args[index], perl: perl)
 	}
 
 	func fetch<T : PerlSvConvertible>(at index: Int) throws -> T? {
 		guard index < args.count else { return nil }
-		return try Optional<T>.fromUnsafeSvPointer(args[index], perl: perl)
+		return try Optional<T>.fromUnsafeSvPointer(copy: args[index], perl: perl)
 	}
 
 	@_specialize(Bool) @_specialize(Int) @_specialize(Double) @_specialize(String) @_specialize(PerlScalar)
@@ -71,7 +71,7 @@ struct UnsafeXSubStack : UnsafeStack {
 		var tail: [T] = []
 		tail.reserveCapacity(args.count - index)
 		for value in args[index..<args.count] {
-			tail.append(try T.fromUnsafeSvPointer(value, perl: perl))
+			tail.append(try T.fromUnsafeSvPointer(copy: value, perl: perl))
 		}
 		return tail
 	}
@@ -83,7 +83,7 @@ struct UnsafeXSubStack : UnsafeStack {
 		var i = args[index..<args.count].makeIterator()
 		while let name = i.next() {
 			guard let value = i.next() else { throw PerlError.oddElementsHash }
-			tail[try String(name, perl: perl)] = try T.fromUnsafeSvPointer(value, perl: perl)
+			tail[try String(name, perl: perl)] = try T.fromUnsafeSvPointer(copy: value, perl: perl)
 		}
 		return tail
 	}

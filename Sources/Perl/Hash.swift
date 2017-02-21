@@ -132,7 +132,7 @@ extension PerlHash {
 	///   otherwise, `nil`.
 	public func fetch<T : PerlSvConvertible>(_ key: String) throws -> T? {
 		return try withUnsafeCollection { c in
-			try c.fetch(key).flatMap { try T?.fromUnsafeSvPointer($0, perl: c.perl) }
+			try c.fetch(key).flatMap { try T?.fromUnsafeSvPointer(inc: $0, perl: c.perl) }
 		}
 	}
 
@@ -156,7 +156,7 @@ extension PerlHash {
 	/// - Returns: The value that was removed, or `nil` if the key was not found in the hash.
 	public func delete<T : PerlSvConvertible>(_ key: String) throws -> T? {
 		return try withUnsafeCollection { c in
-			try c.delete(key).flatMap { try T?.fromUnsafeSvPointer($0, perl: c.perl) }
+			try c.delete(key).flatMap { try T?.fromUnsafeSvPointer(inc: $0, perl: c.perl) }
 		}
 	}
 
@@ -178,7 +178,7 @@ extension PerlHash {
 	public func fetch<T : PerlSvConvertible>(_ key: PerlScalar) throws -> T? {
 		return try withUnsafeCollection { c in
 			try key.withUnsafeSvPointer { keysv, _ in
-				try c.fetch(keysv).flatMap { try T?.fromUnsafeSvPointer($0, perl: c.perl) }
+				try c.fetch(keysv).flatMap { try T?.fromUnsafeSvPointer(inc: $0, perl: c.perl) }
 			}
 		}
 	}
@@ -206,7 +206,7 @@ extension PerlHash {
 	public func delete<T : PerlSvConvertible>(_ key: PerlScalar) throws -> T? {
 		return try withUnsafeCollection { c in
 			try key.withUnsafeSvPointer { keysv, _ in
-				try c.delete(keysv).flatMap { try T?.fromUnsafeSvPointer($0, perl: c.perl) }
+				try c.delete(keysv).flatMap { try T?.fromUnsafeSvPointer(inc: $0, perl: c.perl) }
 			}
 		}
 	}
@@ -388,7 +388,7 @@ extension Dictionary where Value : PerlSvConvertible {
 		self.init()
 		try hv.withUnsafeCollection {
 			for (k, v) in $0 {
-				self[k as! Key] = try Value.fromUnsafeSvPointer(v, perl: $0.perl)
+				self[k as! Key] = try Value.fromUnsafeSvPointer(inc: v, perl: $0.perl)
 			}
 		}
 	}
@@ -406,7 +406,7 @@ extension Dictionary where Value : PerlSvConvertible {
 		try ref.withReferentUnsafeSvPointer(type: .hash) { sv, perl in
 			try sv.withMemoryRebound(to: UnsafeHV.self, capacity: 1) { hv in
 				for (k, v) in hv.pointee.collection(perl: perl) {
-					self[k as! Key] = try Value.fromUnsafeSvPointer(v, perl: perl)
+					self[k as! Key] = try Value.fromUnsafeSvPointer(inc: v, perl: perl)
 				}
 			}
 		}

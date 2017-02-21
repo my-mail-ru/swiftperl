@@ -293,6 +293,26 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		let cv: PerlSub = try PerlSub(sv)
 		XCTAssertEqual(try cv.call(10, 15) as Int?, 25)
 //		XCTAssertEqual(try sv.call(10, 15) as Int, 25)
+
+		let sub: PerlSub = try perl.eval("my $stored = 40; sub { $_[0] = 20; return $stored }")
+		let arg: PerlScalar = 10
+		let r1: PerlScalar = try sub.call(arg)
+		XCTAssertEqual(try Int(arg), 20)
+		XCTAssertEqual(try Int(r1), 40)
+		r1.set(50)
+		let r2: PerlScalar = try sub.call(arg)
+		XCTAssertEqual(try Int(r2), 40)
+
+		var origsv: UnsafeSvPointer?
+		var origptr: UnsafeRawPointer?
+		let ret: PerlScalar = try PerlSub { () -> PerlScalar in
+			let s = PerlScalar("ololo")
+			s.withUnsafeSvPointer { sv, _ in origsv = sv }
+			s.withUnsafeBytes { origptr = $0.baseAddress }
+			return s
+		}.call()
+		ret.withUnsafeSvPointer { sv, _ in XCTAssertNotEqual(sv, origsv, "Returned SV is not copied") }
+		ret.withUnsafeBytes { XCTAssertEqual($0.baseAddress, origptr, "String of returned SV is not stealed") }
 	}
 
 	func testInterpreterMisc() throws {
