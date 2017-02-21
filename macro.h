@@ -529,6 +529,11 @@ PERL_STATIC_INLINE MAGIC *sPerl_mg_findext(pTHX_ SV *sv, int type, const MGVTBL 
 #endif
 }
 
+SWIFT_NAME(PerlInterpreter.sv_dump(self:_:))
+PERL_STATIC_INLINE void sPerl_sv_dump(pTHX_ _Nonnull SV *sv) {
+	sv_dump(sv);
+}
+
 // DynaLoader
 
 EXTERN_C XS(boot_DynaLoader);
