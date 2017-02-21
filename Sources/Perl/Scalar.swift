@@ -236,6 +236,11 @@ public final class PerlScalar : PerlValue, PerlDerived {
 		}
 	}
 
+	/// Dumps the contents of the underlying SV to the "STDERR" filehandle.
+	public func dump() {
+		withUnsafeSvPointer { sv, perl in perl.pointee.sv_dump(sv) }
+	}
+
 	/// A textual representation of the SV, suitable for debugging.
 	public override var debugDescription: String {
 		var values = [String]()
