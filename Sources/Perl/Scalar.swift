@@ -36,11 +36,7 @@ public final class PerlScalar : PerlValue, PerlDerived {
 	public convenience init() { self.init(perl: UnsafeInterpreter.current) } // default bellow doesn't work...
 
 	convenience init(copyUnchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) {
-		// newSV() and sv_setsv() are used instead of newSVsv() to allow
-		// stealing temporary buffers and enable COW-optimizations.
-		let csv = perl.pointee.newSV()!
-		perl.pointee.sv_setsv(csv, sv)
-		self.init(noincUnchecked: csv, perl: perl)
+		self.init(noincUnchecked: perl.pointee.newSV(stealing: sv), perl: perl)
 	}
 
 	convenience init(copy sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
@@ -61,7 +57,7 @@ public final class PerlScalar : PerlValue, PerlDerived {
 
 	/// Creates a `SV` containig a `v`.
 	public convenience init<T : PerlSvConvertible>(_ v: T, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.init(noincUnchecked: v.toUnsafeSvPointer(perl: perl), perl: perl)
+		self.init(noincUnchecked: v._toUnsafeSvPointer(perl: perl), perl: perl)
 	}
 
 	/// Semantics of a Perl string data.
@@ -98,12 +94,12 @@ public final class PerlScalar : PerlValue, PerlDerived {
 
 	/// Creates a `RV` pointing to a `AV` which contains `SV`s with elements of an `array`.
 	public convenience init<T : PerlSvConvertible>(_ array: [T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.init(noincUnchecked: array.toUnsafeSvPointer(perl: perl), perl: perl)
+		self.init(noincUnchecked: array._toUnsafeSvPointer(perl: perl), perl: perl)
 	}
 
 	/// Creates a `RV` pointing to a `HV` which contains `SV`s with elements of a `dict`.
 	public convenience init<T : PerlSvConvertible>(_ dict: [String: T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.init(noincUnchecked: dict.toUnsafeSvPointer(perl: perl), perl: perl)
+		self.init(noincUnchecked: dict._toUnsafeSvPointer(perl: perl), perl: perl)
 	}
 
 	/// Creates a `SV` containig an unwrapped value of a `v` if `v != nil` or an `undef` in other case.

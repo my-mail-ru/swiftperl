@@ -150,10 +150,10 @@ extension PerlSub {
 			stack.xsReturn(EmptyCollection())
 %           elif r == 1:
 			let result = try body(${args})
-			stack.xsReturn(CollectionOfOne(result.toUnsafeSvPointer(perl: stack.perl)))
+			stack.xsReturn(CollectionOfOne(result._toUnsafeSvPointer(perl: stack.perl)))
 %           else:
 			let result = try body(${args})
-			let svResult: ContiguousArray = [ ${", ".join(map(lambda n: "result." + str(n) + ".toUnsafeSvPointer(perl: stack.perl)", range(0, r)))} ]
+			let svResult: ContiguousArray = [ ${", ".join(map(lambda n: "result." + str(n) + "._toUnsafeSvPointer(perl: stack.perl)", range(0, r)))} ]
 			stack.xsReturn(svResult)
 %           end
 		}
@@ -183,9 +183,9 @@ extension PerlSub {
 		where R.Iterator.Element == PerlScalar {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
-			let args = try stack.args.map { try PerlScalar.fromUnsafeSvPointer(inc: $0, perl: stack.perl) }
+			let args = try stack.args.map { try PerlScalar(_fromUnsafeSvPointerInc: $0, perl: stack.perl) }
 			let result = try body(args, stack.perl)
-			stack.xsReturn(result.map { $0.toUnsafeSvPointer(perl: stack.perl) })
+			stack.xsReturn(result.map { $0._toUnsafeSvPointer(perl: stack.perl) })
 		}
 	}
 }

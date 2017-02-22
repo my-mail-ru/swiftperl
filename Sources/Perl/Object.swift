@@ -159,7 +159,7 @@ extension PerlNamedClass where Self : PerlObject {
 		defer { perl.pointee.leaveScope() }
 		let classname = (type(of: self) as PerlNamedClass.Type).perlClassName
 		let args = [classname as PerlSvConvertible?] + args
-		let svArgs: [UnsafeSvPointer] = args.map { $0?.toUnsafeSvPointer(perl: perl) ?? perl.pointee.newSV() }
+		let svArgs: [UnsafeSvPointer] = args.map { $0?._toUnsafeSvPointer(perl: perl) ?? perl.pointee.newSV() }
 		let sv = try perl.pointee.unsafeCall(sv: perl.pointee.newSV(method, mortal: true), args: svArgs, flags: G_METHOD|G_SCALAR)[0]
 		guard sv.pointee.isObject(perl: perl) else {
 			throw PerlError.notObject(fromUnsafeSvPointer(inc: sv, perl: perl))

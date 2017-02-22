@@ -80,6 +80,14 @@ extension UnsafeSV {
 }
 
 extension UnsafeInterpreter {
+	// newSV() and sv_setsv() are used instead of newSVsv() to allow
+	// stealing temporary buffers and enable COW-optimizations.
+	mutating func newSV(stealing sv: UnsafeSvPointer) -> UnsafeSvPointer {
+		let csv = newSV()!
+		sv_setsv(csv, sv)
+		return csv
+	}
+
 	mutating func newSV(_ v: Bool) -> UnsafeSvPointer {
 		return newSV(boolSV(v))
 	}
