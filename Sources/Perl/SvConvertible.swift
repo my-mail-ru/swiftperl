@@ -20,6 +20,11 @@ extension Int : PerlSvConvertible {
 	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
 }
 
+extension UInt : PerlSvConvertible {
+	public init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws { try self.init(sv, perl: perl) }
+	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
+}
+
 extension Double : PerlSvConvertible {
 	public init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws { try self.init(sv, perl: perl) }
 	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer { return perl.pointee.newSV(self) }

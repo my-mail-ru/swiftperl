@@ -148,10 +148,11 @@ extension Bool {
 
 extension Int {
 	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		guard SvNIOK(sv) || perl.pointee.looks_like_number(sv) else {
-			throw PerlError.notNumber(fromUnsafeSvPointer(inc: sv, perl: perl))
-		}
 		self.init(unchecked: sv, perl: perl)
+		guard SvIOK(sv) && (!SvIsUV(sv) || UInt(bitPattern: self) <= UInt(Int.max))
+			|| SvNOK(sv) && (!SvIsUV(sv) && self != Int.min || UInt(bitPattern: self) <= UInt(Int.max)) else {
+			throw PerlError.notNumber(fromUnsafeSvPointer(inc: sv, perl: perl), want: Int.self)
+		}
 	}
 
 	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
@@ -159,12 +160,26 @@ extension Int {
 	}
 }
 
+extension UInt {
+	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+		self.init(unchecked: sv, perl: perl)
+		guard SvIOK(sv) && (SvIsUV(sv) || Int(bitPattern: self) >= Int(UInt.min))
+			|| SvNOK(sv) && (SvIsUV(sv) && self != UInt.max || Int(bitPattern: self) >= Int(UInt.min)) else {
+			throw PerlError.notNumber(fromUnsafeSvPointer(inc: sv, perl: perl), want: UInt.self)
+		}
+	}
+
+	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+		self = perl.pointee.SvUV(sv)
+	}
+}
+
 extension Double {
 	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		guard SvNIOK(sv) || perl.pointee.looks_like_number(sv) else {
-			throw PerlError.notNumber(fromUnsafeSvPointer(inc: sv, perl: perl))
-		}
 		self.init(unchecked: sv, perl: perl)
+		guard SvNIOK(sv) else {
+			throw PerlError.notNumber(fromUnsafeSvPointer(inc: sv, perl: perl), want: Double.self)
+		}
 	}
 
 	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
@@ -174,10 +189,10 @@ extension Double {
 
 extension String {
 	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		guard SvPOK(sv) || SvNIOK(sv) else {
+		self.init(unchecked: sv, perl: perl)
+		guard SvPOK(sv) || SvNOK(sv) else {
 			throw PerlError.notStringOrNumber(fromUnsafeSvPointer(inc: sv, perl: perl))
 		}
-		self.init(unchecked: sv, perl: perl)
 	}
 
 	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {

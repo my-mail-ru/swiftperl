@@ -165,6 +165,11 @@ PERL_STATIC_INLINE SV *sPerl_newSViv(pTHX_ const IV i) {
 }
 
 SWIFT_NAME(PerlInterpreter.newSV(self:_:))
+PERL_STATIC_INLINE SV *sPerl_newSVuv(pTHX_ const UV u) {
+	return newSVuv(u);
+}
+
+SWIFT_NAME(PerlInterpreter.newSV(self:_:))
 PERL_STATIC_INLINE SV *sPerl_newSVnv(pTHX_ const NV n) {
 	return newSVnv(n);
 }
@@ -199,14 +204,24 @@ PERL_STATIC_INLINE bool sPerl_SvIOK(_Nonnull SV *sv) {
 	return SvIOK(sv);
 }
 
-SWIFT_NAME(SvNOK(_:))
-PERL_STATIC_INLINE bool sPerl_SvNOK(_Nonnull SV *sv) {
-	return SvNOK(sv);
-}
-
 SWIFT_NAME(SvIOK_UV(_:))
 PERL_STATIC_INLINE bool sPerl_SvIOK_UV(_Nonnull SV *sv) {
 	return SvIOK_UV(sv);
+}
+
+SWIFT_NAME(SvIOK_notUV(_:))
+PERL_STATIC_INLINE bool sPerl_SvIOK_notUV(_Nonnull SV *sv) {
+	return SvIOK_notUV(sv);
+}
+
+SWIFT_NAME(SvIsUV(_:))
+PERL_STATIC_INLINE bool sPerl_SvIsUV(_Nonnull SV *sv) {
+	return SvIsUV(sv);
+}
+
+SWIFT_NAME(SvNOK(_:))
+PERL_STATIC_INLINE bool sPerl_SvNOK(_Nonnull SV *sv) {
+	return SvNOK(sv);
 }
 
 SWIFT_NAME(SvNIOK(_:))
@@ -254,14 +269,14 @@ PERL_STATIC_INLINE IV sPerl_SvIV(pTHX_ _Nonnull SV *sv) {
 	return SvIV(sv);
 }
 
-SWIFT_NAME(PerlInterpreter.SvNV(self:_:))
-PERL_STATIC_INLINE NV sPerl_SvNV(pTHX_ _Nonnull SV *sv) {
-	return SvNV(sv);
-}
-
 SWIFT_NAME(PerlInterpreter.SvUV(self:_:))
 PERL_STATIC_INLINE UV sPerl_SvUV(pTHX_ _Nonnull SV *sv) {
 	return SvUV(sv);
+}
+
+SWIFT_NAME(PerlInterpreter.SvNV(self:_:))
+PERL_STATIC_INLINE NV sPerl_SvNV(pTHX_ _Nonnull SV *sv) {
+	return SvNV(sv);
 }
 
 SWIFT_NAME(PerlInterpreter.SvPV(self:_:_:))
@@ -287,6 +302,11 @@ PERL_STATIC_INLINE void sPerl_sv_setsv(pTHX_ _Nonnull SV *dsv, SV *ssv) {
 SWIFT_NAME(PerlInterpreter.sv_setiv(self:_:_:))
 PERL_STATIC_INLINE void sPerl_sv_setiv(pTHX_ _Nonnull SV *const sv, const IV num) {
 	return sv_setiv(sv, num);
+}
+
+SWIFT_NAME(PerlInterpreter.sv_setuv(self:_:_:))
+PERL_STATIC_INLINE void sPerl_sv_setuv(pTHX_ _Nonnull SV *const sv, const UV num) {
+	return sv_setuv(sv, num);
 }
 
 SWIFT_NAME(PerlInterpreter.sv_setnv(self:_:_:))

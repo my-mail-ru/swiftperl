@@ -13,10 +13,10 @@ public enum PerlError : Error {
 	/// SV of an unexpected type was recevied.
 	case unexpectedSvType(_: AnyPerl, want: SvType)
 
-	/// SV is not a number, but we suppose it to be.
-	case notNumber(_: AnyPerl)
+	/// SV is not a number (integer or double) of appropriate range.
+	case notNumber(_: AnyPerl, want: Any.Type)
 
-	/// SV is not a string or a number, but we suppose it to be.
+	/// SV is not a string or a number (integer or double).
 	case notStringOrNumber(_: AnyPerl)
 
 	/// SV is not a reference.

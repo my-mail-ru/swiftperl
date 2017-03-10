@@ -130,10 +130,13 @@ public final class PerlScalar : PerlValue, PerlDerived {
 		return withUnsafeSvPointer { sv, _ in sv.pointee.defined }
 	}
 
-	/// A boolean value indicating whether the `SV` contains an integer.
-	public var isInt: Bool {
-		return withUnsafeSvPointer { sv, _ in sv.pointee.isInt }
+	/// A boolean value indicating whether the `SV` contains an integer (signed or unsigned).
+	public var isInteger: Bool {
+		return withUnsafeSvPointer { sv, _ in SvIOK(sv) }
 	}
+
+	@available(*, deprecated, renamed: "isInteger")
+	public var isInt: Bool { return isInteger }
 
 	/// A boolean value indicating whether the `SV` contains a double.
 	public var isDouble: Bool {
@@ -216,10 +219,16 @@ public final class PerlScalar : PerlValue, PerlDerived {
 		withUnsafeSvPointer { sv, perl in perl.pointee.sv_setsv(sv, perl.pointee.boolSV(value)) }
 	}
 
-	/// Copies an integer into `self`, upgrading first if necessary.
+	/// Copies a signed integer into `self`, upgrading first if necessary.
 	/// Does not handle 'set' magic.
 	public func set(_ value: Int) {
 		withUnsafeSvPointer { sv, perl in perl.pointee.sv_setiv(sv, value) }
+	}
+
+	/// Copies an unsigned integer into `self`, upgrading first if necessary.
+	/// Does not handle 'set' magic.
+	public func set(_ value: UInt) {
+		withUnsafeSvPointer { sv, perl in perl.pointee.sv_setuv(sv, value) }
 	}
 
 	/// Copies a double into `self`, upgrading first if necessary.
@@ -258,14 +267,18 @@ public final class PerlScalar : PerlValue, PerlDerived {
 	public override var debugDescription: String {
 		var values = [String]()
 		if defined {
-			if isInt {
-				values.append("iv: \(Int(unchecked: self))")
-			}
-			if isString {
-				values.append("pv: \(String(unchecked: self).debugDescription)")
+			if isInteger {
+				if withUnsafeSvPointer({ sv, _ in SvIsUV(sv) }) {
+					values.append("uv: \(UInt(unchecked: self))")
+				} else {
+					values.append("iv: \(Int(unchecked: self))")
+				}
 			}
 			if isDouble {
 				values.append("nv: \(Double(unchecked: self).debugDescription)")
+			}
+			if isString {
+				values.append("pv: \(String(unchecked: self).debugDescription)")
 			}
 			if let ref = referent {
 				var str = "rv: "
@@ -482,16 +495,21 @@ extension Bool {
 }
 
 extension Int {
-	/// Creates an integer from `PerlScalar`.
-	/// Throws if `sv` contains something that not looks like a number.
+	/// Creates a signed integer from `PerlScalar`.
+	/// Throws if `sv` does not contain a signed integer.
 	///
 	/// ```swift
-	/// let i = try Int(PerlScalar(100))      // i == 100
-	/// let i = try Int(PerlScalar("100"))    // i == 100
-	/// let i = try Int(PerlScalar())         // throws
-	/// let i = try Int(PerlScalar(""))       // throws
-	/// let i = try Int(PerlScalar("any"))    // throws
-	/// let i = try Int(PerlScalar("50sec"))  // throws
+	/// let i = try Int(PerlScalar(100))                     // i == 100
+	/// let i = try Int(PerlScalar("100"))                   // i == 100
+	/// let i = try Int(PerlScalar(42.5))                    // i == 42
+	/// let i = try Int(PerlScalar())                        // throws
+	/// let i = try Int(PerlScalar(""))                      // throws
+	/// let i = try Int(PerlScalar("any"))                   // throws
+	/// let i = try Int(PerlScalar("50sec"))                 // throws
+	/// let i = try Int(PerlScalar("10000000000000000000"))  // throws
+	/// let i = try Int(PerlScalar("20000000000000000000"))  // throws
+	/// let i = try Int(PerlScalar("-10"))                   // i == -10
+	/// let i = try Int(PerlScalar("-20000000000000000000")) // throws
 	/// ```
 	public init(_ sv: PerlScalar) throws {
 		defer { _fixLifetime(sv) }
@@ -499,16 +517,21 @@ extension Int {
 		try self.init(usv, perl: perl)
 	}
 
-	/// Creates an integer from `PerlScalar` using Perl macros `SvIV`.
+	/// Creates a signed integer from `PerlScalar` using Perl macros `SvIV`.
 	/// Performs no additional checks.
 	///
 	/// ```swift
-	/// let i = Int(unchecked: PerlScalar(100))        // i == 100
-	/// let i = Int(unchecked: PerlScalar("100"))      // i == 100
-	/// let i = Int(unchecked: PerlScalar())           // i == 0
-	/// let i = Int(unchecked: PerlScalar(""))         // i == 0
-	/// let i = Int(unchecked: PerlScalar("any"))      // i == 0
-	/// let i = Int(unchecked: PerlScalar("50sec"))    // i == 50
+	/// let i = Int(unchecked: PerlScalar(100))                       // i == 100
+	/// let i = Int(unchecked: PerlScalar("100"))                     // i == 100
+	/// let i = Int(unchecked: PerlScalar(42.5))                      // i == 42
+	/// let i = Int(unchecked: PerlScalar())                          // i == 0
+	/// let i = Int(unchecked: PerlScalar(""))                        // i == 0
+	/// let i = Int(unchecked: PerlScalar("any"))                     // i == 0
+	/// let i = Int(unchecked: PerlScalar("50sec"))                   // i == 50
+	/// let i = Int(unchecked: PerlScalar("10000000000000000000"))    // i == Int(bitPattern: 10000000000000000000)
+	/// let i = Int(unchecked: PerlScalar("20000000000000000000"))    // i == Int(bitPattern: UInt.max)
+	/// let i = Int(unchecked: PerlScalar("-10"))                     // i == -10
+	/// let i = Int(unchecked: PerlScalar("-20000000000000000000"))   // i == Int.min
 	/// ```
 	public init(unchecked sv: PerlScalar) {
 		defer { _fixLifetime(sv) }
@@ -517,6 +540,51 @@ extension Int {
 	}
 }
 
+extension UInt {
+	/// Creates an unsigned integer from `PerlScalar`.
+	/// Throws if `sv` does not contain an unsigned integer.
+	///
+	/// ```swift
+	/// let u = try UInt(PerlScalar(100))                       // u == 100
+	/// let u = try UInt(PerlScalar("100"))                     // u == 100
+	/// let u = try UInt(PerlScalar(42.5))                      // u == 42
+	/// let u = try UInt(PerlScalar())                          // throws
+	/// let u = try UInt(PerlScalar(""))                        // throws
+	/// let u = try UInt(PerlScalar("any"))                     // throws
+	/// let u = try UInt(PerlScalar("50sec"))                   // throws
+	/// let u = try UInt(PerlScalar("10000000000000000000"))    // u == 10000000000000000000
+	/// let u = try UInt(PerlScalar("20000000000000000000"))    // throws
+	/// let u = try UInt(PerlScalar("-10"))                     // throws
+	/// let u = try UInt(PerlScalar("-20000000000000000000"))   // throws
+	/// ```
+	public init(_ sv: PerlScalar) throws {
+		defer { _fixLifetime(sv) }
+		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
+		try self.init(usv, perl: perl)
+	}
+
+	/// Creates an unsigned integer from `PerlScalar` using Perl macros `SvUV`.
+	/// Performs no additional checks.
+	///
+	/// ```swift
+	/// let u = UInt(unchecked: PerlScalar(100))        // u == 100
+	/// let u = UInt(unchecked: PerlScalar("100"))      // u == 100
+	/// let u = UInt(unchecked: PerlScalar(42.5))       // u == 42
+	/// let u = UInt(unchecked: PerlScalar())           // u == 0
+	/// let u = UInt(unchecked: PerlScalar(""))         // u == 0
+	/// let u = UInt(unchecked: PerlScalar("any"))      // u == 0
+	/// let u = UInt(unchecked: PerlScalar("50sec"))    // u == 50
+	/// let u = UInt(unchecked: PerlScalar("10000000000000000000"))    // u == 10000000000000000000
+	/// let u = UInt(unchecked: PerlScalar("20000000000000000000"))    // u == UInt.max
+	/// let u = UInt(unchecked: PerlScalar("-10"))                     // u == UInt(bitPattern: -10)
+	/// let u = UInt(unchecked: PerlScalar("-20000000000000000000"))   // u == UInt(bitPattern: Int.min)
+	/// ```
+	public init(unchecked sv: PerlScalar) {
+		defer { _fixLifetime(sv) }
+		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
+		self.init(unchecked: usv, perl: perl)
+	}
+}
 
 extension Double {
 	/// Creates a double from `PerlScalar`.
@@ -554,6 +622,7 @@ extension Double {
 		self.init(unchecked: usv, perl: perl)
 	}
 }
+
 extension String {
 	/// Creates a string from `PerlScalar`.
 	/// Throws if `sv` does not contain a string or a number.
