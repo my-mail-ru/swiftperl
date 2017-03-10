@@ -46,7 +46,7 @@ rm -f .build/release/libCPerl.so
 %swift_install_devel
 # working hard to allow swift interpreter easly import Perl
 for f in EXTERN.h perl.h XSUB.h;
-    do perl -MConfig -lwe 'print qq!#import \"$Config{installarchlib}/CORE/'$f'"!' > %{buildroot}%{swift_clangmoduleroot}/$f;
+	do perl -MConfig -lwe 'print qq!#import \"$Config{installarchlib}/CORE/'$f'"!' > %{buildroot}%{swift_clangmoduleroot}/$f;
 done
 ln -sf %{perl_archlib}/CORE/libperl.so %{buildroot}%{swift_libdir}/
 

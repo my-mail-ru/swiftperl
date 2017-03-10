@@ -74,12 +74,6 @@ final class URI : PerlObject, PerlNamedClass {
 
 extension NSURL : PerlBridgedObject {
 	public static let perlClassName = "NSURL"
-	public static func fromUnsafeSvPointer(inc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Self {
-		return try NSURL._fromUnsafeSvPointerNonFinalClassWorkaround(sv, perl: perl)
-	}
-	public static func fromUnsafeSvPointer(copy sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Self {
-		return try NSURL._fromUnsafeSvPointerNonFinalClassWorkaround(sv, perl: perl)
-	}
 }
 
 final class TestRefCnt : PerlBridgedObject {
