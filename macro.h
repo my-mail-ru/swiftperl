@@ -348,6 +348,11 @@ PERL_STATIC_INLINE bool sPerl_sv_eq(pTHX_ _Nonnull SV *sv1, _Nonnull SV *sv2) {
 	return sv_eq(sv1, sv2);
 }
 
+SWIFT_NAME(PerlInterpreter.sv_utf8_decode(self:_:))
+PERL_STATIC_INLINE bool sPerl_sv_utf8_decode(pTHX_ _Nonnull SV *const sv) {
+	return sv_utf8_decode(sv);
+}
+
 // AV
 
 SWIFT_NAME(PerlInterpreter.get_av(self:_:_:))
