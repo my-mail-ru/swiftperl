@@ -93,13 +93,16 @@ extension UnsafeInterpreter {
 	}
 
 	mutating func newSV(_ v: String, mortal: Bool = false) -> UnsafeSvPointer {
-		let flags = mortal ? SVf_UTF8|SVs_TEMP : SVf_UTF8
+		let flags = (v._core.isASCII ? 0 : SVf_UTF8) | (mortal ? SVs_TEMP : 0)
 		return v.withCStringWithLength { newSVpvn_flags($0, $1, UInt32(flags)) }
 	}
 
 	mutating func newSV(_ v: UnsafeRawBufferPointer, utf8: Bool = false, mortal: Bool = false) -> UnsafeSvPointer {
-		let flags = (utf8 ? SVf_UTF8 : 0) | (mortal ? SVs_TEMP : 0)
-		return newSVpvn_flags(v.baseAddress?.assumingMemoryBound(to: CChar.self), v.count, UInt32(flags))
+		let sv = newSVpvn_flags(v.baseAddress?.assumingMemoryBound(to: CChar.self), v.count, UInt32(mortal ? SVs_TEMP : 0))!
+		if utf8 {
+			sv_utf8_decode(sv)
+		}
+		return sv
 	}
 
 	mutating func newRV<T: UnsafeSvCastable>(inc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {

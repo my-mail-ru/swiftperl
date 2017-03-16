@@ -72,22 +72,30 @@ class ConvertToPerlTests : EmbeddedTestCase {
 	func testString() throws {
 		let a = PerlScalar("ascii string")
 		XCTAssert(a.isString)
-		try perl.eval("sub is_ascii_string { return $_[0] eq 'ascii string' }")
+		try perl.eval("sub is_ascii_string { return !utf8::is_utf8($_[0]) && $_[0] eq 'ascii string' }")
 		XCTAssert(try perl.call(sub: "is_ascii_string", a))
 		let u = PerlScalar("строченька")
 		XCTAssert(u.isString)
-		try perl.eval("sub is_utf8_string { return $_[0] eq 'строченька' }")
+		try perl.eval("sub is_utf8_string { return utf8::is_utf8($_[0]) && $_[0] eq 'строченька' }")
 		XCTAssert(try perl.call(sub: "is_utf8_string", u))
-		try perl.eval("sub is_byte_string { return $_[0] eq pack('C256', 0..255) }")
+		try perl.eval("sub is_byte_string { return !utf8::is_utf8($_[0]) && $_[0] eq pack('C256', 0..255) }")
 		let b = [UInt8](0...255).withUnsafeBytes { PerlScalar($0) }
 		XCTAssert(try perl.call(sub: "is_byte_string", b))
-		let c = [UInt8]("строченька".utf8).withUnsafeBytes { PerlScalar($0, containing: .characters) }
-		XCTAssert(try perl.call(sub: "is_utf8_string", c))
+		let ba = [UInt8]("ascii string".utf8).withUnsafeBytes { PerlScalar($0, containing: .characters) }
+		XCTAssert(try perl.call(sub: "is_ascii_string", ba))
+		let bu = [UInt8]("строченька".utf8).withUnsafeBytes { PerlScalar($0, containing: .characters) }
+		XCTAssert(try perl.call(sub: "is_utf8_string", bu))
 		let s = PerlScalar()
+		s.set("ascii string")
+		XCTAssert(try perl.call(sub: "is_ascii_string", s))
 		s.set("строченька")
 		XCTAssert(try perl.call(sub: "is_utf8_string", s))
 		[UInt8](0...255).withUnsafeBytes { s.set($0) }
 		XCTAssert(try perl.call(sub: "is_byte_string", s))
+		[UInt8]("ascii string".utf8).withUnsafeBytes { s.set($0, containing: .characters) }
+		XCTAssert(try perl.call(sub: "is_ascii_string", s))
+		[UInt8]("строченька".utf8).withUnsafeBytes { s.set($0, containing: .characters) }
+		XCTAssert(try perl.call(sub: "is_utf8_string", s))
 	}
 
 	func testScalarRef() throws {

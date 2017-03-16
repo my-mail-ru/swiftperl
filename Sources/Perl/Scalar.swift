@@ -242,7 +242,11 @@ public final class PerlScalar : PerlValue, PerlDerived {
 	public func set(_ value: String) {
 		withUnsafeSvPointer { sv, perl in
 			value.withCStringWithLength { perl.pointee.sv_setpvn(sv, $0, $1) }
-			SvUTF8_on(sv)
+			if value._core.isASCII {
+				SvUTF8_off(sv)
+			} else {
+				SvUTF8_on(sv)
+			}
 		}
 	}
 
@@ -250,10 +254,10 @@ public final class PerlScalar : PerlValue, PerlDerived {
 	/// Does not handle 'set' magic.
 	public func set(_ value: UnsafeRawBufferPointer, containing: StringUnits = .bytes) {
 		withUnsafeSvPointer { sv, perl in
+			SvUTF8_off(sv)
 			perl.pointee.sv_setpvn(sv, value.baseAddress?.assumingMemoryBound(to: CChar.self), value.count)
-			switch containing {
-				case .bytes: SvUTF8_off(sv)
-				case .characters: SvUTF8_on(sv)
+			if containing == .characters {
+				perl.pointee.sv_utf8_decode(sv)
 			}
 		}
 	}
