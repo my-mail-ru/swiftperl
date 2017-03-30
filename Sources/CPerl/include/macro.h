@@ -491,6 +491,11 @@ PERL_STATIC_INLINE _Nonnull SV *sPerl_HeVAL(_Nonnull HE *he) {
 	return HeVAL(he);
 }
 
+SWIFT_NAME(HvNAME(_:))
+PERL_STATIC_INLINE char *sPerl_HvNAME(_Nonnull HV *stash) {
+	return HvNAME(stash);
+}
+
 // CV
 
 SWIFT_NAME(PerlInterpreter.get_cv(self:_:_:))
@@ -503,6 +508,11 @@ PERL_STATIC_INLINE ANY *sPerl_CvXSUBANY(_Nonnull CV *cv) {
 	return &CvXSUBANY(cv);
 }
 
+SWIFT_NAME(CvGV(_:))
+PERL_STATIC_INLINE GV *sPerl_CvGV(_Nonnull CV *cv) {
+	return CvGV(cv);
+}
+
 SWIFT_NAME(CvFILE(_:))
 PERL_STATIC_INLINE char *sPerl_CvFILE(_Nonnull CV *cv) {
 	return CvFILE(cv);
@@ -513,11 +523,28 @@ PERL_STATIC_INLINE CV *sPerl_newXS_flags(pTHX_ const char *name, _Nonnull XSUBAD
 	return newXS_flags(name, subaddr, filename, proto, flags);
 }
 
+// GV
+
+SWIFT_NAME(GvSTASH(_:))
+PERL_STATIC_INLINE HV *sPerl_GvSTASH(_Nonnull GV *gv) {
+	return GvSTASH(gv);
+}
+
+SWIFT_NAME(GvNAME(_:))
+PERL_STATIC_INLINE char *sPerl_GvNAME(_Nonnull GV *gv) {
+	return GvNAME(gv);
+}
+
 // Misc
 
 SWIFT_NAME(PerlInterpreter.load_module_noargs(self:_:_:_:))
 PERL_STATIC_INLINE void sPerl_load_module_noargs(pTHX_ U32 flags, _Nonnull SV* name, SV* ver) {
 	return load_module(flags, name, ver, NULL);
+}
+
+SWIFT_NAME(PerlInterpreter.vmess(self:_:_:))
+PERL_STATIC_INLINE SV *sPerl_vmess(pTHX_ const char *pat, va_list args) {
+	return vmess(pat, args);
 }
 
 SWIFT_NAME(PerlInterpreter.croak_sv(self:_:))

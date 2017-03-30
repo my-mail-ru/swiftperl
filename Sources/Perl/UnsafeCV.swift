@@ -37,6 +37,14 @@ extension UnsafeCV {
 		svt_local: nil
 	)
 
+	var name: String {
+		mutating get { return String(cString: GvNAME(CvGV(&self))) }
+	}
+
+	var fullname: String {
+		mutating get { return "\(String(cString: HvNAME(GvSTASH(CvGV(&self)))))::\(name)" }
+	}
+
 	var file: String {
 		mutating get { return String(cString: CvFILE(&self)) }
 	}
@@ -69,8 +77,15 @@ private func cvResolver(perl: UnsafeInterpreterPointer, cv: UnsafeCvPointer) -> 
 	} catch PerlError.died(let sv) {
 		let usv = sv.withUnsafeSvPointer { sv, perl in perl.pointee.newSV(sv)! }
 		errsv = perl.pointee.sv_2mortal(usv)
+	} catch let error as PerlSvConvertible {
+		let usv = error._toUnsafeSvPointer(perl: perl)
+		errsv = perl.pointee.sv_2mortal(usv)
 	} catch {
-		errsv = perl.pointee.newSV("Exception: \(error)", mortal: true)
+		errsv = "\(error)".withCString { error in
+			cv.pointee.fullname.withCString { name in
+				withVaList([name, error]) { perl.pointee.vmess("Exception in %s: %s", $0) }
+			}
+		}
 	}
 	if let e = errsv {
 		perl.pointee.croak_sv(e)
