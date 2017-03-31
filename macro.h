@@ -508,8 +508,8 @@ PERL_STATIC_INLINE ANY *sPerl_CvXSUBANY(_Nonnull CV *cv) {
 	return &CvXSUBANY(cv);
 }
 
-SWIFT_NAME(CvGV(_:))
-PERL_STATIC_INLINE GV *sPerl_CvGV(_Nonnull CV *cv) {
+SWIFT_NAME(PerlInterpreter.CvGV(self:_:))
+PERL_STATIC_INLINE GV *sPerl_CvGV(pTHX_ _Nonnull CV *cv) {
 	return CvGV(cv);
 }
 
