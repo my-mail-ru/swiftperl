@@ -37,12 +37,12 @@ extension UnsafeCV {
 		svt_local: nil
 	)
 
-	var name: String {
-		mutating get { return String(cString: GvNAME(CvGV(&self))) }
+	mutating func name(perl: UnsafeInterpreterPointer) -> String {
+		return String(cString: GvNAME(perl.pointee.CvGV(&self)))
 	}
 
-	var fullname: String {
-		mutating get { return "\(String(cString: HvNAME(GvSTASH(CvGV(&self)))))::\(name)" }
+	mutating func fullname(perl: UnsafeInterpreterPointer) -> String {
+		return "\(String(cString: HvNAME(GvSTASH(perl.pointee.CvGV(&self)))))::\(name(perl: perl))"
 	}
 
 	var file: String {
@@ -82,7 +82,7 @@ private func cvResolver(perl: UnsafeInterpreterPointer, cv: UnsafeCvPointer) -> 
 		errsv = perl.pointee.sv_2mortal(usv)
 	} catch {
 		errsv = "\(error)".withCString { error in
-			cv.pointee.fullname.withCString { name in
+			cv.pointee.fullname(perl: perl).withCString { name in
 				withVaList([name, error]) { perl.pointee.vmess("Exception in %s: %s", $0) }
 			}
 		}
