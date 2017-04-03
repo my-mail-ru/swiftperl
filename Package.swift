@@ -21,11 +21,21 @@ if buildBenchmark {
 
 products.append(Product(name: "SampleXS", type: .Library(.Dynamic), modules: "SampleXS"))
 
-let me = CommandLine.arguments[0]
-var parts = me.characters.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
-parts[parts.endIndex - 1] = "prepare"
-let command = parts.joined(separator: "/")
+func getenv(_ name: String) -> String? {
+	guard let value = Glibc.getenv(name) else { return nil }
+	return String(cString: value)
+}
 
-guard system("\(command) >/dev/null 2>/dev/null") == 0 else {
-	fatalError("Failed to execute \(command)")
+// Taken from swift-package-manager
+let tmpdir = getenv("TMPDIR") ?? getenv("TEMP") ?? getenv("TMP") ?? "/tmp/"
+
+let me = CommandLine.arguments[0]
+if me[me.startIndex..<min(me.endIndex, tmpdir.endIndex)] != tmpdir {
+	var parts = me.characters.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
+	parts[parts.endIndex - 1] = "prepare"
+	let command = parts.joined(separator: "/")
+
+	guard system("\(command) >/dev/null 2>/dev/null") == 0 else {
+		fatalError("Failed to execute \(command)")
+	}
 }
