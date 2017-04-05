@@ -2,48 +2,14 @@
 
 use strict;
 use warnings;
-use Config;
 use FindBin;
 
-my $format = "%-40s";
 my $root = $FindBin::Bin;
 
-delete $ENV{LD_LIBRARY_PATH};
-
-write_modulemap();
 expand_gyb();
-
-sub write_modulemap {
-	printf STDERR $format, "Writing module.modulemap";
-	my $archlib = $Config{installarchlib};
-
-	my $perl = 'perl';
-	if (system('swiftc -o /dev/null -Xlinker -lperl - </dev/null 2>/dev/null') != 0) {
-		$perl = "$archlib/CORE/libperl.so";
-		die "Cannot find libperl.so\n" unless -f $perl;
-	}
-
-	my $filename = "$root/Sources/CPerl/include/module.modulemap";
-	open my $file, '>', "$filename.tmp"
-		or die "Cannot write $filename.tmp\n";
-	print $file qq#module CPerl [system] {
-	header "shim.h"
-	header "$archlib/CORE/EXTERN.h"
-	header "$archlib/CORE/perl.h"
-	header "$archlib/CORE/XSUB.h"
-	header "macro.h"
-	link "$perl"
-	use SwiftGlibc
-	export *
-}
-#;
-	close $file;
-	commit_file($filename);
-}
 
 sub expand_gyb {
 	unless (-d ".build/gyb") {
-		printf STDERR $format, "Downloading gyb";
 		system("mkdir -p .build/gyb") == 0
 			or die "Cannot mdkir .build/gyb";
 		foreach my $f (qw/ gyb gyb.py /) {
@@ -51,11 +17,9 @@ sub expand_gyb {
 				or die "Failed to download gyb";
 		}
 		chmod 0755, ".build/gyb/gyb" or die $!;
-		print STDERR "[done]\n"
 	}
 
 	foreach my $f (qw# Sources/Perl/Call.swift Sources/Perl/Subroutine.swift #) {
-		printf STDERR $format, $f;
 		my $filename = "$root/$f";
 		system(".build/gyb/gyb $filename.gyb > $filename.tmp") == 0
 			or die "Failed to expand gyb template\n";
@@ -67,10 +31,8 @@ sub commit_file {
 	my ($filename) = @_;
 	if (system("cmp -s $filename.tmp $filename") == 0) {
 		unlink "$filename.tmp" or die $!;
-		print STDERR "[not changed]\n";
 	} else {
 		rename "$filename.tmp", $filename or die $!;
-		print STDERR "[done]\n";
 	}
 	return;
 }

@@ -6,9 +6,11 @@ let buildBenchmark = false
 let package = Package(
 	name: "Perl",
 	targets: [
-		Target(name: "CPerl"),
-		Target(name: "Perl", dependencies: [.Target(name: "CPerl")]),
+		Target(name: "Perl"),
 		Target(name: "SampleXS", dependencies: [.Target(name: "Perl")])
+	],
+	dependencies: [
+		.Package(url: "https://github.com/my-mail-ru/swift-CPerl.git", versions: Version(0, 1, 1)..<Version(0, .max, .max)),
 	]
 )
 
@@ -35,7 +37,7 @@ if me[me.startIndex..<min(me.endIndex, tmpdir.endIndex)] != tmpdir {
 	parts[parts.endIndex - 1] = "prepare"
 	let command = parts.joined(separator: "/")
 
-	guard system("\(command) >/dev/null 2>/dev/null") == 0 else {
+	guard system(command) == 0 else {
 		fatalError("Failed to execute \(command)")
 	}
 }
