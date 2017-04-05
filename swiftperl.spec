@@ -25,9 +25,6 @@ in Swift environment is also possible.
 
 %prep
 %setup -q
-echo 'package.targets = package.targets.filter { $0.name != "SampleXS" }' >> Package.swift
-echo 'package.exclude.append("Sources/SampleXS")' >> Package.swift
-echo 'products = products.filter { $0.name != "SampleXS" }' >> Package.swift
 %swift_patch_package
 
 

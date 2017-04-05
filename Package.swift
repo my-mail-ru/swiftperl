@@ -7,7 +7,6 @@ let package = Package(
 	name: "Perl",
 	targets: [
 		Target(name: "Perl"),
-		Target(name: "SampleXS", dependencies: [.Target(name: "Perl")])
 	],
 	dependencies: [
 		.Package(url: "https://github.com/my-mail-ru/swift-CPerl.git", versions: Version(0, 1, 1)..<Version(0, .max, .max)),
@@ -20,8 +19,6 @@ if buildBenchmark {
 } else {
 	package.exclude.append("Sources/swiftperl-benchmark")
 }
-
-products.append(Product(name: "SampleXS", type: .Library(.Dynamic), modules: "SampleXS"))
 
 func getenv(_ name: String) -> String? {
 	guard let value = Glibc.getenv(name) else { return nil }
