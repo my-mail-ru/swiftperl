@@ -9,11 +9,10 @@ my $root = $FindBin::Bin;
 
 my $archlib = $Config{installarchlib};
 
-my $linkperl = 'link "perl"';
+my $perl = 'perl';
 if (system('swiftc -o /dev/null -Xlinker -lperl - </dev/null 2>/dev/null') != 0) {
 	die "Cannot find libperl.so\n" unless -f "$archlib/CORE/libperl.so";
-	# first line - for swift build, second - for swift repl
-	$linkperl = qq#link "perl -Xlinker -rpath=$archlib/CORE -Xlinker -L$archlib/CORE"\n\tlink "$archlib/CORE/libperl.so"#;
+	$perl = "perl -Xlinker -rpath=$archlib/CORE -Xlinker -L$archlib/CORE";
 }
 
 my $filename = "$root/module.modulemap";
@@ -25,7 +24,7 @@ print $file qq#module CPerl [system] {
 	header "$archlib/CORE/perl.h"
 	header "$archlib/CORE/XSUB.h"
 	header "macro.h"
-	$linkperl
+	link "$perl"
 	use SwiftGlibc
 	export *
 }
