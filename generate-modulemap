@@ -1,0 +1,39 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Config;
+use FindBin;
+
+my $root = $FindBin::Bin;
+
+my $archlib = $Config{installarchlib};
+
+my $linkperl = 'link "perl"';
+if (system('swiftc -o /dev/null -Xlinker -lperl - </dev/null 2>/dev/null') != 0) {
+	die "Cannot find libperl.so\n" unless -f "$archlib/CORE/libperl.so";
+	# first line - for swift build, second - for swift repl
+	$linkperl = qq#link "perl -Xlinker -rpath=$archlib/CORE -Xlinker -L$archlib/CORE"\n\tlink "$archlib/CORE/libperl.so"#;
+}
+
+my $filename = "$root/module.modulemap";
+open my $file, '>', "$filename.tmp"
+	or die "Cannot write $filename.tmp\n";
+print $file qq#module CPerl [system] {
+	header "shim.h"
+	header "$archlib/CORE/EXTERN.h"
+	header "$archlib/CORE/perl.h"
+	header "$archlib/CORE/XSUB.h"
+	header "macro.h"
+	$linkperl
+	use SwiftGlibc
+	export *
+}
+#;
+close $file;
+
+if (system("cmp -s $filename.tmp $filename") == 0) {
+	unlink "$filename.tmp" or die $!;
+} else {
+	rename "$filename.tmp", $filename or die $!;
+}
