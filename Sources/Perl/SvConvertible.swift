@@ -17,17 +17,17 @@ extension Bool : PerlSvConvertible {
 
 extension Int : PerlSvConvertible {
 	public init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws { try self.init(sv, perl: perl) }
-	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
+	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer { return perl.pointee.newSViv(self) }
 }
 
 extension UInt : PerlSvConvertible {
 	public init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws { try self.init(sv, perl: perl) }
-	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
+	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer { return perl.pointee.newSVuv(self) }
 }
 
 extension Double : PerlSvConvertible {
 	public init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws { try self.init(sv, perl: perl) }
-	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
+	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer { return perl.pointee.newSVnv(self) }
 }
 
 extension String : PerlSvConvertible {
@@ -58,7 +58,7 @@ extension PerlDerived where Self : PerlValue, UnsafeValue : UnsafeSvCastable {
 	}
 
 	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer {
-		return withUnsafeSvPointer { sv, perl in perl.pointee.newRV(inc: sv) }
+		return withUnsafeSvPointer { sv, perl in perl.pointee.newRV_inc(sv) }
 	}
 }
 

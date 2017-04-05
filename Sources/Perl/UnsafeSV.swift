@@ -89,7 +89,7 @@ extension UnsafeInterpreter {
 	}
 
 	mutating func newSV(_ v: Bool) -> UnsafeSvPointer {
-		return newSV(boolSV(v))
+		return newSVsv(boolSV(v))
 	}
 
 	mutating func newSV(_ v: String, mortal: Bool = false) -> UnsafeSvPointer {
@@ -106,11 +106,11 @@ extension UnsafeInterpreter {
 	}
 
 	mutating func newRV<T: UnsafeSvCastable>(inc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
-		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { newRV(inc: $0) }
+		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { newRV_inc($0) }
 	}
 
 	mutating func newRV<T: UnsafeSvCastable>(noinc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
-		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { newRV(noinc: $0) }
+		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { newRV_noinc($0) }
 	}
 
 	mutating func newSV(_ v: AnyObject, isa: String) -> UnsafeSvPointer {

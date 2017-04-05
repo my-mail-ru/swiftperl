@@ -75,7 +75,7 @@ private func cvResolver(perl: UnsafeInterpreterPointer, cv: UnsafeCvPointer) -> 
 		try cv.pointee.body(stack)
 		errsv = nil
 	} catch PerlError.died(let sv) {
-		let usv = sv.withUnsafeSvPointer { sv, perl in perl.pointee.newSV(sv)! }
+		let usv = sv.withUnsafeSvPointer { sv, perl in perl.pointee.newSVsv(sv)! }
 		errsv = perl.pointee.sv_2mortal(usv)
 	} catch let error as PerlSvConvertible {
 		let usv = error._toUnsafeSvPointer(perl: perl)

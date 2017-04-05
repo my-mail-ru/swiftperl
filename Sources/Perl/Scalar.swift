@@ -75,14 +75,14 @@ public final class PerlScalar : PerlValue, PerlDerived {
 
 	/// Creates a new SV which is an exact duplicate of the original SV.
 	public convenience init(copy scalar: PerlScalar) {
-		let sv = scalar.withUnsafeSvPointer { sv, perl in perl.pointee.newSV(sv)! }
+		let sv = scalar.withUnsafeSvPointer { sv, perl in perl.pointee.newSVsv(sv)! }
 		self.init(noincUnchecked: sv, perl: scalar.perl)
 	}
 
 	/// Creates a `RV` pointing to a `sv`.
 	public convenience init<T : PerlValue>(referenceTo sv: T) {
 		let rv = sv.withUnsafeSvPointer { sv, perl in
-			perl.pointee.newRV(inc: sv)!
+			perl.pointee.newRV_inc(sv)!
 		}
 		self.init(noincUnchecked: rv, perl: sv.perl)
 	}
