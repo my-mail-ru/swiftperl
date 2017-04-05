@@ -154,22 +154,22 @@ PERL_STATIC_INLINE SV *sPerl_newSV(pTHX) {
 	return newSV(0);
 }
 
-SWIFT_NAME(PerlInterpreter.newSV(self:_:))
+SWIFT_NAME(PerlInterpreter.newSVsv(self:_:))
 PERL_STATIC_INLINE SV *sPerl_newSVsv(pTHX_ SV *const old) {
 	return newSVsv(old);
 }
 
-SWIFT_NAME(PerlInterpreter.newSV(self:_:))
+SWIFT_NAME(PerlInterpreter.newSViv(self:_:))
 PERL_STATIC_INLINE SV *sPerl_newSViv(pTHX_ const IV i) {
 	return newSViv(i);
 }
 
-SWIFT_NAME(PerlInterpreter.newSV(self:_:))
+SWIFT_NAME(PerlInterpreter.newSVuv(self:_:))
 PERL_STATIC_INLINE SV *sPerl_newSVuv(pTHX_ const UV u) {
 	return newSVuv(u);
 }
 
-SWIFT_NAME(PerlInterpreter.newSV(self:_:))
+SWIFT_NAME(PerlInterpreter.newSVnv(self:_:))
 PERL_STATIC_INLINE SV *sPerl_newSVnv(pTHX_ const NV n) {
 	return newSVnv(n);
 }
@@ -179,12 +179,12 @@ PERL_STATIC_INLINE SV *sPerl_newSVpvn_flags(pTHX_ const char *const s, const STR
 	return newSVpvn_flags(s, len, flags);
 }
 
-SWIFT_NAME(PerlInterpreter.newRV(self:inc:))
+SWIFT_NAME(PerlInterpreter.newRV_inc(self:_:))
 PERL_STATIC_INLINE SV *sPerl_newRV_inc(pTHX_ _Nonnull SV *const sv) {
 	return newRV_inc(sv);
 }
 
-SWIFT_NAME(PerlInterpreter.newRV(self:noinc:))
+SWIFT_NAME(PerlInterpreter.newRV_noinc(self:_:))
 PERL_STATIC_INLINE SV *sPerl_newRV_noinc(pTHX_ _Nonnull SV *const sv) {
 	return newRV_noinc(sv);
 }
