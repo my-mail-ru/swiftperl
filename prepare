@@ -1,0 +1,46 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Config;
+use FindBin;
+
+my $root = $FindBin::Bin;
+my $archlib = $Config{archlib};
+
+my $perl = 'perl';
+if ($Config{osname} ne 'darwin' && system('swiftc -o /dev/null -Xlinker -lperl - </dev/null 2>/dev/null') != 0) {
+	die "Cannot find libperl.so\n" unless -f "$archlib/CORE/libperl.so";
+	$perl = "perl -Xlinker -rpath=$archlib/CORE -Xlinker -L$archlib/CORE";
+}
+
+write_file("$root/module.modulemap", <<EOF);
+module CPerl [system] {
+	header "shim.h"
+	header "$archlib/CORE/EXTERN.h"
+	header "$archlib/CORE/perl.h"
+	header "$archlib/CORE/XSUB.h"
+	header "macro.h"
+	link "$perl"
+	use SwiftGlibc
+	export *
+}
+EOF
+
+write_file("$root/libperl.pc", <<EOF);
+Cflags: -I$archlib/CORE
+Libs: -L$archlib/CORE -lperl
+EOF
+
+sub write_file {
+	my ($filename, $content) = @_;
+	open my $file, '>', "$filename.tmp"
+		or die "Cannot write $filename.tmp\n";
+	print $file $content;
+	close $file;
+	if (system("cmp -s $filename.tmp $filename") == 0) {
+		unlink "$filename.tmp" or die $!;
+	} else {
+		rename "$filename.tmp", $filename or die $!;
+	}
+}
