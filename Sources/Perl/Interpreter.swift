@@ -1,4 +1,8 @@
+#if os(Linux) || os(FreeBSD) || os(PS4) || os(Android) || CYGWIN
 import func Glibc.atexit
+#elseif os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+import func Darwin.atexit
+#endif
 
 /// A safe Perl Interpreter.
 ///

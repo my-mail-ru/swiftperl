@@ -1,5 +1,4 @@
 import CPerl
-import var Glibc.environ
 
 public typealias UnsafeInterpreter = CPerl.PerlInterpreter
 public typealias UnsafeInterpreterPointer = UnsafeMutablePointer<UnsafeInterpreter>
