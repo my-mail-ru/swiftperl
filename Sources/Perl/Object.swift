@@ -61,6 +61,61 @@ open class PerlObject : PerlValue, PerlDerived {
 		self.init(noincUnchecked: sv, perl: perl)
 	}
 
+	/// Creates a new object by calling its Perl constructor.
+	///
+	/// Use this `init` only to construct instances of
+	/// subclasses conforming to `PerlNamedClass`.
+	///
+	/// The recomended way is to wrap this constructor
+	/// invocations by implementing more concrete initializers
+	/// which hide Perl method calling magic behind.
+	///
+	/// Let's imagine a class:
+	///
+	/// ```swift
+	/// final class URI : PerlObject, PerlNamedClass {
+	/// 	static let perlClassName = "URI"
+	///
+	/// 	convenience init(_ str: String) throws {
+	/// 		try self.init(method: "new", args: [str])
+	/// 	}
+	/// }
+	/// ```
+	///
+	/// Then Swift expression:
+	///
+	/// ```swift
+	/// let uri = URI("https://my.mail.ru/music")
+	/// ```
+	///
+	/// will be equal to Perl:
+	///
+	/// ```perl
+	/// my $uri = URI->new("https://my.mail.ru/music")
+	/// ```
+	///
+	/// - Parameter method: A name of the constuctor. Usually it is *new*.
+	/// - Parameter args: Arguments to pass to the constructor.
+	/// - Parameter perl: The Perl interpreter.
+	public convenience init(method: String, args: [PerlSvConvertible?], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+		guard let named = type(of: self) as? PerlNamedClass.Type else {
+			fatalError("PerlObject.init(method:args:perl) is only supported for subclasses conforming to PerlNamedClass")
+		}
+		perl.pointee.enterScope()
+		defer { perl.pointee.leaveScope() }
+		let classname = named.perlClassName
+		let args = [classname as PerlSvConvertible?] + args
+		let svArgs: [UnsafeSvPointer] = args.map { $0?._toUnsafeSvPointer(perl: perl) ?? perl.pointee.newSV() }
+		let sv = try perl.pointee.unsafeCall(sv: perl.pointee.newSV(method, mortal: true), args: svArgs, flags: G_METHOD|G_SCALAR)[0]
+		guard sv.pointee.isObject(perl: perl) else {
+			throw PerlError.notObject(fromUnsafeSvPointer(inc: sv, perl: perl))
+		}
+		guard sv.pointee.isDerived(from: classname, perl: perl) else {
+			throw PerlError.unexpectedObjectType(fromUnsafeSvPointer(inc: sv, perl: perl), want: type(of: self))
+		}
+		self.init(incUnchecked: sv, perl: perl)
+	}
+
 	public convenience init(_ sv: PerlScalar) throws {
 		defer { _fixLifetime(sv) }
 		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
@@ -122,54 +177,6 @@ extension PerlNamedClass {
 }
 
 extension PerlNamedClass where Self : PerlObject {
-	/// Creates a new object by calling its Perl constructor.
-	///
-	/// The recomended way is to wrap this constructor
-	/// invocations by implementing more concrete initializers
-	/// which hide Perl method calling magic behind.
-	///
-	/// Let's imagine a class:
-	///
-	/// ```swift
-	/// final class URI : PerlObject, PerlNamedClass {
-	/// 	static let perlClassName = "URI"
-	/// 
-	/// 	convenience init(_ str: String) throws {
-	/// 		try self.init(method: "new", args: [str])
-	/// 	}
-	/// }
-	/// ```
-	///
-	/// Then Swift expression:
-	///
-	/// ```swift
-	/// let uri = URI("https://my.mail.ru/music")
-	/// ```
-	///
-	/// will be equal to Perl:
-	///
-	/// ```perl
-	/// my $uri = URI->new("https://my.mail.ru/music")
-	///	```
-	///
-	/// - Parameter method: A name of the constuctor. Usually it is *new*.
-	/// - Parameter args: Arguments to pass to constructor.
-	public init(method: String, args: [PerlSvConvertible?], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		perl.pointee.enterScope()
-		defer { perl.pointee.leaveScope() }
-		let classname = (type(of: self) as PerlNamedClass.Type).perlClassName
-		let args = [classname as PerlSvConvertible?] + args
-		let svArgs: [UnsafeSvPointer] = args.map { $0?._toUnsafeSvPointer(perl: perl) ?? perl.pointee.newSV() }
-		let sv = try perl.pointee.unsafeCall(sv: perl.pointee.newSV(method, mortal: true), args: svArgs, flags: G_METHOD|G_SCALAR)[0]
-		guard sv.pointee.isObject(perl: perl) else {
-			throw PerlError.notObject(fromUnsafeSvPointer(inc: sv, perl: perl))
-		}
-		guard sv.pointee.isDerived(from: classname, perl: perl) else {
-			throw PerlError.unexpectedObjectType(fromUnsafeSvPointer(inc: sv, perl: perl), want: Self.self)
-		}
-		self.init(incUnchecked: sv, perl: perl)
-	}
-
 	/// Registers this class as a counterpart of Perl class which name is provided in `perlClassName`.
 	public static func register() {
 		PerlObject.register(self, as: (self as PerlNamedClass.Type).perlClassName)
