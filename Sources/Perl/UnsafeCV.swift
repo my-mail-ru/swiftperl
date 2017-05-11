@@ -36,17 +36,36 @@ extension UnsafeCV {
 		svt_dup: nil,
 		svt_local: nil
 	)
+}
 
-	mutating func name(perl: UnsafeInterpreterPointer) -> String {
-		return String(cString: GvNAME(perl.pointee.CvGV(&self)))
+struct UnsafeCvContext {
+	let cv: UnsafeCvPointer
+	let perl: UnsafeInterpreterPointer
+
+	var name: String {
+		return String(cString: GvNAME(perl.pointee.CvGV(cv)))
 	}
 
-	mutating func fullname(perl: UnsafeInterpreterPointer) -> String {
-		return "\(String(cString: HvNAME(GvSTASH(perl.pointee.CvGV(&self)))))::\(name(perl: perl))"
+	var fullname: String {
+		return "\(String(cString: HvNAME(GvSTASH(perl.pointee.CvGV(cv)))))::\(name)"
 	}
 
 	var file: String {
-		mutating get { return String(cString: CvFILE(&self)) }
+		return String(cString: CvFILE(cv))
+	}
+}
+
+extension UnsafeCvContext {
+	init(dereference svc: UnsafeSvContext) throws {
+		guard let rvc = svc.referent, rvc.type == .code else {
+			throw PerlError.unexpectedSvType(fromUnsafeSvContext(inc: svc), want: .code)
+		}
+		self.init(rebind: rvc)
+	}
+
+	init(rebind svc: UnsafeSvContext) {
+		let cv = UnsafeMutableRawPointer(svc.sv).bindMemory(to: UnsafeCV.self, capacity: 1)
+		self.init(cv: cv, perl: svc.perl)
 	}
 }
 
@@ -74,15 +93,14 @@ private func cvResolver(perl: UnsafeInterpreterPointer, cv: UnsafeCvPointer) -> 
 		let stack = UnsafeXSubStack(perl: perl)
 		try cv.pointee.body(stack)
 		errsv = nil
-	} catch PerlError.died(let sv) {
-		let usv = sv.withUnsafeSvPointer { sv, perl in perl.pointee.newSVsv(sv)! }
-		errsv = perl.pointee.sv_2mortal(usv)
+	} catch PerlError.died(let scalar) {
+		errsv = scalar.withUnsafeSvContext { UnsafeSvContext.new(copy: $0).mortal() }
 	} catch let error as PerlSvConvertible {
 		let usv = error._toUnsafeSvPointer(perl: perl)
 		errsv = perl.pointee.sv_2mortal(usv)
 	} catch {
 		errsv = "\(error)".withCString { error in
-			cv.pointee.fullname(perl: perl).withCString { name in
+			UnsafeCvContext(cv: cv, perl: perl).fullname.withCString { name in
 				withVaList([name, error]) { perl.pointee.vmess("Exception in %s: %s", $0) }
 			}
 		}

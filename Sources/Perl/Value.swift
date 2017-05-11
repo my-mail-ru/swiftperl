@@ -2,60 +2,62 @@
 /// not only scalars. Performs reference counting on initialization and
 /// deinitialization.
 open class PerlValue : AnyPerl, CustomDebugStringConvertible {
-	private let sv: UnsafeSvPointer
-	let perl: UnsafeInterpreterPointer
+	let unsafeSvContext: UnsafeSvContext
 
 	/// Unsafely creates an instance without incrementing a reference counter of a SV.
 	/// Performs no type checks and should be used only if compatibility is known.
-	public required init(noincUnchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) {
-		self.sv = sv
-		self.perl = perl
+	public required init(noincUnchecked svc: UnsafeSvContext) {
+		unsafeSvContext = svc
 	}
 
 	/// Unsafely creates an instance incrementing a reference counter of a SV.
 	/// Performs no type checks and should be used only if compatibility is known.
-	public required init(incUnchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) {
-		self.sv = sv.pointee.refcntInc()
-		self.perl = perl
+	public required init(incUnchecked svc: UnsafeSvContext) {
+		svc.refcntInc()
+		unsafeSvContext = svc
 	}
 
 	/// Unsafely creates an instance without incrementing a reference counter of a SV.
 	/// Performs type checks and throws an error unless compatible.
-	public convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		self.init(noincUnchecked: sv, perl: perl)
+	public convenience init(noinc svc: UnsafeSvContext) throws {
+		self.init(noincUnchecked: svc)
 	}
 
 	/// Unsafely creates an nstance incrementing a reference counter of a SV.
 	/// Performs type checks and throws an error unless compatible.
-	public convenience init(inc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		try self.init(noinc: sv.pointee.refcntInc(), perl: perl)
+	public convenience init(inc svc: UnsafeSvContext) throws {
+		svc.refcntInc()
+		try self.init(noinc: svc)
 	}
 
 	deinit {
-		sv.pointee.refcntDec(perl: perl)
+		unsafeSvContext.refcntDec()
 	}
 
-	/// Invokes the given closure on the unsafe pointers to the SV and the Perl Interpreter.
+	/// Invokes the given closure on the unsafe context containing pointers
+	/// to the SV and the Perl interpreter.
 	///
-	/// The `withUnsafeSvPointer(_:)` method ensures that the SV's
+	/// The `withUnsafeSvContext(_:)` method ensures that the SV's
 	/// lifetime extends through the execution of `body`.
 	///
-	/// - Parameter body: A closure that takes unsafe pointers to the SV and the Perl Interpreter
-	///   as its arguments. If the closure has a return value, it is used as the
-	///   return value of the `withUnsafeSvPointer(_:)` method.
+	/// - Parameter body: A closure that takes `UnsafeSvContext` as its argument.
+	///   If the closure has a return value, it is used as the
+	///   return value of the `withUnsafeSvContext(_:)` method.
 	/// - Returns: The return value of the `body` closure, if any.
-	public final func withUnsafeSvPointer<R>(_ body: (UnsafeSvPointer, UnsafeInterpreterPointer) throws -> R) rethrows -> R {
-		return try body(sv, perl)
+	public final func withUnsafeSvContext<R>(_ body: (UnsafeSvContext) throws -> R) rethrows -> R {
+		defer { _fixLifetime(self) }
+		return try body(unsafeSvContext)
 	}
 
 	var type: SvType {
-		return sv.pointee.type
+		defer { _fixLifetime(self) }
+		return unsafeSvContext.type
 	}
 
-	static func derivedClass(for sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) -> PerlValue.Type {
-		switch sv.pointee.type {
+	static func derivedClass(for svc: UnsafeSvContext) -> PerlValue.Type {
+		switch svc.type {
 			case .scalar:
-				if let classname = sv.pointee.classname(perl: perl) {
+				if let classname = svc.classname {
 					return PerlObject.derivedClass(for: classname)
 				} else {
 					return PerlScalar.self
@@ -67,14 +69,19 @@ open class PerlValue : AnyPerl, CustomDebugStringConvertible {
 		}
 	}
 
-	static func initDerived(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) -> PerlValue {
-		let subclass = derivedClass(for: sv, perl: perl)
-		return subclass.init(noincUnchecked: sv, perl: perl)
+	static func initDerived(noinc svc: UnsafeSvContext) -> PerlValue {
+		let subclass = derivedClass(for: svc)
+		return subclass.init(noincUnchecked: svc)
 	}
 
-	static func initDerived(inc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) -> PerlValue {
-		let subclass = derivedClass(for: sv, perl: perl)
-		return subclass.init(incUnchecked: sv, perl: perl)
+	static func initDerived(inc svc: UnsafeSvContext) -> PerlValue {
+		let subclass = derivedClass(for: svc)
+		return subclass.init(incUnchecked: svc)
+	}
+
+	/// Dumps the contents of the underlying SV to the "STDERR" filehandle.
+	public func dump() {
+		withUnsafeSvContext { $0.dump() }
 	}
 
 	/// A textual representation of the SV, suitable for debugging.

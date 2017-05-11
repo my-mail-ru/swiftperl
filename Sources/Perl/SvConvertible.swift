@@ -1,74 +1,92 @@
 public protocol PerlSvConvertible {
-	init(_fromUnsafeSvPointerInc: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws
-	init(_fromUnsafeSvPointerCopy: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws
+	init(_fromUnsafeSvContextInc: UnsafeSvContext) throws
+	init(_fromUnsafeSvContextCopy: UnsafeSvContext) throws
 	func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer
 }
 
 extension PerlSvConvertible {
-	public init(_fromUnsafeSvPointerCopy sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		try self.init(_fromUnsafeSvPointerInc: sv, perl: perl)
+	public init(_fromUnsafeSvContextCopy svc: UnsafeSvContext) throws {
+		try self.init(_fromUnsafeSvContextInc: svc)
 	}
 }
 
 extension Bool : PerlSvConvertible {
-	public init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) { self.init(sv, perl: perl) }
+	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) { self.init(svc) }
 	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
 }
 
 extension Int : PerlSvConvertible {
-	public init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws { try self.init(sv, perl: perl) }
+	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws { try self.init(svc) }
 	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer { return perl.pointee.newSViv(self) }
 }
 
 extension UInt : PerlSvConvertible {
-	public init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws { try self.init(sv, perl: perl) }
+	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws { try self.init(svc) }
 	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer { return perl.pointee.newSVuv(self) }
 }
 
 extension Double : PerlSvConvertible {
-	public init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws { try self.init(sv, perl: perl) }
+	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws { try self.init(svc) }
 	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer { return perl.pointee.newSVnv(self) }
 }
 
 extension String : PerlSvConvertible {
-	public init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws { try self.init(sv, perl: perl) }
+	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws { try self.init(svc) }
 	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer { return perl.pointee.newSV(self) }
 }
 
 extension PerlScalar : PerlSvConvertible {
-	public convenience init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		try self.init(inc: sv, perl: perl)
+	public convenience init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
+		try self.init(inc: svc)
 	}
 
-	public convenience init(_fromUnsafeSvPointerCopy sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		try self.init(copy: sv, perl: perl)
+	public convenience init(_fromUnsafeSvContextCopy svc: UnsafeSvContext) throws {
+		try self.init(copy: svc)
 	}
 
 	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer {
-		return withUnsafeSvPointer { sv, _ in sv.pointee.refcntInc() }
+		defer { _fixLifetime(self) }
+		return unsafeSvContext.refcntInc()
 	}
 }
 
-extension PerlDerived where Self : PerlValue, UnsafeValue : UnsafeSvCastable {
-	public init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		guard let unsafe = try UnsafeMutablePointer<UnsafeValue>(autoDeref: sv, perl: perl) else {
-			throw PerlError.unexpectedUndef(Perl.fromUnsafeSvPointer(inc: sv, perl: perl))
-		}
-		self.init(inc: unsafe, perl: perl)
+extension PerlArray : PerlSvConvertible {
+	public convenience init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
+		try self.init(inc: UnsafeAvContext(dereference: svc))
 	}
 
 	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer {
-		return withUnsafeSvPointer { sv, perl in perl.pointee.newRV_inc(sv) }
+		return withUnsafeSvContext { $0.perl.pointee.newRV_inc($0.sv) }
+	}
+}
+
+extension PerlHash : PerlSvConvertible {
+	public convenience init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
+		try self.init(inc: UnsafeHvContext(dereference: svc))
+	}
+
+	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer {
+		return withUnsafeSvContext { $0.perl.pointee.newRV_inc($0.sv) }
+	}
+}
+
+extension PerlSub : PerlSvConvertible {
+	public convenience init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
+		try self.init(inc: UnsafeCvContext(dereference: svc))
+	}
+
+	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer {
+		return withUnsafeSvContext { $0.perl.pointee.newRV_inc($0.sv) }
 	}
 }
 
 extension PerlSvConvertible where Self : PerlBridgedObject {
-	public init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		guard let object = sv.pointee.swiftObject(perl: perl) else {
-			throw PerlError.notSwiftObject(Perl.fromUnsafeSvPointer(inc: sv, perl: perl))
+	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
+		guard let object = svc.swiftObject else {
+			throw PerlError.notSwiftObject(Perl.fromUnsafeSvContext(inc: svc))
 		}
 		guard let derivedObject = object as? Self else {
-			throw PerlError.unexpectedObjectType(Perl.fromUnsafeSvPointer(inc: sv, perl: perl), want: Self.self)
+			throw PerlError.unexpectedObjectType(Perl.fromUnsafeSvContext(inc: svc), want: Self.self)
 		}
 		self = derivedObject
 	}
@@ -76,57 +94,54 @@ extension PerlSvConvertible where Self : PerlBridgedObject {
 	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer {
 		return perl.pointee.newSV(self)
 	}
-
-	@available(*, deprecated, message: "This ugly hack is not needed anymore")
-	public static func _fromUnsafeSvPointerNonFinalClassWorkaround<T>(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws -> T {
-		fatalError("shouldn't be here")
-	}
 }
 
 extension PerlSvConvertible where Self : PerlObject {
-	private init(fromUnsafeSvPointerNoinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		guard let classname = sv.pointee.classname(perl: perl) else {
-			throw PerlError.notObject(Perl.fromUnsafeSvPointer(noinc: sv, perl: perl))
+	private init(fromUnsafeSvContextNoinc svc: UnsafeSvContext) throws {
+		guard let classname = svc.classname else {
+			throw PerlError.notObject(Perl.fromUnsafeSvContext(noinc: svc))
 		}
 		if let nc = Self.self as? PerlNamedClass.Type, nc.perlClassName == classname {
-			self.init(noincUnchecked: sv, perl: perl)
+			self.init(noincUnchecked: svc)
 		} else {
 			let derivedClass = PerlObject.derivedClass(for: classname)
 			if derivedClass == Self.self {
-				self.init(noincUnchecked: sv, perl: perl)
+				self.init(noincUnchecked: svc)
 			} else {
 				guard let dc = derivedClass as? Self.Type else {
-					throw PerlError.unexpectedObjectType(Perl.fromUnsafeSvPointer(noinc: sv, perl: perl), want: Self.self)
+					throw PerlError.unexpectedObjectType(Perl.fromUnsafeSvContext(noinc: svc), want: Self.self)
 				}
-				self.init(as: dc, noinc: sv, perl: perl)
+				self.init(as: dc, noinc: svc)
 			}
 		}
 	}
 
-	private init(as derivedClass: Self.Type, noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) {
-		self = derivedClass.init(noincUnchecked: sv, perl: perl)
+	private init(as derivedClass: Self.Type, noinc svc: UnsafeSvContext) {
+		self = derivedClass.init(noincUnchecked: svc)
 	}
 
-	public init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		try self.init(fromUnsafeSvPointerNoinc: sv.pointee.refcntInc(), perl: perl)
+	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
+		svc.refcntInc()
+		try self.init(fromUnsafeSvContextNoinc: svc)
 	}
 
-	public init(_fromUnsafeSvPointerCopy sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		try self.init(fromUnsafeSvPointerNoinc: perl.pointee.newSV(stealing: sv), perl: perl)
+	public init(_fromUnsafeSvContextCopy svc: UnsafeSvContext) throws {
+		try self.init(fromUnsafeSvContextNoinc: UnsafeSvContext.new(stealingCopy: svc))
 	}
 
 	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer {
-		return withUnsafeSvPointer { sv, _ in sv.pointee.refcntInc() }
+		defer { _fixLifetime(self) }
+		return unsafeSvContext.refcntInc()
 	}
 }
 
 extension Optional where Wrapped : PerlSvConvertible {
-	public init(_fromUnsafeSvPointerInc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		self = sv.pointee.defined ? .some(try Wrapped(_fromUnsafeSvPointerInc: sv, perl: perl)) : .none
+	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
+		self = svc.defined ? .some(try Wrapped(_fromUnsafeSvContextInc: svc)) : .none
 	}
 
-	public init(_fromUnsafeSvPointerCopy sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		self = sv.pointee.defined ? .some(try Wrapped(_fromUnsafeSvPointerCopy: sv, perl: perl)) : .none
+	public init(_fromUnsafeSvContextCopy svc: UnsafeSvContext) throws {
+		self = svc.defined ? .some(try Wrapped(_fromUnsafeSvContextCopy: svc)) : .none
 	}
 
 	public func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer {
@@ -141,24 +156,21 @@ extension Optional where Wrapped : PerlSvConvertible {
 
 extension Array where Element : PerlSvConvertible {
 	func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer {
-		let av = perl.pointee.newAV()!
-		var c = av.pointee.collection(perl: perl)
-		c.reserveCapacity(numericCast(count))
+		let avc = UnsafeAvContext.new(perl: perl)
+		avc.reserveCapacity(numericCast(count))
 		for (i, v) in enumerated() {
-			c[i] = v._toUnsafeSvPointer(perl: perl)
+			avc.store(i, value: v._toUnsafeSvPointer(perl: perl))
 		}
-		return perl.pointee.newRV(noinc: av)
+		return perl.pointee.newRV(noinc: avc.av)
 	}
 }
 
-// where Key == String, but it is unsupported
 extension Dictionary where Value : PerlSvConvertible {
 	func _toUnsafeSvPointer(perl: UnsafeInterpreterPointer) -> UnsafeSvPointer {
-		let hv = perl.pointee.newHV()!
-		var c = hv.pointee.collection(perl: perl)
+		let hvc = UnsafeHvContext.new(perl: perl)
 		for (k, v) in self {
-			c[k as! String] = v._toUnsafeSvPointer(perl: perl)
+			hvc.store("\(k)", value: v._toUnsafeSvPointer(perl: perl))
 		}
-		return perl.pointee.newRV(noinc: hv)
+		return perl.pointee.newRV(noinc: hvc.hv)
 	}
 }

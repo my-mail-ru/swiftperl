@@ -10,15 +10,15 @@
 /// Making your own custom types conforming to `AnyPerl` protocol is undesirable.
 public protocol AnyPerl : class {}
 
-func fromUnsafeSvPointer(inc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) -> AnyPerl {
-	return sv.pointee.swiftObject(perl: perl) ?? PerlValue.initDerived(inc: sv, perl: perl)
+func fromUnsafeSvContext(inc svc: UnsafeSvContext) -> AnyPerl {
+	return svc.swiftObject ?? PerlValue.initDerived(inc: svc)
 }
 
-func fromUnsafeSvPointer(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) -> AnyPerl {
-	if let obj = sv.pointee.swiftObject(perl: perl) {
-		sv.pointee.refcntDec(perl: perl)
+func fromUnsafeSvContext(noinc svc: UnsafeSvContext) -> AnyPerl {
+	if let obj = svc.swiftObject {
+		svc.refcntDec()
 		return obj
 	} else {
-		return PerlValue.initDerived(noinc: sv, perl: perl)
+		return PerlValue.initDerived(noinc: svc)
 	}
 }

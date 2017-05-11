@@ -1,5 +1,5 @@
 import XCTest
-import Perl
+@testable import Perl
 
 class ConvertToPerlTests : EmbeddedTestCase {
 	static var allTests: [(String, (ConvertToPerlTests) -> () throws -> Void)] {
@@ -190,9 +190,9 @@ class ConvertToPerlTests : EmbeddedTestCase {
 		XCTAssertEqual(try perl.eval("testnoarg(10) == 25 ? 'OK' : 'FAIL'"), "OK")
 
 		let orig = PerlScalar("ololo")
-		let origsv = orig.withUnsafeSvPointer { sv, _ in sv }
+		let origsv = orig.withUnsafeSvContext { $0.sv }
 		try PerlSub { (arg: PerlScalar) -> Void in
-			arg.withUnsafeSvPointer { sv, _ in XCTAssertNotEqual(sv, origsv, "Argument SV is not copied") }
+			arg.withUnsafeSvContext { XCTAssertNotEqual($0.sv, origsv, "Argument SV is not copied") }
 		}.call(orig)
 
 		var storedIn: PerlScalar?

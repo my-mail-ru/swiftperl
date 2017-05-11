@@ -50,17 +50,21 @@ import CPerl
 public final class PerlSub : PerlValue, PerlDerived {
 	public typealias UnsafeValue = UnsafeCV
 
-	convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		try self.init(_noinc: sv, perl: perl)
+	convenience init(noinc cvc: UnsafeCvContext) {
+		self.init(noincUnchecked: UnsafeSvContext(rebind: cvc))
+	}
+
+	convenience init(inc cvc: UnsafeCvContext) {
+		self.init(incUnchecked: UnsafeSvContext(rebind: cvc))
 	}
 
 	@discardableResult
 	convenience init(name: String?, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current, file: StaticString = #file, body: @escaping CvBody) {
 		let cv = perl.pointee.newCV(name: name, file: file, body: body) // FIXME Why result is non-optional???
-		let sv = UnsafeMutableRawPointer(cv).bindMemory(to: UnsafeSV.self, capacity: 1)
-		self.init(noincUnchecked: sv, perl: perl)
+		self.init(noinc: UnsafeCvContext(cv: cv, perl: perl))
 		if name != nil {
-			sv.pointee.refcntInc()
+			unsafeSvContext.refcntInc()
+			_fixLifetime(self)
 		}
 	}
 
@@ -68,24 +72,23 @@ public final class PerlSub : PerlValue, PerlDerived {
 	/// If the subroutine does not exist then `nil` is returned.
 	public convenience init?(get name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		guard let cv = perl.pointee.getCV(name) else { return nil }
-		self.init(inc: cv, perl: perl)
+		self.init(inc: UnsafeCvContext(cv: cv, perl: perl))
 	}
 
-	func withUnsafeCvPointer<R>(_ body: (UnsafeCvPointer, UnsafeInterpreterPointer) throws -> R) rethrows -> R {
-		return try withUnsafeSvPointer { sv, perl in
-			return try sv.withMemoryRebound(to: UnsafeCV.self, capacity: 1) {
-				return try body($0, perl)
-			}
+	func withUnsafeCvContext<R>(_ body: (UnsafeCvContext) throws -> R) rethrows -> R {
+		defer { _fixLifetime(self) }
+		return try unsafeSvContext.sv.withMemoryRebound(to: UnsafeCV.self, capacity: 1) {
+			return try body(UnsafeCvContext(cv: $0, perl: unsafeSvContext.perl))
 		}
 	}
 
 	var file: String {
-		return withUnsafeCvPointer { cv, _ in cv.pointee.file }
+		return withUnsafeCvContext { $0.file }
 	}
 
 	/// A textual representation of the CV, suitable for debugging.
 	public override var debugDescription: String {
-		let deparse: PerlObject = try! perl.pointee.eval("use B::Deparse; B::Deparse->new('-sCi0')")
+		let deparse: PerlObject = try! unsafeSvContext.perl.pointee.eval("use B::Deparse; B::Deparse->new('-sCi0')")
 		var text: String = try! deparse.call(method: "coderef2text", self)
 		text = text.characters.split { $0 == "\n" } .map(String.init).joined(separator: " ")
 		return "PerlSub(\(text) at \(file))"
@@ -183,7 +186,7 @@ extension PerlSub {
 		where R.Iterator.Element == PerlScalar {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
-			let args = try stack.args.map { try PerlScalar(_fromUnsafeSvPointerInc: $0, perl: stack.perl) }
+			let args = try stack.args.map { try PerlScalar(_fromUnsafeSvContextInc: UnsafeSvContext(sv: $0, perl: stack.perl)) }
 			let result = try body(args, stack.perl)
 			stack.xsReturn(result.map { $0._toUnsafeSvPointer(perl: stack.perl) })
 		}

@@ -1,5 +1,5 @@
 import XCTest
-import Perl
+@testable import Perl
 
 class ConvertFromPerlTests : EmbeddedTestCase {
 	static var allTests: [(String, (ConvertFromPerlTests) -> () throws -> Void)] {
@@ -414,11 +414,11 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		var origptr: UnsafeRawPointer?
 		let ret: PerlScalar = try PerlSub { () -> PerlScalar in
 			let s = PerlScalar("ololo")
-			s.withUnsafeSvPointer { sv, _ in origsv = sv }
+			s.withUnsafeSvContext { origsv = $0.sv }
 			s.withUnsafeBytes { origptr = $0.baseAddress }
 			return s
 		}.call()
-		ret.withUnsafeSvPointer { sv, _ in XCTAssertNotEqual(sv, origsv, "Returned SV is not copied") }
+		ret.withUnsafeSvContext { XCTAssertNotEqual($0.sv, origsv, "Returned SV is not copied") }
 		ret.withUnsafeBytes { XCTAssertEqual($0.baseAddress, origptr, "String of returned SV is not stealed") }
 	}
 

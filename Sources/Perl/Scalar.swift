@@ -35,29 +35,25 @@ public final class PerlScalar : PerlValue, PerlDerived {
 	/// Creates a `SV` containing an undefined value.
 	public convenience init() { self.init(perl: UnsafeInterpreter.current) } // default bellow doesn't work...
 
-	convenience init(copyUnchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) {
-		self.init(noincUnchecked: perl.pointee.newSV(stealing: sv), perl: perl)
+	convenience init(copyUnchecked svc: UnsafeSvContext) {
+		self.init(noincUnchecked: UnsafeSvContext.new(stealingCopy: svc))
 	}
 
-	convenience init(copy sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		guard sv.pointee.type == UnsafeValue.type else {
-			throw PerlError.unexpectedSvType(fromUnsafeSvPointer(inc: sv, perl: perl), want: UnsafeValue.type)
+	convenience init(copy svc: UnsafeSvContext) throws {
+		guard svc.type == UnsafeValue.type else {
+			throw PerlError.unexpectedSvType(fromUnsafeSvContext(inc: svc), want: UnsafeValue.type)
 		}
-		self.init(copyUnchecked: sv, perl: perl)
+		self.init(copyUnchecked: svc)
 	}
 
 	/// Creates a `SV` containing an undefined value.
 	public convenience init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.init(noincUnchecked: perl.pointee.newSV(), perl: perl)
-	}
-
-	convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		try self.init(_noinc: sv, perl: perl)
+		self.init(noincUnchecked: UnsafeSvContext.new(perl: perl))
 	}
 
 	/// Creates a `SV` containig a `v`.
 	public convenience init<T : PerlSvConvertible>(_ v: T, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.init(noincUnchecked: v._toUnsafeSvPointer(perl: perl), perl: perl)
+		self.init(noincUnchecked: UnsafeSvContext(sv: v._toUnsafeSvPointer(perl: perl), perl: perl))
 	}
 
 	/// Semantics of a Perl string data.
@@ -70,21 +66,19 @@ public final class PerlScalar : PerlValue, PerlDerived {
 
 	/// Creates a Perl string containing a copy of bytes or characters from `v`.
 	public convenience init(_ v: UnsafeRawBufferPointer, containing: StringUnits = .bytes, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.init(noincUnchecked: perl.pointee.newSV(v, utf8: containing == .characters), perl: perl)
+		self.init(noincUnchecked: UnsafeSvContext.new(v, utf8: containing == .characters, perl: perl))
 	}
 
 	/// Creates a new SV which is an exact duplicate of the original SV.
 	public convenience init(copy scalar: PerlScalar) {
-		let sv = scalar.withUnsafeSvPointer { sv, perl in perl.pointee.newSVsv(sv)! }
-		self.init(noincUnchecked: sv, perl: scalar.perl)
+		self.init(noincUnchecked: UnsafeSvContext.new(copy: scalar.unsafeSvContext))
+		_fixLifetime(scalar)
 	}
 
 	/// Creates a `RV` pointing to a `sv`.
-	public convenience init<T : PerlValue>(referenceTo sv: T) {
-		let rv = sv.withUnsafeSvPointer { sv, perl in
-			perl.pointee.newRV_inc(sv)!
-		}
-		self.init(noincUnchecked: rv, perl: sv.perl)
+	public convenience init<T : PerlValue>(referenceTo value: T) {
+		self.init(noincUnchecked: UnsafeSvContext.new(rvInc: value.unsafeSvContext))
+		_fixLifetime(value)
 	}
 
 	/// Creates a `RV` pointing to a `sv`.
@@ -94,12 +88,12 @@ public final class PerlScalar : PerlValue, PerlDerived {
 
 	/// Creates a `RV` pointing to a `AV` which contains `SV`s with elements of an `array`.
 	public convenience init<T : PerlSvConvertible>(_ array: [T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.init(noincUnchecked: array._toUnsafeSvPointer(perl: perl), perl: perl)
+		self.init(noincUnchecked: UnsafeSvContext(sv: array._toUnsafeSvPointer(perl: perl), perl: perl))
 	}
 
 	/// Creates a `RV` pointing to a `HV` which contains `SV`s with elements of a `dict`.
 	public convenience init<T : PerlSvConvertible>(_ dict: [String: T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self.init(noincUnchecked: dict._toUnsafeSvPointer(perl: perl), perl: perl)
+		self.init(noincUnchecked: UnsafeSvContext(sv: dict._toUnsafeSvPointer(perl: perl), perl: perl))
 	}
 
 	/// Creates a `SV` containig an unwrapped value of a `v` if `v != nil` or an `undef` in other case.
@@ -115,24 +109,24 @@ public final class PerlScalar : PerlValue, PerlDerived {
 	/// If the variable does not exist then `nil` is returned.
 	public convenience init?(get name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		guard let sv = perl.pointee.getSV(name) else { return nil }
-		self.init(incUnchecked: sv, perl: perl)
+		self.init(incUnchecked: UnsafeSvContext(sv: sv, perl: perl))
 	}
 
 	/// Returns the specified Perl global or package scalar with the given name (so it won't work on lexical variables).
 	/// If the variable does not exist then it will be created.
 	public convenience init(getCreating name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		let sv = perl.pointee.getSV(name, flags: GV_ADD)!
-		self.init(incUnchecked: sv, perl: perl)
+		self.init(incUnchecked: UnsafeSvContext(sv: sv, perl: perl))
 	}
 
 	/// A boolean value indicating whether the `SV` is defined.
 	public var defined: Bool {
-		return withUnsafeSvPointer { sv, _ in sv.pointee.defined }
+		return withUnsafeSvContext { $0.defined }
 	}
 
 	/// A boolean value indicating whether the `SV` contains an integer (signed or unsigned).
 	public var isInteger: Bool {
-		return withUnsafeSvPointer { sv, _ in SvIOK(sv) }
+		return withUnsafeSvContext { $0.isInteger }
 	}
 
 	@available(*, deprecated, renamed: "isInteger")
@@ -140,36 +134,36 @@ public final class PerlScalar : PerlValue, PerlDerived {
 
 	/// A boolean value indicating whether the `SV` contains a double.
 	public var isDouble: Bool {
-		return withUnsafeSvPointer { sv, _ in sv.pointee.isDouble }
+		return withUnsafeSvContext { $0.isDouble }
 	}
 
 	/// A boolean value indicating whether the `SV` contains a character string.
 	public var isString: Bool {
-		return withUnsafeSvPointer { sv, _ in sv.pointee.isString }
+		return withUnsafeSvContext { $0.isString }
 	}
 
 	/// A boolean value indicating whether the `SV` is a reference.
 	public var isRef: Bool {
-		return withUnsafeSvPointer { sv, _ in sv.pointee.isRef }
+		return withUnsafeSvContext { $0.isRef }
 	}
 
 	/// A boolean value indicating whether the `SV` is an object.
 	public var isObject: Bool {
-		return withUnsafeSvPointer { sv, perl in sv.pointee.isObject(perl: perl) }
+		return withUnsafeSvContext { $0.isObject }
 	}
 
 	/// Dereferences the `SV` if it is a reference. Returns `nil` if not.
 	public var referent: AnyPerl? {
-		return withUnsafeSvPointer { rv, perl in
-			guard let sv = rv.pointee.referent else { return nil }
-			return fromUnsafeSvPointer(inc: sv, perl: perl)
+		return withUnsafeSvContext {
+			guard let svc = $0.referent else { return nil }
+			return fromUnsafeSvContext(inc: svc)
 		}
 	}
 
 	/// Calls the closure with `UnsafeRawBufferPointer` to the string in the SV,
 	/// or a stringified form of the SV if the SV does not contain a string.
 	public func withUnsafeBytes<R>(_ body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R {
-		return try withUnsafeSvPointer { sv, perl in try sv.pointee.withUnsafeBytes(perl: perl, body: body)}
+		return try withUnsafeSvContext { try $0.withUnsafeBytes(body) }
 	}
 
 	/// Evaluates the given closure when this `PerlScalar` instance is defined,
@@ -206,65 +200,45 @@ public final class PerlScalar : PerlValue, PerlDerived {
 	/// Does not handle 'set' magic on destination SV. Calls 'get' magic on source SV.
 	/// Loosely speaking, it performs a copy-by-value, obliterating any previous content of the destination.
 	public func set(_ value: PerlScalar) {
-		value.withUnsafeSvPointer { ssv, _ in
-			withUnsafeSvPointer { dsv, perl in
-				perl.pointee.sv_setsv(dsv, ssv)
-			}
+		value.withUnsafeSvContext { s in
+			withUnsafeSvContext { $0.set(s.sv) }
 		}
 	}
 
 	/// Copies a boolean into `self`.
 	/// Does not handle 'set' magic.
 	public func set(_ value: Bool) {
-		withUnsafeSvPointer { sv, perl in perl.pointee.sv_setsv(sv, perl.pointee.boolSV(value)) }
+		withUnsafeSvContext { $0.set(value) }
 	}
 
 	/// Copies a signed integer into `self`, upgrading first if necessary.
 	/// Does not handle 'set' magic.
 	public func set(_ value: Int) {
-		withUnsafeSvPointer { sv, perl in perl.pointee.sv_setiv(sv, value) }
+		withUnsafeSvContext { $0.set(value) }
 	}
 
 	/// Copies an unsigned integer into `self`, upgrading first if necessary.
 	/// Does not handle 'set' magic.
 	public func set(_ value: UInt) {
-		withUnsafeSvPointer { sv, perl in perl.pointee.sv_setuv(sv, value) }
+		withUnsafeSvContext { $0.set(value) }
 	}
 
 	/// Copies a double into `self`, upgrading first if necessary.
 	/// Does not handle 'set' magic.
 	public func set(_ value: Double) {
-		withUnsafeSvPointer { sv, perl in perl.pointee.sv_setnv(sv, value) }
+		withUnsafeSvContext { $0.set(value) }
 	}
 
 	/// Copies a string (possibly containing embedded `NUL` characters) into `self`.
 	/// Does not handle 'set' magic.
 	public func set(_ value: String) {
-		withUnsafeSvPointer { sv, perl in
-			value.withCStringWithLength { perl.pointee.sv_setpvn(sv, $0, $1) }
-			if value._core.isASCII {
-				SvUTF8_off(sv)
-			} else {
-				SvUTF8_on(sv)
-			}
-		}
+		withUnsafeSvContext { $0.set(value) }
 	}
 
 	/// Copies bytes or characters from `value` into `self`.
 	/// Does not handle 'set' magic.
 	public func set(_ value: UnsafeRawBufferPointer, containing: StringUnits = .bytes) {
-		withUnsafeSvPointer { sv, perl in
-			SvUTF8_off(sv)
-			perl.pointee.sv_setpvn(sv, value.baseAddress?.assumingMemoryBound(to: CChar.self), value.count)
-			if containing == .characters {
-				perl.pointee.sv_utf8_decode(sv)
-			}
-		}
-	}
-
-	/// Dumps the contents of the underlying SV to the "STDERR" filehandle.
-	public func dump() {
-		withUnsafeSvPointer { sv, perl in perl.pointee.sv_dump(sv) }
+		withUnsafeSvContext { $0.set(value, containing: containing) }
 	}
 
 	/// A textual representation of the SV, suitable for debugging.
@@ -272,7 +246,7 @@ public final class PerlScalar : PerlValue, PerlDerived {
 		var values = [String]()
 		if defined {
 			if isInteger {
-				if withUnsafeSvPointer({ sv, _ in SvIsUV(sv) }) {
+				if withUnsafeSvContext({ SvIsUV($0.sv) }) {
 					values.append("uv: \(UInt(unchecked: self))")
 				} else {
 					values.append("iv: \(Int(unchecked: self))")
@@ -295,15 +269,15 @@ public final class PerlScalar : PerlValue, PerlDerived {
 		return "PerlScalar(\(values.joined(separator: ", ")))"
 	}
 
-	func withReferentUnsafeSvPointer<R>(type: SvType, body: (UnsafeSvPointer, UnsafeInterpreterPointer) throws -> R) throws -> R {
-		return try withUnsafeSvPointer { rv, perl in
-			guard let sv = rv.pointee.referent else {
-				throw PerlError.notReference(fromUnsafeSvPointer(inc: rv, perl: perl))
+	func withReferentUnsafeSvContext<R>(type: SvType, body: (UnsafeSvContext) throws -> R) throws -> R {
+		return try withUnsafeSvContext {
+			guard let svc = $0.referent else {
+				throw PerlError.notReference(fromUnsafeSvContext(inc: $0))
 			}
-			guard sv.pointee.type == type else {
-				throw PerlError.unexpectedSvType(fromUnsafeSvPointer(inc: sv, perl: perl), want: type)
+			guard svc.type == type else {
+				throw PerlError.unexpectedSvType(fromUnsafeSvContext(inc: svc), want: type)
 			}
-			return try body(sv, perl)
+			return try body(svc)
 		}
 	}
 }
@@ -314,14 +288,14 @@ extension PerlScalar : Equatable, Hashable {
 	/// Hash values are not guaranteed to be equal across different executions of
 	/// your program. Do not save hash values to use during a future execution.
 	public var hashValue: Int {
-		return withUnsafeSvPointer { sv, perl in Int(perl.pointee.SvHASH(sv)) }
+		return withUnsafeSvContext { Int($0.hash) }
 	}
 
 	/// Returns a Boolean value indicating whether two scalars stringify to identical strings.
 	public static func == (lhs: PerlScalar, rhs: PerlScalar) -> Bool {
-		return rhs.withUnsafeSvPointer { sv2, _ in
-			lhs.withUnsafeSvPointer { sv1, perl in
-				perl.pointee.sv_eq(sv1, sv2)
+		return lhs.withUnsafeSvContext { svc1 in
+			rhs.withUnsafeSvContext { svc2 in
+				UnsafeSvContext.eq(svc1, svc2)
 			}
 		}
 	}
@@ -491,10 +465,9 @@ extension Bool {
 	/// let b = Bool(PerlScalar("any"))   // b == true
 	/// let b = Bool(PerlScalar("false")) // b == true
 	///	```
-	public init(_ sv: PerlScalar) {
-		defer { _fixLifetime(sv) }
-		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		self.init(usv, perl: perl)
+	public init(_ scalar: PerlScalar) {
+		self.init(scalar.unsafeSvContext)
+		_fixLifetime(scalar)
 	}
 }
 
@@ -515,10 +488,9 @@ extension Int {
 	/// let i = try Int(PerlScalar("-10"))                   // i == -10
 	/// let i = try Int(PerlScalar("-20000000000000000000")) // throws
 	/// ```
-	public init(_ sv: PerlScalar) throws {
-		defer { _fixLifetime(sv) }
-		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		try self.init(usv, perl: perl)
+	public init(_ scalar: PerlScalar) throws {
+		try self.init(scalar.unsafeSvContext)
+		_fixLifetime(scalar)
 	}
 
 	/// Creates a signed integer from `PerlScalar` using Perl macros `SvIV`.
@@ -537,10 +509,9 @@ extension Int {
 	/// let i = Int(unchecked: PerlScalar("-10"))                     // i == -10
 	/// let i = Int(unchecked: PerlScalar("-20000000000000000000"))   // i == Int.min
 	/// ```
-	public init(unchecked sv: PerlScalar) {
-		defer { _fixLifetime(sv) }
-		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		self.init(unchecked: usv, perl: perl)
+	public init(unchecked scalar: PerlScalar) {
+		self.init(unchecked: scalar.unsafeSvContext)
+		_fixLifetime(scalar)
 	}
 }
 
@@ -561,10 +532,9 @@ extension UInt {
 	/// let u = try UInt(PerlScalar("-10"))                     // throws
 	/// let u = try UInt(PerlScalar("-20000000000000000000"))   // throws
 	/// ```
-	public init(_ sv: PerlScalar) throws {
-		defer { _fixLifetime(sv) }
-		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		try self.init(usv, perl: perl)
+	public init(_ scalar: PerlScalar) throws {
+		try self.init(scalar.unsafeSvContext)
+		_fixLifetime(scalar)
 	}
 
 	/// Creates an unsigned integer from `PerlScalar` using Perl macros `SvUV`.
@@ -583,10 +553,9 @@ extension UInt {
 	/// let u = UInt(unchecked: PerlScalar("-10"))                     // u == UInt(bitPattern: -10)
 	/// let u = UInt(unchecked: PerlScalar("-20000000000000000000"))   // u == UInt(bitPattern: Int.min)
 	/// ```
-	public init(unchecked sv: PerlScalar) {
-		defer { _fixLifetime(sv) }
-		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		self.init(unchecked: usv, perl: perl)
+	public init(unchecked scalar: PerlScalar) {
+		self.init(unchecked: scalar.unsafeSvContext)
+		_fixLifetime(scalar)
 	}
 }
 
@@ -602,10 +571,9 @@ extension Double {
 	/// let i = try Double(PerlScalar("any"))    // throws
 	/// let i = try Double(PerlScalar("50sec"))  // throws
 	/// ```
-	public init(_ sv: PerlScalar) throws {
-		defer { _fixLifetime(sv) }
-		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		try self.init(usv, perl: perl)
+	public init(_ scalar: PerlScalar) throws {
+		try self.init(scalar.unsafeSvContext)
+		_fixLifetime(scalar)
 	}
 
 	/// Creates a double from `PerlScalar` using Perl macros `SvNV`.
@@ -620,10 +588,9 @@ extension Double {
 	/// let i = Double(unchecked: PerlScalar("50sec"))     // i == 50
 	/// let i = Double(unchecked: PerlScalar("50.3sec"))   // i == 50.3
 	/// ```
-	public init(unchecked sv: PerlScalar) {
-		defer { _fixLifetime(sv) }
-		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		self.init(unchecked: usv, perl: perl)
+	public init(unchecked scalar: PerlScalar) {
+		self.init(unchecked: scalar.unsafeSvContext)
+		_fixLifetime(scalar)
 	}
 }
 
@@ -637,10 +604,9 @@ extension String {
 	/// let s = try String(PerlScalar("OK"))                         // s == "OK"
 	/// let s = try String(PerlScalar(referenceTo: PerlScalar(10)))  // throws
 	/// ```
-	public init(_ sv: PerlScalar) throws {
-		defer { _fixLifetime(sv) }
-		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		try self.init(usv, perl: perl)
+	public init(_ scalar: PerlScalar) throws {
+		try self.init(scalar.unsafeSvContext)
+		_fixLifetime(scalar)
 	}
 
 	/// Creates a string from `PerlScalar` using Perl macros `SvPV`.
@@ -652,9 +618,8 @@ extension String {
 	/// let s = String(PerlScalar("OK"))                         // s == "OK"
 	/// let s = String(PerlScalar(referenceTo: PerlScalar(10)))  // s == "SCALAR(0x12345678)"
 	/// ```
-	public init(unchecked sv: PerlScalar) {
-		defer { _fixLifetime(sv) }
-		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		self.init(unchecked: usv, perl: perl)
+	public init(unchecked scalar: PerlScalar) {
+		self.init(unchecked: scalar.unsafeSvContext)
+		_fixLifetime(scalar)
 	}
 }

@@ -3,76 +3,53 @@ import CPerl
 public typealias UnsafeHV = CPerl.HV
 public typealias UnsafeHvPointer = UnsafeMutablePointer<UnsafeHV>
 
-extension UnsafeHV {
-	mutating func collection(perl: UnsafeInterpreterPointer/* = UnsafeInterpreter.current*/) -> UnsafeHvCollection {
-		return UnsafeHvCollection(hv: &self, perl: perl)
-	}
-}
-
-struct UnsafeHvCollection: Sequence, IteratorProtocol {
-	typealias Key = String
-	typealias Value = UnsafeSvPointer
-	typealias Element = (key: Key, value: Value)
-
+struct UnsafeHvContext {
 	let hv: UnsafeHvPointer
 	let perl: UnsafeInterpreterPointer
 
-	func makeIterator() -> UnsafeHvCollection {
-		perl.pointee.hv_iterinit(hv)
-		return self
+	static func new(perl: UnsafeInterpreterPointer) -> UnsafeHvContext {
+		return UnsafeHvContext(hv: perl.pointee.newHV()!, perl: perl)
 	}
 
-	func next() -> Element? {
-		guard let he = perl.pointee.hv_iternext(hv) else { return nil }
-		var klen = 0
-		let ckey = perl.pointee.HePV(he, &klen)!
-		let key = String(cString: ckey, withLength: klen)
-		let value = HeVAL(he)
-		return (key: key, value: value)
-	}
-
-	func fetch(_ key: Key, lval: Bool = false) -> Value? {
+	func fetch(_ key: String, lval: Bool = false) -> UnsafeSvContext? {
 		let lval: Int32 = lval ? 1 : 0
-		return key.withCStringWithLength { perl.pointee.hv_fetch(hv, $0, -Int32($1), lval) }?.pointee
+		return key.withCStringWithLength { perl.pointee.hv_fetch(hv, $0, -Int32($1), lval) }
+			.flatMap { $0.pointee.map { UnsafeSvContext(sv: $0, perl: perl) } }
 	}
 
-	func store(_ key: Key, newValue: Value) -> Value? {
-		return key.withCStringWithLength { perl.pointee.hv_store(hv, $0, -Int32($1), newValue, 0) }?.pointee
-	}
-
-	func delete(_ key: Key) -> Value? {
-		return key.withCStringWithLength { perl.pointee.hv_delete(hv, $0, -Int32($1), 0) }
-	}
-
-	func delete(discarding key: Key) {
-		key.withCStringWithLength { _ = perl.pointee.hv_delete(hv, $0, -Int32($1), G_DISCARD) }
-	}
-
-	func exists(_ key: Key) -> Bool {
-		return key.withCStringWithLength { perl.pointee.hv_exists(hv, $0, -Int32($1)) }
-	}
-
-	subscript(key: Key) -> Value? {
-		get { return fetch(key) }
-		set {
-			if let value = newValue {
-				_ = store(key, newValue: value)
-			} else {
-				delete(discarding: key)
-			}
+	func store(_ key: String, value: UnsafeSvPointer) {
+		if key.withCStringWithLength({ perl.pointee.hv_store(hv, $0, -Int32($1), value, 0) }) == nil {
+			UnsafeSvContext(sv: value, perl: perl).refcntDec()
 		}
 	}
 
-	func fetch(_ key: UnsafeSvPointer, lval: Bool = false) -> Value? {
-		return perl.pointee.hv_fetch_ent(hv, key, lval ? 1 : 0, 0).map(HeVAL)
+	func delete(_ key: String) -> UnsafeSvContext? {
+		return key.withCStringWithLength { perl.pointee.hv_delete(hv, $0, -Int32($1), 0) }
+			.map { UnsafeSvContext(sv: $0, perl: perl) }
 	}
 
-	func store(_ key: UnsafeSvPointer, newValue: Value) -> Value? {
-		return perl.pointee.hv_store_ent(hv, key, newValue, 0).map(HeVAL)
+	func delete(discarding key: String) {
+		key.withCStringWithLength { _ = perl.pointee.hv_delete(hv, $0, -Int32($1), G_DISCARD) }
 	}
 
-	func delete(_ key: UnsafeSvPointer) -> Value? {
+	func exists(_ key: String) -> Bool {
+		return key.withCStringWithLength { perl.pointee.hv_exists(hv, $0, -Int32($1)) }
+	}
+
+	func fetch(_ key: UnsafeSvPointer, lval: Bool = false) -> UnsafeSvContext? {
+		return perl.pointee.hv_fetch_ent(hv, key, lval ? 1 : 0, 0)
+			.map(HeVAL).map { UnsafeSvContext(sv: $0, perl: perl) }
+	}
+
+	func store(_ key: UnsafeSvPointer, value: UnsafeSvPointer) {
+		if perl.pointee.hv_store_ent(hv, key, value, 0) == nil {
+			UnsafeSvContext(sv: value, perl: perl).refcntDec()
+		}
+	}
+
+	func delete(_ key: UnsafeSvPointer) -> UnsafeSvContext? {
 		return perl.pointee.hv_delete_ent(hv, key, 0, 0)
+			.map { UnsafeSvContext(sv: $0, perl: perl) }
 	}
 
 	func delete(discarding key: UnsafeSvPointer) {
@@ -83,18 +60,63 @@ struct UnsafeHvCollection: Sequence, IteratorProtocol {
 		return perl.pointee.hv_exists_ent(hv, key, 0)
 	}
 
-	subscript(key: UnsafeSvPointer) -> Value? {
+	func clear() {
+		perl.pointee.hv_clear(hv)
+	}
+}
+
+extension UnsafeHvContext {
+	init(dereference svc: UnsafeSvContext) throws {
+		guard let rvc = svc.referent, rvc.type == .hash else {
+			throw PerlError.unexpectedSvType(fromUnsafeSvContext(inc: svc), want: .hash)
+		}
+		self.init(rebind: rvc)
+	}
+
+	init(rebind svc: UnsafeSvContext) {
+		let hv = UnsafeMutableRawPointer(svc.sv).bindMemory(to: UnsafeHV.self, capacity: 1)
+		self.init(hv: hv, perl: svc.perl)
+	}
+}
+
+extension UnsafeHvContext: Sequence, IteratorProtocol {
+	typealias Key = String
+	typealias Value = UnsafeSvContext
+	typealias Element = (key: Key, value: Value)
+
+	func makeIterator() -> UnsafeHvContext {
+		perl.pointee.hv_iterinit(hv)
+		return self
+	}
+
+	func next() -> Element? {
+		guard let he = perl.pointee.hv_iternext(hv) else { return nil }
+		var klen = 0
+		let ckey = perl.pointee.HePV(he, &klen)!
+		let key = String(cString: ckey, withLength: klen)
+		let value = UnsafeSvContext(sv: HeVAL(he), perl: perl)
+		return (key: key, value: value)
+	}
+
+	subscript(key: Key) -> Value? {
 		get { return fetch(key) }
 		set {
 			if let value = newValue {
-				_ = store(key, newValue: value)
+				store(key, value: value.sv)
 			} else {
 				delete(discarding: key)
 			}
 		}
 	}
 
-	func clear() {
-		perl.pointee.hv_clear(hv)
+	subscript(key: UnsafeSvPointer) -> Value? {
+		get { return fetch(key) }
+		set {
+			if let value = newValue {
+				store(key, value: value.sv)
+			} else {
+				delete(discarding: key)
+			}
+		}
 	}
 }

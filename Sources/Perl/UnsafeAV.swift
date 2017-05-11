@@ -3,33 +3,28 @@ import CPerl
 public typealias UnsafeAV = CPerl.AV
 public typealias UnsafeAvPointer = UnsafeMutablePointer<UnsafeAV>
 
-extension UnsafeAV {
-	mutating func collection(perl: UnsafeInterpreterPointer/* = UnsafeInterpreter.current*/) -> UnsafeAvCollection {
-		return UnsafeAvCollection(av: &self, perl: perl)
-	}
-}
-
-struct UnsafeAvCollection : RandomAccessCollection {
-	typealias Element = UnsafeSvPointer
-	typealias Index = Int
-	typealias Indices = CountableRange<Int>
-
+struct UnsafeAvContext {
 	let av: UnsafeAvPointer
 	let perl: UnsafeInterpreterPointer
 
-	var startIndex: Index { return 0 }
-	var endIndex: Index { return perl.pointee.av_top_index(av) + 1 }
-
-	func fetch(_ i: Index, lval: Bool = false) -> Element? {
-		return perl.pointee.av_fetch(av, i, lval ? 1 : 0)?.pointee
+	static func new(perl: UnsafeInterpreterPointer) -> UnsafeAvContext {
+		return UnsafeAvContext(av: perl.pointee.newAV()!, perl: perl)
 	}
 
-	func store(_ i: Index, value: Element) -> Element? {
-		return perl.pointee.av_store(av, i, value)?.pointee
+	func fetch(_ i: Index, lval: Bool = false) -> UnsafeSvContext? {
+		return perl.pointee.av_fetch(av, i, lval ? 1 : 0)
+			.flatMap { $0.pointee.map { UnsafeSvContext(sv: $0, perl: perl) } }
 	}
 
-	func delete(_ i: Index) -> Element? {
+	func store(_ i: Index, value: UnsafeSvPointer) {
+		if perl.pointee.av_store(av, i, value) == nil {
+			UnsafeSvContext(sv: value, perl: perl).refcntDec()
+		}
+	}
+
+	func delete(_ i: Index) -> UnsafeSvContext? {
 		return perl.pointee.av_delete(av, i, 0)
+			.map { UnsafeSvContext(sv: $0, perl: perl) }
 	}
 
 	func delete(discarding i: Index) {
@@ -38,19 +33,6 @@ struct UnsafeAvCollection : RandomAccessCollection {
 
 	func exists(_ i: Index) -> Bool {
 		return perl.pointee.av_exists(av, i)
-	}
-
-	subscript(i: Index) -> Element? {
-		get {
-			return fetch(i)
-		}
-		set {
-			if let newValue = newValue {
-				_ = store(i, value: newValue)
-			} else {
-				delete(discarding: i)
-			}
-		}
 	}
 
 	func clear() {
@@ -64,16 +46,52 @@ struct UnsafeAvCollection : RandomAccessCollection {
 	func extend(by count: Int) {
 		extend(to: self.count + count)
 	}
+}
+
+extension UnsafeAvContext {
+	init(dereference svc: UnsafeSvContext) throws {
+		guard let rvc = svc.referent, rvc.type == .array else {
+			throw PerlError.unexpectedSvType(fromUnsafeSvContext(inc: svc), want: .array)
+		}
+		self.init(rebind: rvc)
+	}
+
+	init(rebind svc: UnsafeSvContext) {
+		let av = UnsafeMutableRawPointer(svc.sv).bindMemory(to: UnsafeAV.self, capacity: 1)
+		self.init(av: av, perl: svc.perl)
+	}
+}
+
+extension UnsafeAvContext : RandomAccessCollection {
+	typealias Element = UnsafeSvContext
+	typealias Index = Int
+	typealias Indices = CountableRange<Int>
+
+	var startIndex: Index { return 0 }
+	var endIndex: Index { return perl.pointee.av_top_index(av) + 1 }
+
+	subscript(i: Index) -> Element? {
+		get {
+			return fetch(i)
+		}
+		set {
+			if let newValue = newValue {
+				store(i, value: newValue.sv)
+			} else {
+				delete(discarding: i)
+			}
+		}
+	}
 
 	func reserveCapacity(_ capacity: Int) {
 		extend(to: capacity)
 	}
 
-	func append(_ sv: Element) {
-		perl.pointee.av_push(av, sv)
+	func append(_ svc: Element) {
+		perl.pointee.av_push(av, svc.sv)
 	}
 
 	func removeFirst() -> Element {
-		return perl.pointee.av_shift(av)
+		return UnsafeSvContext(sv: perl.pointee.av_shift(av), perl: perl)
 	}
 }

@@ -24,70 +24,180 @@ public enum SvType {
 public typealias UnsafeSV = CPerl.SV
 public typealias UnsafeSvPointer = UnsafeMutablePointer<UnsafeSV>
 
-extension UnsafeSV {
+public struct UnsafeSvContext {
+	let sv: UnsafeSvPointer
+	let perl: UnsafeInterpreterPointer
+
 	@discardableResult
-	mutating func refcntInc() -> UnsafeSvPointer {
-		return SvREFCNT_inc(&self)
+	func refcntInc() -> UnsafeSvPointer {
+		return SvREFCNT_inc(sv)
 	}
 
-	mutating func refcntDec(perl: UnsafeInterpreterPointer) {
-		SvREFCNT_dec(perl, &self)
+	func refcntDec() {
+		SvREFCNT_dec(perl, sv)
 	}
 
-	var type: SvType { mutating get { return SvType(SvTYPE(&self)) } }
-	var defined: Bool { mutating get { return SvOK(&self) } }
-	var isInt: Bool { mutating get { return SvIOK(&self) } }
-	var isDouble: Bool { mutating get { return SvNOK(&self) } }
-	var isString: Bool { mutating get { return SvPOK(&self) } }
-	var isRef: Bool { mutating get { return SvROK(&self) } }
-
-	var referent: UnsafeSvPointer? {
-		mutating get { return SvROK(&self) ? SvRV(&self) : nil }
+	@discardableResult
+	func mortal() -> UnsafeSvPointer {
+		return perl.pointee.sv_2mortal(sv)
 	}
 
-	mutating func withUnsafeBytes<R>(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current, body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R {
+	var type: SvType { return SvType(SvTYPE(sv)) }
+	var defined: Bool { return SvOK(sv) }
+	var isInteger: Bool { return SvIOK(sv) }
+	var isDouble: Bool { return SvNOK(sv) }
+	var isString: Bool { return SvPOK(sv) }
+	var isRef: Bool { return SvROK(sv) }
+
+	var referent: UnsafeSvContext? {
+		return SvROK(sv) ? UnsafeSvContext(sv: SvRV(sv), perl: perl) : nil
+	}
+
+	func withUnsafeBytes<R>(_ body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R {
 		var clen = 0
-		let cstr = perl.pointee.SvPV(&self, &clen)!
+		let cstr = perl.pointee.SvPV(sv, &clen)!
 		let bytes = UnsafeRawBufferPointer(start: cstr, count: clen)
 		return try body(bytes)
 	}
 
-	mutating func isObject(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> Bool {
-		return perl.pointee.sv_isobject(&self)
+	var isObject: Bool { return perl.pointee.sv_isobject(sv) }
+
+	func isDerived(from: String) -> Bool {
+		return from.withCString { perl.pointee.sv_derived_from(sv, $0) }
 	}
 
-	mutating func isDerived(from: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> Bool {
-		return from.withCString { perl.pointee.sv_derived_from(&self, $0) }
+	var classname: String? {
+		guard isObject else { return nil }
+		return String(cString: perl.pointee.sv_reftype(SvRV(sv), true))
 	}
 
-	mutating func classname(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) -> String? {
-		guard isObject(perl: perl) else { return nil }
-		return String(cString: perl.pointee.sv_reftype(SvRV(&self), true))
+	private var hasSwiftObjectMagic: Bool {
+		return SvTYPE(sv) == SVt_PVMG && perl.pointee.mg_findext(sv, PERL_MAGIC_ext, &objectMgvtbl) != nil
 	}
 
-	mutating func hasSwiftObjectMagic(perl: UnsafeInterpreterPointer) -> Bool {
-		return SvTYPE(&self) == SVt_PVMG && perl.pointee.mg_findext(&self, PERL_MAGIC_ext, &objectMgvtbl) != nil
-	}
-
-	mutating func swiftObject(perl: UnsafeInterpreterPointer) -> PerlBridgedObject? {
-		guard isObject(perl: perl) else { return nil }
-		let sv = SvRV(&self)!
-		guard sv.pointee.hasSwiftObjectMagic(perl: perl) else { return nil }
-		let iv = perl.pointee.SvIV(sv)
+	var swiftObject: PerlBridgedObject? {
+		guard isObject else { return nil }
+		let rvc = UnsafeSvContext(sv: SvRV(sv)!, perl: perl)
+		guard rvc.hasSwiftObjectMagic else { return nil }
+		let iv = perl.pointee.SvIV(rvc.sv)
 		let u = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(bitPattern: iv)!)
 		return (u.takeUnretainedValue() as! PerlBridgedObject)
+	}
+
+	static func new(perl: UnsafeInterpreterPointer) -> UnsafeSvContext {
+		return UnsafeSvContext(sv: perl.pointee.newSV(), perl: perl)
+	}
+
+	static func new(copy src: UnsafeSvContext) -> UnsafeSvContext {
+		return UnsafeSvContext(sv: src.perl.pointee.newSVsv(src.sv)!, perl: src.perl)
+	}
+
+	// newSV() and sv_setsv() are used instead of newSVsv() to allow
+	// stealing temporary buffers and enable COW-optimizations.
+	static func new(stealingCopy src: UnsafeSvContext) -> UnsafeSvContext {
+		let dst = UnsafeSvContext.new(perl: src.perl)
+		dst.set(src.sv)
+		return dst
+	}
+
+	static func new(rvInc svc: UnsafeSvContext) -> UnsafeSvContext {
+		return UnsafeSvContext(sv: svc.perl.pointee.newRV_inc(svc.sv)!, perl: svc.perl)
+	}
+
+	static func new(_ v: UnsafeRawBufferPointer, utf8: Bool = false, mortal: Bool = false, perl: UnsafeInterpreterPointer) -> UnsafeSvContext {
+		let sv = perl.pointee.newSVpvn_flags(v.baseAddress?.assumingMemoryBound(to: CChar.self), v.count, UInt32(mortal ? SVs_TEMP : 0))!
+		if utf8 {
+			perl.pointee.sv_utf8_decode(sv)
+		}
+		return UnsafeSvContext(sv: sv, perl: perl)
+	}
+
+	func set(_ ssv: UnsafeSvPointer) {
+		perl.pointee.sv_setsv(sv, ssv)
+	}
+
+	func set(_ value: Bool) {
+		set(perl.pointee.boolSV(value))
+	}
+
+	func set(_ value: Int) {
+		perl.pointee.sv_setiv(sv, value)
+	}
+
+	func set(_ value: UInt) {
+		perl.pointee.sv_setuv(sv, value)
+	}
+
+	func set(_ value: Double) {
+		perl.pointee.sv_setnv(sv, value)
+	}
+
+	func set(_ value: String) {
+		value.withCStringWithLength { perl.pointee.sv_setpvn(sv, $0, $1) }
+		if value._core.isASCII {
+			SvUTF8_off(sv)
+		} else {
+			SvUTF8_on(sv)
+		}
+	}
+
+	func set(_ value: UnsafeRawBufferPointer, containing: PerlScalar.StringUnits = .bytes) {
+		SvUTF8_off(sv)
+		perl.pointee.sv_setpvn(sv, value.baseAddress?.assumingMemoryBound(to: CChar.self), value.count)
+		if containing == .characters {
+			perl.pointee.sv_utf8_decode(sv)
+		}
+	}
+
+	var hash: UInt32 {
+		return perl.pointee.SvHASH(sv)
+	}
+
+	func dump() {
+		perl.pointee.sv_dump(sv)
+	}
+
+	static func eq(_ lhs: UnsafeSvContext, _ rhs: UnsafeSvContext) -> Bool {
+		return lhs.perl.pointee.sv_eq(lhs.sv, rhs.sv)
+	}
+}
+
+extension UnsafeSvContext {
+	func withUnsafeAvContext<R>(_ body: (UnsafeAvContext) throws -> R) rethrows -> R {
+		return try sv.withMemoryRebound(to: UnsafeAV.self, capacity: 1) { av in
+			try body(UnsafeAvContext(av: av, perl: perl))
+		}
+	}
+
+	func withUnsafeHvContext<R>(_ body: (UnsafeHvContext) throws -> R) rethrows -> R {
+		return try sv.withMemoryRebound(to: UnsafeHV.self, capacity: 1) { hv in
+			try body(UnsafeHvContext(hv: hv, perl: perl))
+		}
+	}
+
+	func withUnsafeCvContext<R>(_ body: (UnsafeCvContext) throws -> R) rethrows -> R {
+		return try sv.withMemoryRebound(to: UnsafeCV.self, capacity: 1) { cv in
+			try body(UnsafeCvContext(cv: cv, perl: perl))
+		}
+	}
+
+	init(rebind avc: UnsafeAvContext) {
+		let sv = UnsafeMutableRawPointer(avc.av).bindMemory(to: UnsafeSV.self, capacity: 1)
+		self.init(sv: sv, perl: avc.perl)
+	}
+
+	init(rebind hvc: UnsafeHvContext) {
+		let sv = UnsafeMutableRawPointer(hvc.hv).bindMemory(to: UnsafeSV.self, capacity: 1)
+		self.init(sv: sv, perl: hvc.perl)
+	}
+
+	init(rebind cvc: UnsafeCvContext) {
+		let sv = UnsafeMutableRawPointer(cvc.cv).bindMemory(to: UnsafeSV.self, capacity: 1)
+		self.init(sv: sv, perl: cvc.perl)
 	}
 }
 
 extension UnsafeInterpreter {
-	// newSV() and sv_setsv() are used instead of newSVsv() to allow
-	// stealing temporary buffers and enable COW-optimizations.
-	mutating func newSV(stealing sv: UnsafeSvPointer) -> UnsafeSvPointer {
-		let csv = newSV()!
-		sv_setsv(csv, sv)
-		return csv
-	}
-
 	mutating func newSV(_ v: Bool) -> UnsafeSvPointer {
 		return newSVsv(boolSV(v))
 	}
@@ -95,14 +205,6 @@ extension UnsafeInterpreter {
 	mutating func newSV(_ v: String, mortal: Bool = false) -> UnsafeSvPointer {
 		let flags = (v._core.isASCII ? 0 : SVf_UTF8) | (mortal ? SVs_TEMP : 0)
 		return v.withCStringWithLength { newSVpvn_flags($0, $1, UInt32(flags)) }
-	}
-
-	mutating func newSV(_ v: UnsafeRawBufferPointer, utf8: Bool = false, mortal: Bool = false) -> UnsafeSvPointer {
-		let sv = newSVpvn_flags(v.baseAddress?.assumingMemoryBound(to: CChar.self), v.count, UInt32(mortal ? SVs_TEMP : 0))!
-		if utf8 {
-			sv_utf8_decode(sv)
-		}
-		return sv
 	}
 
 	mutating func newRV<T: UnsafeSvCastable>(inc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
@@ -144,63 +246,63 @@ private var objectMgvtbl = MGVTBL(
 )
 
 extension Bool {
-	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self = perl.pointee.SvTRUE(sv)
+	public init(_ svc: UnsafeSvContext) {
+		self = svc.perl.pointee.SvTRUE(svc.sv)
 	}
 }
 
 extension Int {
-	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		self.init(unchecked: sv, perl: perl)
-		guard SvIOK(sv) && (!SvIsUV(sv) || UInt(bitPattern: self) <= UInt(Int.max))
-			|| SvNOK(sv) && (!SvIsUV(sv) && self != Int.min || UInt(bitPattern: self) <= UInt(Int.max)) else {
-			throw PerlError.notNumber(fromUnsafeSvPointer(inc: sv, perl: perl), want: Int.self)
+	public init(_ svc: UnsafeSvContext) throws {
+		self.init(unchecked: svc)
+		guard SvIOK(svc.sv) && (!SvIsUV(svc.sv) || UInt(bitPattern: self) <= UInt(Int.max))
+			|| SvNOK(svc.sv) && (!SvIsUV(svc.sv) && self != Int.min || UInt(bitPattern: self) <= UInt(Int.max)) else {
+			throw PerlError.notNumber(fromUnsafeSvContext(inc: svc), want: Int.self)
 		}
 	}
 
-	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self = perl.pointee.SvIV(sv)
+	public init(unchecked svc: UnsafeSvContext) {
+		self = svc.perl.pointee.SvIV(svc.sv)
 	}
 }
 
 extension UInt {
-	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		self.init(unchecked: sv, perl: perl)
-		guard SvIOK(sv) && (SvIsUV(sv) || Int(bitPattern: self) >= Int(UInt.min))
-			|| SvNOK(sv) && (SvIsUV(sv) && self != UInt.max || Int(bitPattern: self) >= Int(UInt.min)) else {
-			throw PerlError.notNumber(fromUnsafeSvPointer(inc: sv, perl: perl), want: UInt.self)
+	public init(_ svc: UnsafeSvContext) throws {
+		self.init(unchecked: svc)
+		guard SvIOK(svc.sv) && (SvIsUV(svc.sv) || Int(bitPattern: self) >= Int(UInt.min))
+			|| SvNOK(svc.sv) && (SvIsUV(svc.sv) && self != UInt.max || Int(bitPattern: self) >= Int(UInt.min)) else {
+			throw PerlError.notNumber(fromUnsafeSvContext(inc: svc), want: UInt.self)
 		}
 	}
 
-	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self = perl.pointee.SvUV(sv)
+	public init(unchecked svc: UnsafeSvContext) {
+		self = svc.perl.pointee.SvUV(svc.sv)
 	}
 }
 
 extension Double {
-	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		self.init(unchecked: sv, perl: perl)
-		guard SvNIOK(sv) else {
-			throw PerlError.notNumber(fromUnsafeSvPointer(inc: sv, perl: perl), want: Double.self)
+	public init(_ svc: UnsafeSvContext) throws {
+		self.init(unchecked: svc)
+		guard SvNIOK(svc.sv) else {
+			throw PerlError.notNumber(fromUnsafeSvContext(inc: svc), want: Double.self)
 		}
 	}
 
-	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		self = perl.pointee.SvNV(sv)
+	public init(unchecked svc: UnsafeSvContext) {
+		self = svc.perl.pointee.SvNV(svc.sv)
 	}
 }
 
 extension String {
-	public init(_ sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		self.init(unchecked: sv, perl: perl)
-		guard SvPOK(sv) || SvNOK(sv) else {
-			throw PerlError.notStringOrNumber(fromUnsafeSvPointer(inc: sv, perl: perl))
+	public init(_ svc: UnsafeSvContext) throws {
+		self.init(unchecked: svc)
+		guard SvPOK(svc.sv) || SvNOK(svc.sv) else {
+			throw PerlError.notStringOrNumber(fromUnsafeSvContext(inc: svc))
 		}
 	}
 
-	public init(unchecked sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public init(unchecked svc: UnsafeSvContext) {
 		var clen = 0
-		let cstr = perl.pointee.SvPV(sv, &clen)!
+		let cstr = svc.perl.pointee.SvPV(svc.sv, &clen)!
 		self = String(cString: cstr, withLength: clen)
 	}
 }

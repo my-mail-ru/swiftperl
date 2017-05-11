@@ -45,6 +45,14 @@ import var CPerl.GV_ADD
 public final class PerlArray : PerlValue, PerlDerived {
 	public typealias UnsafeValue = UnsafeAV
 
+	convenience init(noinc avc: UnsafeAvContext) {
+		self.init(noincUnchecked: UnsafeSvContext(rebind: avc))
+	}
+
+	convenience init(inc avc: UnsafeAvContext) {
+		self.init(incUnchecked: UnsafeSvContext(rebind: avc))
+	}
+
 	/// Creates an empty Perl array.
 	public convenience init() {
 		self.init(perl: UnsafeInterpreter.current)
@@ -52,12 +60,7 @@ public final class PerlArray : PerlValue, PerlDerived {
 
 	/// Creates an empty Perl array.
 	public convenience init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		let av = perl.pointee.newAV()!
-		self.init(noinc: av, perl: perl)
-	}
-
-	convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		try self.init(_noinc: sv, perl: perl)
+		self.init(noinc: UnsafeAvContext.new(perl: perl))
 	}
 
 	/// Initializes Perl array with elements of collection `c`.
@@ -74,34 +77,27 @@ public final class PerlArray : PerlValue, PerlDerived {
 	/// If the variable does not exist then `nil` is returned.
 	public convenience init?(get name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		guard let av = perl.pointee.getAV(name) else { return nil }
-		self.init(inc: av, perl: perl)
+		self.init(inc: UnsafeAvContext(av: av, perl: perl))
 	}
 
 	/// Returns the specified Perl global or package array with the given name (so it won't work on lexical variables).
 	/// If the variable does not exist then it will be created.
 	public convenience init(getCreating name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		let av = perl.pointee.getAV(name, flags: GV_ADD)!
-		self.init(inc: av, perl: perl)
+		self.init(inc: UnsafeAvContext(av: av, perl: perl))
 	}
 
-	func withUnsafeAvPointer<R>(_ body: (UnsafeAvPointer, UnsafeInterpreterPointer) throws -> R) rethrows -> R {
-		return try withUnsafeSvPointer { sv, perl in
-			return try sv.withMemoryRebound(to: UnsafeAV.self, capacity: 1) {
-				return try body($0, perl)
-			}
-		}
-	}
-
-	func withUnsafeCollection<R>(_ body: (UnsafeAvCollection) throws -> R) rethrows -> R {
-		return try withUnsafeAvPointer {
-			return try body($0.pointee.collection(perl: $1))
+	func withUnsafeAvContext<R>(_ body: (UnsafeAvContext) throws -> R) rethrows -> R {
+		defer { _fixLifetime(self) }
+		return try unsafeSvContext.sv.withMemoryRebound(to: UnsafeAV.self, capacity: 1) {
+			return try body(UnsafeAvContext(av: $0, perl: unsafeSvContext.perl))
 		}
 	}
 
 	/// A textual representation of the AV, suitable for debugging.
 	public override var debugDescription: String {
-		let values = withUnsafeCollection { c in
-			c.map { $0.map { try! PerlScalar(inc: $0, perl: c.perl).debugDescription } ?? "nil" }
+		let values = withUnsafeAvContext { c in
+			c.map { $0.map { try! PerlScalar(inc: $0).debugDescription } ?? "nil" }
 				.joined(separator: ", ")
 		}
 		return "PerlArray([\(values)])"
@@ -116,9 +112,9 @@ extension PerlArray {
 	///
 	/// - Complexity: O(1).
 	public func fetch<T : PerlSvConvertible>(_ index: Int) throws -> T? {
-		return try withUnsafeCollection { c in
+		return try withUnsafeAvContext { c in
 			try c.fetch(index).flatMap {
-				try T?(_fromUnsafeSvPointerInc: $0, perl: c.perl)
+				try T?(_fromUnsafeSvContextInc: $0)
 			}
 		}
 	}
@@ -130,11 +126,8 @@ extension PerlArray {
 	///
 	/// - Complexity: O(1).
 	public func store<T : PerlSvConvertible>(_ index: Int, value: T) {
-		withUnsafeCollection { c in
-			let sv = value._toUnsafeSvPointer(perl: c.perl)
-			if c.store(index, value: sv) == nil {
-				sv.pointee.refcntDec(perl: c.perl)
-			}
+		withUnsafeAvContext {
+			$0.store(index, value: value._toUnsafeSvPointer(perl: $0.perl))
 		}
 	}
 
@@ -143,26 +136,26 @@ extension PerlArray {
 	/// - Parameter index: The position of the element to fetch.
 	/// - Returns: Deleted element or `nil` if the element not exists or is undefined.
 	public func delete<T : PerlSvConvertible>(_ index: Int) throws -> T? {
-		return try withUnsafeCollection { c in
+		return try withUnsafeAvContext { c in
 			try c.delete(index).flatMap {
-				try T?(_fromUnsafeSvPointerInc: $0, perl: c.perl)
+				try T?(_fromUnsafeSvContextInc: $0)
 			}
 		}
 	}
 
 	/// Deletes the element at the specified position.
 	public func delete(_ index: Int) {
-		withUnsafeCollection { $0.delete(discarding: index) }
+		withUnsafeAvContext { $0.delete(discarding: index) }
 	}
 
 	/// Returns true if the element at the specified position is initialized.
 	public func exists(_ index: Int) -> Bool {
-		return withUnsafeCollection { $0.exists(index) }
+		return withUnsafeAvContext { $0.exists(index) }
 	}
 
 	/// Frees the all the elements of an array, leaving it empty.
 	public func clear() {
-		withUnsafeCollection { $0.clear() }
+		withUnsafeAvContext { $0.clear() }
 	}
 }
 
@@ -183,7 +176,7 @@ extension PerlArray : RandomAccessCollection {
 	/// than the last valid subscript argument.
 	///
 	/// If the array is empty, `endIndex` is equal to `startIndex`.
-	public var endIndex: Int { return withUnsafeCollection { $0.endIndex } }
+	public var endIndex: Int { return withUnsafeAvContext { $0.endIndex } }
 
 	/// Accesses the element at the specified position.
 	///
@@ -195,14 +188,15 @@ extension PerlArray : RandomAccessCollection {
 	/// - Complexity: Reading an element from an array is O(1). Writing is O(1), too.
 	public subscript(index: Int) -> PerlScalar {
 		get {
-			return withUnsafeCollection { c in
-				c.fetch(index).map { try! PerlScalar(inc: $0, perl: c.perl) } ?? PerlScalar(perl: c.perl)
+			return withUnsafeAvContext { c in
+				c.fetch(index).map { try! PerlScalar(inc: $0) } ?? PerlScalar(perl: c.perl)
 			}
 		}
 		set {
-			withUnsafeCollection { c in
-				newValue.withUnsafeSvPointer { sv, _ in
-					_ = c.store(index, value: sv)?.pointee.refcntInc()
+			withUnsafeAvContext { c in
+				newValue.withUnsafeSvContext {
+					$0.refcntInc()
+					c.store(index, value: $0.sv)
 				}
 			}
 		}
@@ -221,7 +215,7 @@ extension PerlArray {
 
 extension PerlArray {
 	func extend(to count: Int) {
-		withUnsafeCollection { $0.extend(to: count) }
+		withUnsafeAvContext { $0.extend(to: count) }
 	}
 
 	func extend(by count: Int) {
@@ -256,9 +250,10 @@ extension PerlArray {
 	///
 	/// - Complexity: Amortized O(1) over many additions.
 	public func append(_ sv: Element) {
-		withUnsafeCollection { c in
-			sv.withUnsafeSvPointer { sv, _ in
-				c.append(sv.pointee.refcntInc())
+		withUnsafeAvContext { c in
+			sv.withUnsafeSvContext {
+				$0.refcntInc()
+				c.append($0)
 			}
 		}
 	}
@@ -272,7 +267,7 @@ extension PerlArray {
 	///
 	/// - Complexity: O(1)
 	public func removeFirst() -> Element {
-		return withUnsafeCollection { try! PerlScalar(noinc: $0.removeFirst(), perl: $0.perl) }
+		return withUnsafeAvContext { try! PerlScalar(noinc: $0.removeFirst()) }
 	}
 }
 
@@ -302,10 +297,10 @@ extension Array where Element : PerlSvConvertible {
 	///
 	/// - Complexity: O(*n*), where *n* is the count of the array.
 	public init(_ av: PerlArray) throws {
-		self = try av.withUnsafeCollection { uc in
+		self = try av.withUnsafeAvContext { uc in
 			try uc.enumerated().map {
-				guard let sv = $1 else { throw PerlError.elementNotExists(av, at: $0) }
-				return try Element(_fromUnsafeSvPointerInc: sv, perl: uc.perl)
+				guard let svc = $1 else { throw PerlError.elementNotExists(av, at: $0) }
+				return try Element(_fromUnsafeSvContextInc: svc)
 			}
 		}
 	}
@@ -319,11 +314,11 @@ extension Array where Element : PerlSvConvertible {
 	///
 	/// - Complexity: O(*n*), where *n* is the count of the array.
 	public init(_ ref: PerlScalar) throws {
-		self = try ref.withReferentUnsafeSvPointer(type: .array) { sv, perl in
-			try sv.withMemoryRebound(to: UnsafeAV.self, capacity: 1) { av in
-				try av.pointee.collection(perl: perl).enumerated().map {
-					guard let sv = $1 else { throw PerlError.elementNotExists(PerlArray(inc: av, perl: perl), at: $0) }
-					return try Element(_fromUnsafeSvPointerInc: sv, perl: perl)
+		self = try ref.withReferentUnsafeSvContext(type: .array) { svc in
+			try svc.withUnsafeAvContext { avc in
+				try avc.enumerated().map {
+					guard let svc = $1 else { throw PerlError.elementNotExists(PerlArray(inc: avc), at: $0) }
+					return try Element(_fromUnsafeSvContextInc: svc)
 				}
 			}
 		}

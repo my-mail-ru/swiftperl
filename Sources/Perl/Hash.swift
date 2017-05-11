@@ -48,6 +48,14 @@ import var CPerl.GV_ADD
 public final class PerlHash : PerlValue, PerlDerived {
 	public typealias UnsafeValue = UnsafeHV
 
+	convenience init(noinc hvc: UnsafeHvContext) {
+		self.init(noincUnchecked: UnsafeSvContext(rebind: hvc))
+	}
+
+	convenience init(inc hvc: UnsafeHvContext) {
+		self.init(incUnchecked: UnsafeSvContext(rebind: hvc))
+	}
+
 	/// Creates an empty Perl hash.
 	public convenience init() {
 		self.init(perl: UnsafeInterpreter.current)
@@ -55,12 +63,7 @@ public final class PerlHash : PerlValue, PerlDerived {
 
 	/// Creates an empty Perl hash.
 	public convenience init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		let hv = perl.pointee.newHV()!
-		self.init(noinc: hv, perl: perl)
-	}
-
-	convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer) throws {
-		try self.init(_noinc: sv, perl: perl)
+		self.init(noinc: UnsafeHvContext.new(perl: perl))
 	}
 
 	/// Initializes a new Perl hash with elements of dictionary `dict`,
@@ -93,27 +96,20 @@ public final class PerlHash : PerlValue, PerlDerived {
 	/// If the variable does not exist then `nil` is returned.
 	public convenience init?(get name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		guard let hv = perl.pointee.getHV(name) else { return nil }
-		self.init(inc: hv, perl: perl)
+		self.init(inc: UnsafeHvContext(hv: hv, perl: perl))
 	}
 
 	/// Returns the specified Perl global or package hash with the given name (so it won't work on lexical variables).
 	/// If the variable does not exist then it will be created.
 	public convenience init(getCreating name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
 		let hv = perl.pointee.getHV(name, flags: GV_ADD)!
-		self.init(inc: hv, perl: perl)
+		self.init(inc: UnsafeHvContext(hv: hv, perl: perl))
 	}
 
-	func withUnsafeHvPointer<R>(_ body: (UnsafeHvPointer, UnsafeInterpreterPointer) throws -> R) rethrows -> R {
-		return try withUnsafeSvPointer { sv, perl in
-			return try sv.withMemoryRebound(to: UnsafeHV.self, capacity: 1) {
-				return try body($0, perl)
-			}
-		}
-	}
-
-	func withUnsafeCollection<R>(_ body: (UnsafeHvCollection) throws -> R) rethrows -> R {
-		return try withUnsafeHvPointer {
-			return try body($0.pointee.collection(perl: $1))
+	func withUnsafeHvContext<R>(_ body: (UnsafeHvContext) throws -> R) rethrows -> R {
+		defer { _fixLifetime(self) }
+		return try unsafeSvContext.sv.withMemoryRebound(to: UnsafeHV.self, capacity: 1) {
+			return try body(UnsafeHvContext(hv: $0, perl: unsafeSvContext.perl))
 		}
 	}
 
@@ -131,8 +127,8 @@ extension PerlHash {
 	/// - Returns: The value associated with `key` if `key` is in the hash;
 	///   otherwise, `nil`.
 	public func fetch<T : PerlSvConvertible>(_ key: String) throws -> T? {
-		return try withUnsafeCollection { c in
-			try c.fetch(key).flatMap { try T?(_fromUnsafeSvPointerInc: $0, perl: c.perl) }
+		return try withUnsafeHvContext { c in
+			try c.fetch(key).flatMap { try T?(_fromUnsafeSvContextInc: $0) }
 		}
 	}
 
@@ -141,12 +137,8 @@ extension PerlHash {
 	/// - Parameter key: The key to associate with `value`.
 	/// - Parameter value: The value to store in the hash.
 	public func store<T : PerlSvConvertible>(key: String, value: T) {
-		withUnsafeCollection { c in
-			let v = value._toUnsafeSvPointer(perl: c.perl)
-			guard c.store(key, newValue: v) != nil else {
-				v.pointee.refcntDec(perl: perl)
-				return
-			}
+		withUnsafeHvContext { c in
+			c.store(key, value: value._toUnsafeSvPointer(perl: c.perl))
 		}
 	}
 
@@ -155,19 +147,19 @@ extension PerlHash {
 	/// - Parameter key: The key to remove along with its associated value.
 	/// - Returns: The value that was removed, or `nil` if the key was not found in the hash.
 	public func delete<T : PerlSvConvertible>(_ key: String) throws -> T? {
-		return try withUnsafeCollection { c in
-			try c.delete(key).flatMap { try T?(_fromUnsafeSvPointerInc: $0, perl: c.perl) }
+		return try withUnsafeHvContext { c in
+			try c.delete(key).flatMap { try T?(_fromUnsafeSvContextInc: $0) }
 		}
 	}
 
 	/// Deletes the given key and its associated value from the hash.
 	public func delete(_ key: String) {
-		withUnsafeCollection { $0.delete(discarding: key) }
+		withUnsafeHvContext { $0.delete(discarding: key) }
 	}
 
 	/// Returns a boolean indicating whether the specified hash key exists.
 	public func exists(_ key: String) -> Bool {
-		return withUnsafeCollection { $0.exists(key) }
+		return withUnsafeHvContext { $0.exists(key) }
 	}
 
 	/// Fetches the value associated with the given key.
@@ -176,9 +168,9 @@ extension PerlHash {
 	/// - Returns: The value associated with `key` if `key` is in the hash;
 	///   otherwise, `nil`.
 	public func fetch<T : PerlSvConvertible>(_ key: PerlScalar) throws -> T? {
-		return try withUnsafeCollection { c in
-			try key.withUnsafeSvPointer { keysv, _ in
-				try c.fetch(keysv).flatMap { try T?(_fromUnsafeSvPointerInc: $0, perl: c.perl) }
+		return try withUnsafeHvContext { c in
+			try key.withUnsafeSvContext {
+				try c.fetch($0.sv).flatMap { try T?(_fromUnsafeSvContextInc: $0) }
 			}
 		}
 	}
@@ -188,13 +180,9 @@ extension PerlHash {
 	/// - Parameter key: The key to associate with `value`.
 	/// - Parameter value: The value to store in the hash.
 	public func store<T : PerlSvConvertible>(key: PerlScalar, value: T) {
-		withUnsafeCollection { c in
-			key.withUnsafeSvPointer { keysv, _ in
-				let v = value._toUnsafeSvPointer(perl: c.perl)
-				guard c.store(keysv, newValue: v) != nil else {
-					v.pointee.refcntDec(perl: perl)
-					return
-				}
+		withUnsafeHvContext { c in
+			key.withUnsafeSvContext {
+				c.store($0.sv, value: value._toUnsafeSvPointer(perl: c.perl))
 			}
 		}
 	}
@@ -204,26 +192,26 @@ extension PerlHash {
 	/// - Parameter key: The key to remove along with its associated value.
 	/// - Returns: The value that was removed, or `nil` if the key was not found in the hash.
 	public func delete<T : PerlSvConvertible>(_ key: PerlScalar) throws -> T? {
-		return try withUnsafeCollection { c in
-			try key.withUnsafeSvPointer { keysv, _ in
-				try c.delete(keysv).flatMap { try T?(_fromUnsafeSvPointerInc: $0, perl: c.perl) }
+		return try withUnsafeHvContext { c in
+			try key.withUnsafeSvContext {
+				try c.delete($0.sv).flatMap { try T?(_fromUnsafeSvContextInc: $0) }
 			}
 		}
 	}
 
 	/// Deletes the given key and its associated value from the hash.
 	public func delete(_ key: PerlScalar) {
-		withUnsafeCollection { c in key.withUnsafeSvPointer { keysv, _ in c.delete(discarding: keysv) } }
+		withUnsafeHvContext { c in key.withUnsafeSvContext { c.delete(discarding: $0.sv) } }
 	}
 
 	/// Returns a boolean indicating whether the specified hash key exists.
 	public func exists(_ key: PerlScalar) -> Bool {
-		return withUnsafeCollection { c in key.withUnsafeSvPointer { keysv, _ in c.exists(keysv) } }
+		return withUnsafeHvContext { c in key.withUnsafeSvContext { c.exists($0.sv) } }
 	}
 
 	/// Frees the all the elements of a hash, leaving it empty.
 	public func clear() {
-		withUnsafeCollection { $0.clear() }
+		withUnsafeHvContext { $0.clear() }
 	}
 }
 
@@ -242,7 +230,7 @@ extension PerlHash: Sequence, IteratorProtocol {
 	/// - Attention: Only one iterator is possible at any time.
 	/// - SeeAlso: `Sequence`
 	public func makeIterator() -> PerlHash {
-		withUnsafeCollection { _ = $0.makeIterator() }
+		withUnsafeHvContext { _ = $0.makeIterator() }
 		return self
 	}
 
@@ -253,9 +241,9 @@ extension PerlHash: Sequence, IteratorProtocol {
 	///
 	/// - SeeAlso: `IteratorProtocol`
 	public func next() -> Element? {
-		return withUnsafeCollection {
+		return withUnsafeHvContext {
 			guard let u = $0.next() else { return nil }
-			return (key: u.key, value: try! PerlScalar(inc: u.value, perl: $0.perl))
+			return (key: u.key, value: try! PerlScalar(inc: u.value))
 		}
 	}
 
@@ -278,16 +266,17 @@ extension PerlHash: Sequence, IteratorProtocol {
 	/// - SeeAlso: `Dictionary`
 	public subscript(key: Key) -> PerlScalar? {
 		get {
-			return withUnsafeCollection {
-				guard let sv = $0.fetch(key) else { return nil }
-				return try! PerlScalar(inc: sv, perl: $0.perl)
+			return withUnsafeHvContext {
+				guard let svc = $0.fetch(key) else { return nil }
+				return try! PerlScalar(inc: svc)
 			}
 		}
 		set {
-			withUnsafeCollection { c in
+			withUnsafeHvContext { c in
 				if let value = newValue {
-					value.withUnsafeSvPointer { sv, _ in
-						_ = c.store(key, newValue: sv)?.pointee.refcntInc()
+					value.withUnsafeSvContext {
+						$0.refcntInc()
+						c.store(key, value: $0.sv)
 					}
 				} else {
 					c.delete(discarding: key)
@@ -315,20 +304,21 @@ extension PerlHash: Sequence, IteratorProtocol {
 	/// - SeeAlso: `Dictionary`
 	public subscript(key: PerlScalar) -> PerlScalar? {
 		get {
-			return withUnsafeCollection { c in
-				guard let sv = key.withUnsafeSvPointer({ c.fetch($0.0) }) else { return nil }
-				return try! PerlScalar(inc: sv, perl: c.perl)
+			return withUnsafeHvContext { c in
+				guard let svc = key.withUnsafeSvContext({ c.fetch($0.sv) }) else { return nil }
+				return try! PerlScalar(inc: svc)
 			}
 		}
 		set {
-			withUnsafeCollection { c in
-				key.withUnsafeSvPointer { keysv, _ in
+			withUnsafeHvContext { c in
+				key.withUnsafeSvContext { key in
 					if let value = newValue {
-						value.withUnsafeSvPointer { sv, _ in
-							_ = c.store(keysv, newValue: sv)?.pointee.refcntInc()
+						value.withUnsafeSvContext {
+							$0.refcntInc()
+							c.store(key.sv, value: $0.sv)
 						}
 					} else {
-						c.delete(discarding: keysv)
+						c.delete(discarding: key.sv)
 					}
 				}
 			}
@@ -386,9 +376,9 @@ extension Dictionary where Value : PerlSvConvertible {
 	/// - Complexity: O(*n*), where *n* is the count of the hash.
 	public init(_ hv: PerlHash) throws {
 		self.init()
-		try hv.withUnsafeCollection {
+		try hv.withUnsafeHvContext {
 			for (k, v) in $0 {
-				self[k as! Key] = try Value(_fromUnsafeSvPointerInc: v, perl: $0.perl)
+				self[k as! Key] = try Value(_fromUnsafeSvContextInc: v)
 			}
 		}
 	}
@@ -403,10 +393,10 @@ extension Dictionary where Value : PerlSvConvertible {
 	/// - Complexity: O(*n*), where *n* is the count of the hash.
 	public init(_ ref: PerlScalar) throws {
 		self.init()
-		try ref.withReferentUnsafeSvPointer(type: .hash) { sv, perl in
-			try sv.withMemoryRebound(to: UnsafeHV.self, capacity: 1) { hv in
-				for (k, v) in hv.pointee.collection(perl: perl) {
-					self[k as! Key] = try Value(_fromUnsafeSvPointerInc: v, perl: perl)
+		try ref.withReferentUnsafeSvContext(type: .hash) { svc in
+			try svc.sv.withMemoryRebound(to: UnsafeHV.self, capacity: 1) { hv in
+				for (k, v) in UnsafeHvContext(hv: hv, perl: svc.perl) {
+					self[k as! Key] = try Value(_fromUnsafeSvContextInc: v)
 				}
 			}
 		}

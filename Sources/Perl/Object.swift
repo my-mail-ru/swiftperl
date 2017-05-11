@@ -49,16 +49,16 @@ import CPerl
 open class PerlObject : PerlValue, PerlDerived {
 	public typealias UnsafeValue = UnsafeSV
 
-	convenience init(noinc sv: UnsafeSvPointer, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		guard sv.pointee.isObject(perl: perl) else {
-			throw PerlError.notObject(fromUnsafeSvPointer(noinc: sv, perl: perl))
+	convenience init(noinc svc: UnsafeSvContext) throws {
+		guard svc.isObject else {
+			throw PerlError.notObject(fromUnsafeSvContext(noinc: svc))
 		}
 		if let named = type(of: self) as? PerlNamedClass.Type {
-			guard sv.pointee.isDerived(from: named.perlClassName, perl: perl) else {
-				throw PerlError.unexpectedObjectType(fromUnsafeSvPointer(noinc: sv, perl: perl), want: type(of: self))
+			guard svc.isDerived(from: named.perlClassName) else {
+				throw PerlError.unexpectedObjectType(fromUnsafeSvContext(noinc: svc), want: type(of: self))
 			}
 		}
-		self.init(noincUnchecked: sv, perl: perl)
+		self.init(noincUnchecked: svc)
 	}
 
 	/// Creates a new object by calling its Perl constructor.
@@ -107,27 +107,29 @@ open class PerlObject : PerlValue, PerlDerived {
 		let args = [classname as PerlSvConvertible?] + args
 		let svArgs: [UnsafeSvPointer] = args.map { $0?._toUnsafeSvPointer(perl: perl) ?? perl.pointee.newSV() }
 		let sv = try perl.pointee.unsafeCall(sv: perl.pointee.newSV(method, mortal: true), args: svArgs, flags: G_METHOD|G_SCALAR)[0]
-		guard sv.pointee.isObject(perl: perl) else {
-			throw PerlError.notObject(fromUnsafeSvPointer(inc: sv, perl: perl))
+		let svc = UnsafeSvContext(sv: sv, perl: perl)
+		guard svc.isObject else {
+			throw PerlError.notObject(fromUnsafeSvContext(inc: svc))
 		}
-		guard sv.pointee.isDerived(from: classname, perl: perl) else {
-			throw PerlError.unexpectedObjectType(fromUnsafeSvPointer(inc: sv, perl: perl), want: type(of: self))
+		guard svc.isDerived(from: classname) else {
+			throw PerlError.unexpectedObjectType(fromUnsafeSvContext(inc: svc), want: type(of: self))
 		}
-		self.init(incUnchecked: sv, perl: perl)
+		self.init(incUnchecked: svc)
 	}
 
-	public convenience init(_ sv: PerlScalar) throws {
-		defer { _fixLifetime(sv) }
-		let (usv, perl) = sv.withUnsafeSvPointer { $0 }
-		try self.init(inc: usv, perl: perl)
+	public convenience init(_ scalar: PerlScalar) throws {
+		defer { _fixLifetime(scalar) }
+		try self.init(inc: scalar.unsafeSvContext)
 	}
 
 	var perlClassName: String {
-		return withUnsafeSvPointer { sv, perl in sv.pointee.classname(perl: perl)! }
+		defer { _fixLifetime(self) }
+		return unsafeSvContext.classname!
 	}
 
 	var referent: AnyPerl {
-		return withUnsafeSvPointer { sv, perl in fromUnsafeSvPointer(inc: sv.pointee.referent!, perl: perl) }
+		defer { _fixLifetime(self) }
+		return fromUnsafeSvContext(inc: unsafeSvContext.referent!)
 	}
 
 	/// A textual representation of the SV, suitable for debugging.
