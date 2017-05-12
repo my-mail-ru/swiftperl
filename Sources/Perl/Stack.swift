@@ -3,7 +3,7 @@ import CPerl
 typealias UnsafeStackBufferPointer = UnsafeMutableBufferPointer<UnsafeSvPointer>
 
 protocol UnsafeStack {
-	var perl: UnsafeInterpreterPointer { get }
+	var perl: PerlInterpreter { get }
 }
 
 extension UnsafeStack {
@@ -22,10 +22,10 @@ extension UnsafeStack {
 
 struct UnsafeXSubStack : UnsafeStack {
 	let args: UnsafeStackBufferPointer
-	let perl: UnsafeInterpreterPointer
+	let perl: PerlInterpreter
 	let ax: Int32
 
-	init(perl: UnsafeInterpreterPointer) {
+	init(perl: PerlInterpreter) {
 		self.perl = perl
 		//SV **sp = (my_perl->Istack_sp); I32 ax = (*(my_perl->Imarkstack_ptr)--); SV **mark = (my_perl->Istack_base) + ax++; I32 items = (I32)(sp - mark);
 		var sp = perl.pointee.Istack_sp!
@@ -90,9 +90,9 @@ struct UnsafeXSubStack : UnsafeStack {
 }
 
 struct UnsafeCallStack : UnsafeStack {
-	let perl: UnsafeInterpreterPointer
+	let perl: PerlInterpreter
 
-	init<C : Collection>(perl: UnsafeInterpreterPointer, args: C)
+	init<C : Collection>(perl: PerlInterpreter, args: C)
 		where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int {
 		self.perl = perl
 		var sp = perl.pointee.Istack_sp!
@@ -101,16 +101,16 @@ struct UnsafeCallStack : UnsafeStack {
 	}
 
 	func popReturned(count: Int) -> UnsafeStackBufferPointer {
-		return perl.pointee.popFromStack(count: count)
+		return perl.popFromStack(count: count)
 	}
 }
 
-extension UnsafeInterpreter {
-	mutating func popFromStack(count: Int) -> UnsafeStackBufferPointer {
-		var sp = Istack_sp!
+extension PerlInterpreter {
+	func popFromStack(count: Int) -> UnsafeStackBufferPointer {
+		var sp = pointee.Istack_sp!
 		sp -= count
 		let result = UnsafeStackBufferPointer(start: UnsafeMutableRawPointer(sp + 1).assumingMemoryBound(to: UnsafeSvPointer.self), count: count)
-		Istack_sp = sp
+		pointee.Istack_sp = sp
 		return result
 	}
 }

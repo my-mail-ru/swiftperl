@@ -97,16 +97,16 @@ open class PerlObject : PerlValue, PerlDerived {
 	/// - Parameter method: A name of the constuctor. Usually it is *new*.
 	/// - Parameter args: Arguments to pass to the constructor.
 	/// - Parameter perl: The Perl interpreter.
-	public convenience init(method: String, args: [PerlSvConvertible?], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+	public convenience init(method: String, args: [PerlSvConvertible?], perl: PerlInterpreter = .current) throws {
 		guard let named = type(of: self) as? PerlNamedClass.Type else {
 			fatalError("PerlObject.init(method:args:perl) is only supported for subclasses conforming to PerlNamedClass")
 		}
-		perl.pointee.enterScope()
-		defer { perl.pointee.leaveScope() }
+		perl.enterScope()
+		defer { perl.leaveScope() }
 		let classname = named.perlClassName
 		let args = [classname as PerlSvConvertible?] + args
 		let svArgs: [UnsafeSvPointer] = args.map { $0?._toUnsafeSvPointer(perl: perl) ?? perl.pointee.newSV() }
-		let sv = try perl.pointee.unsafeCall(sv: perl.pointee.newSV(method, mortal: true), args: svArgs, flags: G_METHOD|G_SCALAR)[0]
+		let sv = try perl.unsafeCall(sv: perl.newSV(method, mortal: true), args: svArgs, flags: G_METHOD|G_SCALAR)[0]
 		let svc = UnsafeSvContext(sv: sv, perl: perl)
 		guard svc.isObject else {
 			throw PerlError.notObject(fromUnsafeSvContext(inc: svc))
@@ -167,14 +167,8 @@ public protocol PerlNamedClass : class {
 
 extension PerlNamedClass {
 	/// Loads the module which name is in `perlClassName` attribute.
-	public static func require(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
-		try perl.pointee.require(perlClassName)
-	}
-
-	/// Loads the module which name is in `perlClassName` attribute.
-	@available(*, deprecated, renamed: "require(perl:)")
-	public static func loadModule(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		perl.pointee.loadModule(perlClassName)
+	public static func require(perl: PerlInterpreter = .current) throws {
+		try perl.require(perlClassName)
 	}
 }
 
@@ -185,14 +179,8 @@ extension PerlNamedClass where Self : PerlObject {
 	}
 
 	/// Assuming that the Perl class is in the module with the same name, loads it and registers.
-	public static func initialize(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws {
+	public static func initialize(perl: PerlInterpreter = .current) throws {
 		try require(perl: perl)
-		register()
-	}
-
-	@available(*, deprecated, renamed: "initialize(perl:)")
-	public static func loadAndRegister(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		loadModule(perl: perl)
 		register()
 	}
 }

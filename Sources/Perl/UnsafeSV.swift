@@ -26,7 +26,7 @@ public typealias UnsafeSvPointer = UnsafeMutablePointer<UnsafeSV>
 
 public struct UnsafeSvContext {
 	let sv: UnsafeSvPointer
-	let perl: UnsafeInterpreterPointer
+	let perl: PerlInterpreter
 
 	@discardableResult
 	func refcntInc() -> UnsafeSvPointer {
@@ -34,7 +34,7 @@ public struct UnsafeSvContext {
 	}
 
 	func refcntDec() {
-		SvREFCNT_dec(perl, sv)
+		SvREFCNT_dec(perl.pointer, sv)
 	}
 
 	@discardableResult
@@ -84,7 +84,7 @@ public struct UnsafeSvContext {
 		return (u.takeUnretainedValue() as! PerlBridgedObject)
 	}
 
-	static func new(perl: UnsafeInterpreterPointer) -> UnsafeSvContext {
+	static func new(perl: PerlInterpreter) -> UnsafeSvContext {
 		return UnsafeSvContext(sv: perl.pointee.newSV(), perl: perl)
 	}
 
@@ -104,7 +104,7 @@ public struct UnsafeSvContext {
 		return UnsafeSvContext(sv: svc.perl.pointee.newRV_inc(svc.sv)!, perl: svc.perl)
 	}
 
-	static func new(_ v: UnsafeRawBufferPointer, utf8: Bool = false, mortal: Bool = false, perl: UnsafeInterpreterPointer) -> UnsafeSvContext {
+	static func new(_ v: UnsafeRawBufferPointer, utf8: Bool = false, mortal: Bool = false, perl: PerlInterpreter) -> UnsafeSvContext {
 		let sv = perl.pointee.newSVpvn_flags(v.baseAddress?.assumingMemoryBound(to: CChar.self), v.count, UInt32(mortal ? SVs_TEMP : 0))!
 		if utf8 {
 			perl.pointee.sv_utf8_decode(sv)
@@ -197,33 +197,33 @@ extension UnsafeSvContext {
 	}
 }
 
-extension UnsafeInterpreter {
-	mutating func newSV(_ v: Bool) -> UnsafeSvPointer {
-		return newSVsv(boolSV(v))
+extension PerlInterpreter {
+	func newSV(_ v: Bool) -> UnsafeSvPointer {
+		return pointee.newSVsv(pointee.boolSV(v))
 	}
 
-	mutating func newSV(_ v: String, mortal: Bool = false) -> UnsafeSvPointer {
+	func newSV(_ v: String, mortal: Bool = false) -> UnsafeSvPointer {
 		let flags = (v._core.isASCII ? 0 : SVf_UTF8) | (mortal ? SVs_TEMP : 0)
-		return v.withCStringWithLength { newSVpvn_flags($0, $1, UInt32(flags)) }
+		return v.withCStringWithLength { pointee.newSVpvn_flags($0, $1, UInt32(flags)) }
 	}
 
-	mutating func newRV<T: UnsafeSvCastable>(inc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
-		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { newRV_inc($0) }
+	func newRV<T: UnsafeSvCastable>(inc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
+		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { pointee.newRV_inc($0) }
 	}
 
-	mutating func newRV<T: UnsafeSvCastable>(noinc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
-		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { newRV_noinc($0) }
+	func newRV<T: UnsafeSvCastable>(noinc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
+		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { pointee.newRV_noinc($0) }
 	}
 
-	mutating func newSV(_ v: AnyObject, isa: String) -> UnsafeSvPointer {
+	func newSV(_ v: AnyObject, isa: String) -> UnsafeSvPointer {
 		let u = Unmanaged<AnyObject>.passRetained(v)
 		let iv = unsafeBitCast(u, to: Int.self)
-		let sv = sv_setref_iv(newSV(), isa, iv)
-		sv_magicext(SvRV(sv), nil, PERL_MAGIC_ext, &objectMgvtbl, nil, 0)
+		let sv = pointee.sv_setref_iv(pointee.newSV(), isa, iv)
+		pointee.sv_magicext(SvRV(sv), nil, PERL_MAGIC_ext, &objectMgvtbl, nil, 0)
 		return sv
 	}
 
-	mutating func newSV(_ v: PerlBridgedObject) -> UnsafeSvPointer {
+	func newSV(_ v: PerlBridgedObject) -> UnsafeSvPointer {
 		return newSV(v, isa: type(of: v).perlClassName)
 	}
 }

@@ -1,46 +1,43 @@
 import CPerl
 
-extension UnsafeInterpreter {
-	mutating func unsafeCall<C : Collection>(sv: UnsafeSvPointer, args: C, flags: Int32 = 0) throws -> UnsafeStackBufferPointer
+extension PerlInterpreter {
+	func unsafeCall<C : Collection>(sv: UnsafeSvPointer, args: C, flags: Int32 = 0) throws -> UnsafeStackBufferPointer
 		where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int {
-		let stack = UnsafeCallStack(perl: &self, args: args)
-		let count = call_sv(sv, G_EVAL|flags)
+		let stack = UnsafeCallStack(perl: self, args: args)
+		let count = pointee.call_sv(sv, G_EVAL|flags)
 		let result = stack.popReturned(count: Int(count))
-		let err = UnsafeSvContext(sv: ERRSV, perl: &self)
-		if Bool(err) {
-			throw PerlError.died(try PerlScalar(copy: err))
+		if Bool(error) {
+			throw PerlError.died(try PerlScalar(copy: error))
 		}
 		return result
 	}
 
-	mutating func unsafeCall<C : Collection>(sv: UnsafeSvPointer, discardingResultWithArgs args: C, flags: Int32 = G_VOID) throws -> Void
+	func unsafeCall<C : Collection>(sv: UnsafeSvPointer, discardingResultWithArgs args: C, flags: Int32 = G_VOID) throws -> Void
 		where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int {
-		_ = UnsafeCallStack(perl: &self, args: args)
-		_ = call_sv(sv, G_EVAL|G_DISCARD|flags)
-		let err = UnsafeSvContext(sv: ERRSV, perl: &self)
-		if Bool(err) {
-			throw PerlError.died(try PerlScalar(copy: err))
+		_ = UnsafeCallStack(perl: self, args: args)
+		_ = pointee.call_sv(sv, G_EVAL|G_DISCARD|flags)
+		if Bool(error) {
+			throw PerlError.died(try PerlScalar(copy: error))
 		}
 	}
 
-	mutating func unsafeEval(sv: UnsafeSvPointer, flags: Int32 = 0) throws -> UnsafeStackBufferPointer {
-		let count = eval_sv(sv, flags)
+	func unsafeEval(sv: UnsafeSvPointer, flags: Int32 = 0) throws -> UnsafeStackBufferPointer {
+		let count = pointee.eval_sv(sv, flags)
 		let result = popFromStack(count: Int(count))
-		let err = UnsafeSvContext(sv: ERRSV, perl: &self)
-		if Bool(err) {
-			throw PerlError.died(try PerlScalar(copy: err))
+		if Bool(error) {
+			throw PerlError.died(try PerlScalar(copy: error))
 		}
 		return result
 	}
 
-	mutating func enterScope() {
-		self.ENTER()
-		self.SAVETMPS()
+	func enterScope() {
+		pointee.ENTER()
+		pointee.SAVETMPS()
 	}
 
-	mutating func leaveScope() {
-		self.FREETMPS()
-		self.LEAVE()
+	func leaveScope() {
+		pointee.FREETMPS()
+		pointee.LEAVE()
 	}
 }
 
@@ -67,12 +64,12 @@ extension UnsafeInterpreter {
 		return "" if g == "" else ", " + g
 	
 	def result(r):
-		return re.sub("(R(\\d*)\\??)", lambda m: m.group(1) + "(_fromUnsafeSvContextCopy: UnsafeSvContext(sv: svResult[" + (m.group(2) or "0") + "], perl: &self))", r)
+		return re.sub("(R(\\d*)\\??)", lambda m: m.group(1) + "(_fromUnsafeSvContextCopy: UnsafeSvContext(sv: svResult[" + (m.group(2) or "0") + "], perl: self))", r)
 
 	calls = ["Void", "R", "R?", "(R0?, R1?)"]
 }%
 
-extension UnsafeInterpreter {
+extension PerlInterpreter {
 	/// Calls Perl subroutine identified by `sv` with empty arguments and without
 	/// return values.
 	///
@@ -81,7 +78,7 @@ extension UnsafeInterpreter {
 	///
 	/// - Parameter sv: SV* containing either a string or a reference to CV.
 	/// - Parameter flags: G_VOID by default.
-	public mutating func call(sv: UnsafeSvPointer, flags: Int32 = G_VOID) throws -> Void {
+	public func call(sv: UnsafeSvPointer, flags: Int32 = G_VOID) throws -> Void {
 		try unsafeCall(sv: sv, discardingResultWithArgs: EmptyCollection(), flags: flags)
 	}
 
@@ -100,11 +97,11 @@ extension UnsafeInterpreter {
 	/// - Parameter args: Arguments of the call.
 	/// - Parameter flags: ${context(r)} by default.
 	/// - Returns: Return value of the call.
-	public mutating func call<C : Collection${moreGeneric(r)}>(sv: UnsafeSvPointer, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
+	public func call<C : Collection${moreGeneric(r)}>(sv: UnsafeSvPointer, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
 		where C.Iterator.Element == PerlSvConvertible? {
 		enterScope()
 		defer { leaveScope() }
-		let svArgs: [UnsafeSvPointer] = args.map { $0?._toUnsafeSvPointer(perl: &self) ?? newSV() }
+		let svArgs: [UnsafeSvPointer] = args.map { $0?._toUnsafeSvPointer(perl: self) ?? pointee.newSV() }
 %   if r == "Void":
 		try unsafeCall(sv: sv, discardingResultWithArgs: svArgs, flags: flags)
 %   else:
@@ -115,7 +112,7 @@ extension UnsafeInterpreter {
 % end
 }
 
-extension UnsafeInterpreter {
+extension PerlInterpreter {
 % for r in calls:
 	/// Calls Perl method on the first argument of the call.
 	///
@@ -129,19 +126,27 @@ extension UnsafeInterpreter {
 	///   string (it will be interpreted as a class name) or an object.
 	/// - Parameter flags: ${context(r)} by default.
 	/// - Returns: Return value of the call.
-	public mutating func call<C : Collection${moreGeneric(r)}>(method: String, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
+	public func call<C : Collection${moreGeneric(r)}>(method: String, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
 		where C.Iterator.Element == PerlSvConvertible? {
 		return try call(sv: newSV(method, mortal: true), args: args, flags: G_METHOD|flags)
 	}
 % end
 }
 
-extension UnsafeInterpreter {
+extension PerlInterpreter {
+	// FIXME
+	/// Calls Perl subroutine by its name.
+	///
+	/// - Parameter sub: A name of the subroutine.
+	public func call(sub: String) throws -> Void {
+		try call(sv: newSV(sub, mortal: true), flags: G_VOID)
+	}
+
 	/// Calls Perl subroutine by its name.
 	///
 	/// - Parameter sub: A name of the subroutine.
 	/// - Parameter flags: G_VOID by default.
-	public mutating func call(sub: String, flags: Int32 = G_VOID) throws -> Void {
+	public func call(sub: String, flags: Int32 = G_VOID) throws -> Void {
 		try call(sv: newSV(sub, mortal: true), flags: flags)
 	}
 
@@ -157,20 +162,11 @@ extension UnsafeInterpreter {
 	/// - Parameter args: Arguments of the call.
 	/// - Parameter flags: ${context(r)} by default.
 	/// - Returns: Return value of the call.
-	public mutating func call<C : Collection${moreGeneric(r)}>(sub: String, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
+	public func call<C : Collection${moreGeneric(r)}>(sub: String, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
 		where C.Iterator.Element == PerlSvConvertible? {
 		return try call(sv: newSV(sub, mortal: true), args: args, flags: flags)
 	}
 % end
-}
-
-extension PerlInterpreter {
-	/// Calls Perl subroutine by its name.
-	///
-	/// - Parameter sub: A name of the subroutine.
-	public func call(sub: String) throws -> Void {
-		try pointer.pointee.call(sub: sub)
-	}
 
 % for r in calls:
 	/// Calls Perl subroutine by its name.
@@ -184,7 +180,7 @@ extension PerlInterpreter {
 	/// - Parameter args: Arguments of the call.
 	/// - Returns: Return value of the call.
 	public func call${fqGeneric(r)}(sub: String, _ args: PerlSvConvertible?...) throws -> ${r} {
-		return try pointer.pointee.call(sub: sub, args: args)
+		return try call(sub: sub, args: args)
 	}
 % end
 }
@@ -193,8 +189,8 @@ extension PerlSub {
 	/// Calls Perl subroutine by its name.
 	///
 	/// - Parameter name: A name of the subroutine.
-	public static func call(_ name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Void {
-		try perl.pointee.call(sub: name)
+	public static func call(_ name: String, perl: PerlInterpreter = .current) throws -> Void {
+		try perl.call(sub: name)
 	}
 
 % for r in calls:
@@ -208,15 +204,15 @@ extension PerlSub {
 	/// - Parameter name: A name of the subroutine.
 	/// - Parameter args: Arguments of the call.
 	/// - Returns: Return value of the call.
-	public static func call${fqGeneric(r)}(_ name: String, _ args: PerlSvConvertible?..., perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> ${r} {
-		return try perl.pointee.call(sub: name, args: args)
+	public static func call${fqGeneric(r)}(_ name: String, _ args: PerlSvConvertible?..., perl: PerlInterpreter = .current) throws -> ${r} {
+		return try perl.call(sub: name, args: args)
 	}
 % end
 
 	/// Calls the underlain Perl subroutine.
 	public func call() throws -> Void {
 		try withUnsafeSvContext {
-			try $0.perl.pointee.call(sv: $0.sv)
+			try $0.perl.call(sv: $0.sv)
 		}
 	}
 
@@ -232,16 +228,16 @@ extension PerlSub {
 	/// - Returns: Return value of the call.
 	public func call${fqGeneric(r)}(_ args: PerlSvConvertible?...) throws -> ${r} {
 		return try withUnsafeSvContext {
-			return try $0.perl.pointee.call(sv: $0.sv, args: args)
+			return try $0.perl.call(sv: $0.sv, args: args)
 		}
 	}
 % end
 }
 
-extension UnsafeInterpreter {
+extension PerlInterpreter {
 % for r in calls:
 	/// Tells Perl to "eval" the string in the `sv`.
-	public mutating func eval${fqGeneric(r)}(sv: UnsafeSvPointer, flags: Int32 = ${context(r)}) throws -> ${r} {
+	public func eval${fqGeneric(r)}(sv: UnsafeSvPointer, flags: Int32 = ${context(r)}) throws -> ${r} {
 		enterScope()
 		defer { leaveScope() }
 %   if r == "Void":
@@ -255,17 +251,8 @@ extension UnsafeInterpreter {
 
 % for r in calls:
 	/// Tells Perl to "eval" the string.
-	public mutating func eval${fqGeneric(r)}(_ string: String, flags: Int32 = ${context(r)}) throws -> ${r} {
+	public func eval${fqGeneric(r)}(_ string: String, flags: Int32 = ${context(r)}) throws -> ${r} {
 		return try eval(sv: newSV(string, mortal: true), flags: flags)
-	}
-% end
-}
-
-extension PerlInterpreter {
-% for r in calls:
-	/// Tells Perl to "eval" the string.
-	public func eval${fqGeneric(r)}(_ string: String) throws -> ${r} {
-		return try pointer.pointee.eval(string)
 	}
 % end
 }
@@ -275,7 +262,7 @@ extension PerlObject {
 	///
 	/// - Parameter name: A name of the method to call.
 	public func call(method: String) throws -> Void {
-		try unsafeSvContext.perl.pointee.call(method: method, args: CollectionOfOne(.some(self)))
+		try unsafeSvContext.perl.call(method: method, args: CollectionOfOne(.some(self)))
 	}
 
 % for r in calls:
@@ -295,7 +282,7 @@ extension PerlObject {
 		fullArgs.reserveCapacity(1 + numericCast(args.count))
 		fullArgs.append(self)
 		fullArgs.append(contentsOf: args)
-		return try unsafeSvContext.perl.pointee.call(method: method, args: fullArgs)
+		return try unsafeSvContext.perl.call(method: method, args: fullArgs)
 	}
 
 	/// Calls Perl method on the current instance.
@@ -318,8 +305,8 @@ extension PerlNamedClass {
 	/// Calls Perl method on the class specified by `perlClassName` attribute.
 	///
 	/// - Parameter name: A name of the method to call.
-	public static func call(method: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> Void {
-		return try perl.pointee.call(method: method, args: CollectionOfOne(.some(perlClassName)))
+	public static func call(method: String, perl: PerlInterpreter = .current) throws -> Void {
+		return try perl.call(method: method, args: CollectionOfOne(.some(perlClassName)))
 	}
 
 % for r in calls:
@@ -333,13 +320,13 @@ extension PerlNamedClass {
 	/// - Parameter name: A name of the method to call.
 	/// - Parameter args: A collection of arguments.
 	/// - Returns: Return value of the call.
-	public static func call<C : Collection${moreGeneric(r)}>(method: String, args: C, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> ${r}
+	public static func call<C : Collection${moreGeneric(r)}>(method: String, args: C, perl: PerlInterpreter = .current) throws -> ${r}
 		where C.Iterator.Element == PerlSvConvertible? {
 		var fullArgs = ContiguousArray<PerlSvConvertible?>()
 		fullArgs.reserveCapacity(1 + numericCast(args.count))
 		fullArgs.append(perlClassName)
 		fullArgs.append(contentsOf: args)
-		return try perl.pointee.call(method: method, args: fullArgs)
+		return try perl.call(method: method, args: fullArgs)
 	}
 
 	/// Calls Perl method on the current instance.
@@ -352,7 +339,7 @@ extension PerlNamedClass {
 	/// - Parameter name: A name of the method to call.
 	/// - Parameter args: A variable list of arguments.
 	/// - Returns: Return value of the call.
-	public static func call${fqGeneric(r)}(method: String, _ args: PerlSvConvertible?..., perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) throws -> ${r} {
+	public static func call${fqGeneric(r)}(method: String, _ args: PerlSvConvertible?..., perl: PerlInterpreter = .current) throws -> ${r} {
 		return try call(method: method, args: args)
 	}
 % end

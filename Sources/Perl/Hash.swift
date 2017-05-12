@@ -58,11 +58,11 @@ public final class PerlHash : PerlValue, PerlDerived {
 
 	/// Creates an empty Perl hash.
 	public convenience init() {
-		self.init(perl: UnsafeInterpreter.current)
+		self.init(perl: .current)
 	}
 
 	/// Creates an empty Perl hash.
-	public convenience init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public convenience init(perl: PerlInterpreter = .current) {
 		self.init(noinc: UnsafeHvContext.new(perl: perl))
 	}
 
@@ -94,15 +94,15 @@ public final class PerlHash : PerlValue, PerlDerived {
 
 	/// Returns the specified Perl global or package hash with the given name (so it won't work on lexical variables).
 	/// If the variable does not exist then `nil` is returned.
-	public convenience init?(get name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		guard let hv = perl.pointee.getHV(name) else { return nil }
+	public convenience init?(get name: String, perl: PerlInterpreter = .current) {
+		guard let hv = perl.getHV(name) else { return nil }
 		self.init(inc: UnsafeHvContext(hv: hv, perl: perl))
 	}
 
 	/// Returns the specified Perl global or package hash with the given name (so it won't work on lexical variables).
 	/// If the variable does not exist then it will be created.
-	public convenience init(getCreating name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		let hv = perl.pointee.getHV(name, flags: GV_ADD)!
+	public convenience init(getCreating name: String, perl: PerlInterpreter = .current) {
+		let hv = perl.getHV(name, flags: GV_ADD)!
 		self.init(inc: UnsafeHvContext(hv: hv, perl: perl))
 	}
 

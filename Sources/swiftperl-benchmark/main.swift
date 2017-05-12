@@ -6,7 +6,8 @@ func run(_ code: String, count: Int = 1000000) {
 	print("\"\(code)\",\(sample.cpu)")
 }
 
-let perl = PerlInterpreter()
+let perl = PerlInterpreter.new()
+defer { perl.destroy() }
 
 PerlSub(name: "void") { () -> Void in }
 

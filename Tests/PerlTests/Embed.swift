@@ -3,10 +3,9 @@ import Perl
 
 class EmbedTests: XCTestCase {
 	func testEmbedding() throws {
-		let perl = PerlInterpreter()
-		perl.withUnsafeInterpreterPointer {
-			UnsafeInterpreter.current = $0
-		}
+		let perl = PerlInterpreter.new()
+		defer { perl.destroy() }
+		PerlInterpreter.current = perl
 		let ok: String = try perl.eval("'OK'")
 		XCTAssertEqual(ok, "OK")
 	}

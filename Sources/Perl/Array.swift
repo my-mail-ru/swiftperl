@@ -55,16 +55,16 @@ public final class PerlArray : PerlValue, PerlDerived {
 
 	/// Creates an empty Perl array.
 	public convenience init() {
-		self.init(perl: UnsafeInterpreter.current)
+		self.init(perl: .current)
 	}
 
 	/// Creates an empty Perl array.
-	public convenience init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public convenience init(perl: PerlInterpreter = .current) {
 		self.init(noinc: UnsafeAvContext.new(perl: perl))
 	}
 
 	/// Initializes Perl array with elements of collection `c`.
-	public convenience init<C : Collection>(_ c: C, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current)
+	public convenience init<C : Collection>(_ c: C, perl: PerlInterpreter = .current)
 		where C.Iterator.Element : PerlSvConvertible {
 		self.init(perl: perl)
 		reserveCapacity(numericCast(c.count))
@@ -75,15 +75,15 @@ public final class PerlArray : PerlValue, PerlDerived {
 
 	/// Returns the specified Perl global or package array with the given name (so it won't work on lexical variables).
 	/// If the variable does not exist then `nil` is returned.
-	public convenience init?(get name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		guard let av = perl.pointee.getAV(name) else { return nil }
+	public convenience init?(get name: String, perl: PerlInterpreter = .current) {
+		guard let av = perl.getAV(name) else { return nil }
 		self.init(inc: UnsafeAvContext(av: av, perl: perl))
 	}
 
 	/// Returns the specified Perl global or package array with the given name (so it won't work on lexical variables).
 	/// If the variable does not exist then it will be created.
-	public convenience init(getCreating name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		let av = perl.pointee.getAV(name, flags: GV_ADD)!
+	public convenience init(getCreating name: String, perl: PerlInterpreter = .current) {
+		let av = perl.getAV(name, flags: GV_ADD)!
 		self.init(inc: UnsafeAvContext(av: av, perl: perl))
 	}
 

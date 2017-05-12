@@ -5,13 +5,11 @@ class EmbeddedTestCase : XCTestCase {
 	var perl: PerlInterpreter!
 
 	override func setUp() {
-		perl = PerlInterpreter()
-		perl.withUnsafeInterpreterPointer {
-			UnsafeInterpreter.current = $0
-		}
+		perl = PerlInterpreter.new()
+		PerlInterpreter.current = perl
 	}
 
 	override func tearDown() {
-		perl = nil
+		perl.destroy()
 	}
 }

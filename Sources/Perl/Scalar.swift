@@ -33,7 +33,7 @@ public final class PerlScalar : PerlValue, PerlDerived {
 	public typealias UnsafeValue = UnsafeSV
 
 	/// Creates a `SV` containing an undefined value.
-	public convenience init() { self.init(perl: UnsafeInterpreter.current) } // default bellow doesn't work...
+	public convenience init() { self.init(perl: .current) } // default bellow doesn't work...
 
 	convenience init(copyUnchecked svc: UnsafeSvContext) {
 		self.init(noincUnchecked: UnsafeSvContext.new(stealingCopy: svc))
@@ -47,12 +47,12 @@ public final class PerlScalar : PerlValue, PerlDerived {
 	}
 
 	/// Creates a `SV` containing an undefined value.
-	public convenience init(perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public convenience init(perl: PerlInterpreter = .current) {
 		self.init(noincUnchecked: UnsafeSvContext.new(perl: perl))
 	}
 
 	/// Creates a `SV` containig a `v`.
-	public convenience init<T : PerlSvConvertible>(_ v: T, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public convenience init<T : PerlSvConvertible>(_ v: T, perl: PerlInterpreter = .current) {
 		self.init(noincUnchecked: UnsafeSvContext(sv: v._toUnsafeSvPointer(perl: perl), perl: perl))
 	}
 
@@ -65,7 +65,7 @@ public final class PerlScalar : PerlValue, PerlDerived {
 	}
 
 	/// Creates a Perl string containing a copy of bytes or characters from `v`.
-	public convenience init(_ v: UnsafeRawBufferPointer, containing: StringUnits = .bytes, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public convenience init(_ v: UnsafeRawBufferPointer, containing: StringUnits = .bytes, perl: PerlInterpreter = .current) {
 		self.init(noincUnchecked: UnsafeSvContext.new(v, utf8: containing == .characters, perl: perl))
 	}
 
@@ -87,17 +87,17 @@ public final class PerlScalar : PerlValue, PerlDerived {
 	}
 
 	/// Creates a `RV` pointing to a `AV` which contains `SV`s with elements of an `array`.
-	public convenience init<T : PerlSvConvertible>(_ array: [T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public convenience init<T : PerlSvConvertible>(_ array: [T], perl: PerlInterpreter = .current) {
 		self.init(noincUnchecked: UnsafeSvContext(sv: array._toUnsafeSvPointer(perl: perl), perl: perl))
 	}
 
 	/// Creates a `RV` pointing to a `HV` which contains `SV`s with elements of a `dict`.
-	public convenience init<T : PerlSvConvertible>(_ dict: [String: T], perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public convenience init<T : PerlSvConvertible>(_ dict: [String: T], perl: PerlInterpreter = .current) {
 		self.init(noincUnchecked: UnsafeSvContext(sv: dict._toUnsafeSvPointer(perl: perl), perl: perl))
 	}
 
 	/// Creates a `SV` containig an unwrapped value of a `v` if `v != nil` or an `undef` in other case.
-	public convenience init<T : PerlSvConvertible>(_ v: T?, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
+	public convenience init<T : PerlSvConvertible>(_ v: T?, perl: PerlInterpreter = .current) {
 		if let v = v {
 			self.init(v, perl: perl)
 		} else {
@@ -107,15 +107,15 @@ public final class PerlScalar : PerlValue, PerlDerived {
 
 	/// Returns the specified Perl global or package scalar with the given name (so it won't work on lexical variables).
 	/// If the variable does not exist then `nil` is returned.
-	public convenience init?(get name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		guard let sv = perl.pointee.getSV(name) else { return nil }
+	public convenience init?(get name: String, perl: PerlInterpreter = .current) {
+		guard let sv = perl.getSV(name) else { return nil }
 		self.init(incUnchecked: UnsafeSvContext(sv: sv, perl: perl))
 	}
 
 	/// Returns the specified Perl global or package scalar with the given name (so it won't work on lexical variables).
 	/// If the variable does not exist then it will be created.
-	public convenience init(getCreating name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		let sv = perl.pointee.getSV(name, flags: GV_ADD)!
+	public convenience init(getCreating name: String, perl: PerlInterpreter = .current) {
+		let sv = perl.getSV(name, flags: GV_ADD)!
 		self.init(incUnchecked: UnsafeSvContext(sv: sv, perl: perl))
 	}
 

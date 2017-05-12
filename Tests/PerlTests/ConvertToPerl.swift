@@ -173,7 +173,7 @@ class ConvertToPerlTests : EmbeddedTestCase {
 		XCTAssertEqual(try perl.eval("testplain(10, 15, 'extra') == 25 ? 'OK' : 'FAIL'"), "OK")
 
 		PerlSub(name: "testlast") {
-			(args: [PerlScalar], perl: UnsafeInterpreterPointer) -> [PerlScalar] in
+			(args: [PerlScalar], perl: PerlInterpreter) -> [PerlScalar] in
 			XCTAssertEqual(try Int(args[0]), 10)
 			XCTAssertEqual(try Int(args[1]), 15)
 			XCTAssertEqual(try String(args[2]), "extra")

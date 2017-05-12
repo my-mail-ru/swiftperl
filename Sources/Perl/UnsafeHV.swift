@@ -5,9 +5,9 @@ public typealias UnsafeHvPointer = UnsafeMutablePointer<UnsafeHV>
 
 struct UnsafeHvContext {
 	let hv: UnsafeHvPointer
-	let perl: UnsafeInterpreterPointer
+	let perl: PerlInterpreter
 
-	static func new(perl: UnsafeInterpreterPointer) -> UnsafeHvContext {
+	static func new(perl: PerlInterpreter) -> UnsafeHvContext {
 		return UnsafeHvContext(hv: perl.pointee.newHV()!, perl: perl)
 	}
 

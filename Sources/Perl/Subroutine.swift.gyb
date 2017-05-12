@@ -59,9 +59,8 @@ public final class PerlSub : PerlValue, PerlDerived {
 	}
 
 	@discardableResult
-	convenience init(name: String?, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current, file: StaticString = #file, body: @escaping CvBody) {
-		let cv = perl.pointee.newCV(name: name, file: file, body: body) // FIXME Why result is non-optional???
-		self.init(noinc: UnsafeCvContext(cv: cv, perl: perl))
+	convenience init(name: String?, perl: PerlInterpreter = .current, file: StaticString = #file, body: @escaping CvBody) {
+		self.init(noinc: UnsafeCvContext.new(name: name, file: file, body: body, perl: perl))
 		if name != nil {
 			unsafeSvContext.refcntInc()
 			_fixLifetime(self)
@@ -70,8 +69,8 @@ public final class PerlSub : PerlValue, PerlDerived {
 
 	/// Returns the specified Perl subroutine with the given name.
 	/// If the subroutine does not exist then `nil` is returned.
-	public convenience init?(get name: String, perl: UnsafeInterpreterPointer = UnsafeInterpreter.current) {
-		guard let cv = perl.pointee.getCV(name) else { return nil }
+	public convenience init?(get name: String, perl: PerlInterpreter = .current) {
+		guard let cv = perl.getCV(name) else { return nil }
 		self.init(inc: UnsafeCvContext(cv: cv, perl: perl))
 	}
 
@@ -88,7 +87,7 @@ public final class PerlSub : PerlValue, PerlDerived {
 
 	/// A textual representation of the CV, suitable for debugging.
 	public override var debugDescription: String {
-		let deparse: PerlObject = try! unsafeSvContext.perl.pointee.eval("use B::Deparse; B::Deparse->new('-sCi0')")
+		let deparse: PerlObject = try! unsafeSvContext.perl.eval("use B::Deparse; B::Deparse->new('-sCi0')")
 		var text: String = try! deparse.call(method: "coderef2text", self)
 		text = text.characters.split { $0 == "\n" } .map(String.init).joined(separator: " ")
 		return "PerlSub(\(text) at \(file))"
@@ -182,7 +181,7 @@ extension PerlSub {
 	/// - Parameter file: A name of a source file subroutine was declared in. Used for debug purposes only.
 	/// - Parameter body: The body of the XSUB.
 	@discardableResult
-	public convenience init<R: Collection>(name: String? = nil, file: StaticString = #file, body: @escaping ([PerlScalar], UnsafeInterpreterPointer) throws -> R)
+	public convenience init<R: Collection>(name: String? = nil, file: StaticString = #file, body: @escaping ([PerlScalar], PerlInterpreter) throws -> R)
 		where R.Iterator.Element == PerlScalar {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
@@ -233,7 +232,7 @@ extension PerlNamedClass {
 	/// - Parameter file: A name of a source file subroutine was declared in. Used for debug purposes only.
 	/// - Parameter body: The body of the XSUB.
 	@discardableResult
-	public static func createPerlMethod<R: Collection>(_ method: String, file: StaticString = #file, body: @escaping ([PerlScalar], UnsafeInterpreterPointer) throws -> R) -> PerlSub
+	public static func createPerlMethod<R: Collection>(_ method: String, file: StaticString = #file, body: @escaping ([PerlScalar], PerlInterpreter) throws -> R) -> PerlSub
 		where R.Iterator.Element == PerlScalar {
 		return PerlSub(name: perlClassName + "::" + method, file: file, body: body)
 	}
