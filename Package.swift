@@ -2,8 +2,14 @@ import PackageDescription
 
 #if os(Linux) || os(FreeBSD) || os(PS4) || os(Android) || CYGWIN
 import Glibc
+#if os(Linux)
+var environ: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?> { return __environ }
+#endif
 #elseif os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
 import Darwin
+@_silgen_name("_NSGetEnviron")
+func _NSGetEnviron() -> UnsafeMutablePointer<UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>>
+var environ: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?> { return _NSGetEnviron().pointee }
 #endif
 
 let packageDir: String = {
@@ -30,7 +36,7 @@ if packageDir[packageDir.startIndex..<min(packageDir.endIndex, tmpdir.endIndex)]
 
 	var pid = pid_t()
 	command.withCString {
-		guard posix_spawn(&pid, command, nil, nil, [UnsafeMutablePointer(mutating: $0), nil], nil) == 0 else {
+		guard posix_spawn(&pid, command, nil, nil, [UnsafeMutablePointer(mutating: $0), nil], environ) == 0 else {
 			fatalError("Failed to spawn \(command)")
 		}
 	}
