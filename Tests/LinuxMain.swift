@@ -7,5 +7,6 @@ tests += [testCase(EmbedTests.allTests)]
 tests += [testCase(ConvertFromPerlTests.allTests)]
 tests += [testCase(ConvertToPerlTests.allTests)]
 tests += [testCase(ObjectTests.allTests)]
+tests += [testCase(CallTests.allTests)]
 tests += [testCase(BenchmarkTests.allTests)]
 XCTMain(tests)

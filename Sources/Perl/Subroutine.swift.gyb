@@ -92,6 +92,60 @@ public final class PerlSub : PerlValue, PerlDerived {
 		text = text.characters.split { $0 == "\n" } .map(String.init).joined(separator: " ")
 		return "PerlSub(\(text) at \(file))"
 	}
+
+	/// A copy of arguments passed to a subroutine or returned from it.
+	public final class Args : RandomAccessCollection {
+		let unsafeArgs: [UnsafeSvPointer]
+		let perl: PerlInterpreter
+
+		init(_ args: UnsafeStackBufferPointer, perl: PerlInterpreter = .current) {
+			unsafeArgs = args.map {
+				// not `newSVsv` to enable TEMP buffers stealing
+				let sv = perl.pointee.newSV()!
+				perl.pointee.sv_setsv(sv, $0)
+				return sv
+			}
+			self.perl = perl
+		}
+
+		deinit {
+			for sv in unsafeArgs {
+				SvREFCNT_dec(perl.pointer, sv)
+			}
+		}
+
+		/// Fetches the argument at the specified position.
+		///
+		/// - Parameter index: The position of the argument to fetch.
+		/// - Returns: `nil` if the argument not exists or is undefined.
+		///
+		/// - Complexity: O(1).
+		public func fetch<T : PerlSvConvertible>(_ index: Int) throws -> T? {
+			guard index >= startIndex && index < endIndex else { return nil }
+			return try T?(_fromUnsafeSvContextInc: UnsafeSvContext(sv: unsafeArgs[index], perl: perl))
+		}
+
+		/// The position of the first argument.
+		///
+		/// If the arguments are empty, `startIndex` is equal to `endIndex`.
+		public var startIndex: Int { return unsafeArgs.startIndex }
+
+		/// The arguments' "past the end" position---that is, the position one greater
+		/// than the last valid subscript argument.
+		///
+		/// If the arguments are empty, `endIndex` is equal to `startIndex`.
+		public var endIndex: Int { return unsafeArgs.endIndex }
+
+		/// Accesses the argument at the specified position.
+		///
+		/// - Parameter index: The position of the argument to access.
+		///
+		/// - Complexity: O(1).
+		public subscript(index: Int) -> PerlScalar {
+			guard index >= startIndex && index < endIndex else { return PerlScalar(perl: perl) }
+			return PerlScalar(incUnchecked: UnsafeSvContext(sv: unsafeArgs[index], perl: perl))
+		}
+	}
 }
 
 %{

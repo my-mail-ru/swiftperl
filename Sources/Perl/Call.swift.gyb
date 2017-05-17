@@ -1,7 +1,24 @@
 import CPerl
 
+extension PerlSub {
+	public enum VoidContext {
+		case void
+		public var rawValue: Int32 { return G_VOID }
+	}
+
+	public enum ScalarContext {
+		case scalar
+		public var rawValue: Int32 { return G_SCALAR }
+	}
+
+	public enum ArrayContext {
+		case array
+		public var rawValue: Int32 { return G_ARRAY }
+	}
+}
+
 extension PerlInterpreter {
-	func unsafeCall<C : Collection>(sv: UnsafeSvPointer, args: C, flags: Int32 = 0) throws -> UnsafeStackBufferPointer
+	func unsafeCall<C : Collection>(sv: UnsafeSvPointer, args: C, flags: Int32) throws -> UnsafeStackBufferPointer
 		where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int {
 		let stack = UnsafeCallStack(perl: self, args: args)
 		let count = pointee.call_sv(sv, G_EVAL|flags)
@@ -12,16 +29,7 @@ extension PerlInterpreter {
 		return result
 	}
 
-	func unsafeCall<C : Collection>(sv: UnsafeSvPointer, discardingResultWithArgs args: C, flags: Int32 = G_VOID) throws -> Void
-		where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int {
-		_ = UnsafeCallStack(perl: self, args: args)
-		_ = pointee.call_sv(sv, G_EVAL|G_DISCARD|flags)
-		if Bool(error) {
-			throw PerlError.died(try PerlScalar(copy: error))
-		}
-	}
-
-	func unsafeEval(sv: UnsafeSvPointer, flags: Int32 = 0) throws -> UnsafeStackBufferPointer {
+	func unsafeEval(sv: UnsafeSvPointer, flags: Int32) throws -> UnsafeStackBufferPointer {
 		let count = pointee.eval_sv(sv, flags)
 		let result = popFromStack(count: Int(count))
 		if Bool(error) {
@@ -44,10 +52,12 @@ extension PerlInterpreter {
 %{
 	import re
 
-	def context(r):
+	allReturnVariants = ["Void", "R", "R?", "(R0, R1)", "(R0, R1, R2)", "PerlSub.Args"]
+
+	def contextFlags(r):
 		if r == "Void":
 			return "G_VOID"
-		elif ',' in r:
+		elif ',' in r or r == "PerlSub.Args":
 			return "G_ARRAY"
 		else:
 			return "G_SCALAR"
@@ -63,284 +73,226 @@ extension PerlInterpreter {
 		g = generic(r)
 		return "" if g == "" else ", " + g
 	
-	def result(r):
-		return re.sub("(R(\\d*)\\??)", lambda m: m.group(1) + "(_fromUnsafeSvContextCopy: UnsafeSvContext(sv: svResult[" + (m.group(2) or "0") + "], perl: self))", r)
+	def result(ret):
+		if ret == "PerlSub.Args":
+			return "PerlSub.Args(svResult, perl: self)"
+		else:
+			return "try " + re.sub("(R(\\d*)\\??)", lambda m: m.group(1) + "(_fromUnsafeSvContextCopy: UnsafeSvContext(sv: svResult[" + (m.group(2) or "0") + "], perl: self))", ret)
 
-	calls = ["Void", "R", "R?", "(R0?, R1?)"]
+	contextVariants = ["void", "scalar", "array"]
+
+	dispatchVariants = ["sub", "method"]
+
+	argsVariants = ["args: [PerlSvConvertible?]", "_ args: PerlSvConvertible?..."]
+
+	def returnVariants(context):
+		if context == "void":
+			return ["Void"]
+		elif context == "scalar":
+			return ["R", "R?"]
+		else:
+			return ["R", "R?", "(R0, R1)", "(R0, R1, R2)", "PerlSub.Args"]
+
+	def contextType(context, ret):
+		c = "PerlSub." + context.title() + "Context"
+		if context == "void" and ret == "Void" or context == "scalar" and ret[0] == "R" or context == "array" and "," in ret:
+			c += " = ." + context
+		return c
+
+	# swift 3.1 does not support partial specialization
+	def subVariants(dispatch):
+		if dispatch == "method":
+			return ["String", "PerlScalar"]
+		else:
+			return ["String", "PerlScalar", "PerlSub"]
 }%
 
 extension PerlInterpreter {
-	/// Calls Perl subroutine identified by `sv` with empty arguments and without
-	/// return values.
-	///
-	/// This allows you to specify the Perl subroutine to be called either as string
-	/// (which has first been converted to an SV) or a reference to a subroutine.
-	///
-	/// - Parameter sv: SV* containing either a string or a reference to CV.
-	/// - Parameter flags: G_VOID by default.
-	public func call(sv: UnsafeSvPointer, flags: Int32 = G_VOID) throws -> Void {
-		try unsafeCall(sv: sv, discardingResultWithArgs: EmptyCollection(), flags: flags)
-	}
-
-% for r in calls:
-	/// Calls Perl subroutine identified by `sv`.
-	///
-	/// This allows you to specify the Perl subroutine to be called either as string
-	/// (which has first been converted to an SV) or a reference to a subroutine.
-	///
-	/// Arguments of the call will be automagically converted to mortalized Perl scalar
-	/// values with the lifetime of the scope of this call. The similar thing will
-	/// happen to Perl return values: they will be destroyed before the call
-	/// returns (but after conversion to Swift values was done).
-	///
-	/// - Parameter sv: SV* containing either a string or a reference to CV.
-	/// - Parameter args: Arguments of the call.
-	/// - Parameter flags: ${context(r)} by default.
-	/// - Returns: Return value of the call.
-	public func call<C : Collection${moreGeneric(r)}>(sv: UnsafeSvPointer, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
-		where C.Iterator.Element == PerlSvConvertible? {
-		enterScope()
-		defer { leaveScope() }
+% for ret in allReturnVariants:
+	func call${fqGeneric(ret)}(sv: UnsafeSvPointer, args: [PerlSvConvertible?], flags: Int32 = ${contextFlags(ret)}) throws -> ${ret} {
 		let svArgs: [UnsafeSvPointer] = args.map { $0?._toUnsafeSvPointer(perl: self) ?? pointee.newSV() }
-%   if r == "Void":
-		try unsafeCall(sv: sv, discardingResultWithArgs: svArgs, flags: flags)
+%   if ret == "Void":
+		_ = try unsafeCall(sv: sv, args: svArgs, flags: flags)
 %   else:
 		let svResult = try unsafeCall(sv: sv, args: svArgs, flags: flags)
-		return try ${result(r)}
+		return ${result(ret)}
 %   end
 	}
 % end
 }
 
 extension PerlInterpreter {
-% for r in calls:
-	/// Calls Perl method on the first argument of the call.
+% for dispatch in dispatchVariants:
+%   for context in contextVariants:
+%     for ret in returnVariants(context):
+%       for args in argsVariants:
+%         for subType in subVariants(dispatch):
+	/// Calls the Perl ${"method" if dispatch == "method" else "subroutine"}.
 	///
-	/// Arguments of the call will be automagically converted to mortalized Perl scalar
+	/// The arguments of the call will be automagically converted to mortalized Perl scalar
 	/// values with the lifetime of the scope of this call. The similar thing will
-	/// happen to Perl return values: they will be destroyed before the call
+	/// happen to the Perl return values: they will be destroyed before the call
 	/// returns (but after conversion to Swift values was done).
 	///
-	/// - Parameter method: A name of the method.
-	/// - Parameter args: Arguments of the call. First argument should be either a
-	///   string (it will be interpreted as a class name) or an object.
-	/// - Parameter flags: ${context(r)} by default.
-	/// - Returns: Return value of the call.
-	public func call<C : Collection${moreGeneric(r)}>(method: String, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
-		where C.Iterator.Element == PerlSvConvertible? {
-		return try call(sv: newSV(method, mortal: true), args: args, flags: G_METHOD|flags)
+	/// - Parameter ${dispatch}: The name of the ${"method" if dispatch == "method" else "subroutine"}.
+	/// - Parameter args: Arguments to pass to the Perl ${dispatch}.
+	/// - Parameter context: Context of the call.
+	/// - Returns: Values returned by the Perl ${dispatch} converted to requested Swift types.
+	public func call${fqGeneric(ret)}(${dispatch}: ${subType}, ${args}, context: ${contextType(context, ret)}) throws -> ${ret} {
+		enterScope()
+		defer { leaveScope() }
+%           if subType == "String":
+		return try call(sv: newSV(${dispatch}, mortal: true), args: args, flags: ${"G_METHOD|" if dispatch == "method" else ""}context.rawValue)
+%           else:
+		return try ${dispatch}.withUnsafeSvContext { try call(sv: $0.sv, args: args, flags: ${"G_METHOD|" if dispatch == "method" else ""}context.rawValue) }
+%           end
 	}
-% end
-}
-
-extension PerlInterpreter {
-	// FIXME
-	/// Calls Perl subroutine by its name.
-	///
-	/// - Parameter sub: A name of the subroutine.
-	public func call(sub: String) throws -> Void {
-		try call(sv: newSV(sub, mortal: true), flags: G_VOID)
-	}
-
-	/// Calls Perl subroutine by its name.
-	///
-	/// - Parameter sub: A name of the subroutine.
-	/// - Parameter flags: G_VOID by default.
-	public func call(sub: String, flags: Int32 = G_VOID) throws -> Void {
-		try call(sv: newSV(sub, mortal: true), flags: flags)
-	}
-
-% for r in calls:
-	/// Calls Perl subroutine by its name.
-	///
-	/// Arguments of the call will be automagically converted to mortalized Perl scalar
-	/// values with the lifetime of the scope of this call. The similar thing will
-	/// happen to Perl return values: they will be destroyed before the call
-	/// returns (but after conversion to Swift values was done).
-	///
-	/// - Parameter sub: A name of the subroutine.
-	/// - Parameter args: Arguments of the call.
-	/// - Parameter flags: ${context(r)} by default.
-	/// - Returns: Return value of the call.
-	public func call<C : Collection${moreGeneric(r)}>(sub: String, args: C, flags: Int32 = ${context(r)}) throws -> ${r}
-		where C.Iterator.Element == PerlSvConvertible? {
-		return try call(sv: newSV(sub, mortal: true), args: args, flags: flags)
-	}
-% end
-
-% for r in calls:
-	/// Calls Perl subroutine by its name.
-	///
-	/// Arguments of the call will be automagically converted to mortalized Perl scalar
-	/// values with the lifetime of the scope of this call. The similar thing will
-	/// happen to Perl return values: they will be destroyed before the call
-	/// returns (but after conversion to Swift values was done).
-	///
-	/// - Parameter sub: A name of the subroutine.
-	/// - Parameter args: Arguments of the call.
-	/// - Returns: Return value of the call.
-	public func call${fqGeneric(r)}(sub: String, _ args: PerlSvConvertible?...) throws -> ${r} {
-		return try call(sub: sub, args: args)
-	}
+%         end
+%       end
+%     end
+%   end
 % end
 }
 
 extension PerlSub {
-	/// Calls Perl subroutine by its name.
+% for context in contextVariants:
+%   for ret in returnVariants(context):
+%     for args in argsVariants:
+%       for subType in ("String", "PerlScalar"):
+	/// Calls the Perl subroutine by its name.
 	///
-	/// - Parameter name: A name of the subroutine.
-	public static func call(_ name: String, perl: PerlInterpreter = .current) throws -> Void {
-		try perl.call(sub: name)
-	}
-
-% for r in calls:
-	/// Calls Perl subroutine by its name.
-	///
-	/// Arguments of the call will be automagically converted to mortalized Perl scalar
+	/// The arguments of the call will be automagically converted to mortalized Perl scalar
 	/// values with the lifetime of the scope of this call. The similar thing will
-	/// happen to Perl return values: they will be destroyed before the call
+	/// happen to the Perl return values: they will be destroyed before the call
 	/// returns (but after conversion to Swift values was done).
 	///
-	/// - Parameter name: A name of the subroutine.
-	/// - Parameter args: Arguments of the call.
-	/// - Returns: Return value of the call.
-	public static func call${fqGeneric(r)}(_ name: String, _ args: PerlSvConvertible?..., perl: PerlInterpreter = .current) throws -> ${r} {
-		return try perl.call(sub: name, args: args)
+	/// - Parameter name: The name of the subroutine.
+	/// - Parameter args: Arguments to pass to the Perl subroutine.
+	/// - Parameter context: Context of the call.
+	/// - Returns: Values returned by the Perl subroutine converted to requested Swift types.
+%         if subType == "String":
+	public static func call${fqGeneric(ret)}(_ name: ${subType}, ${args}, context: ${contextType(context, ret)}, perl: PerlInterpreter = .current) throws -> ${ret} {
+		return try perl.call(sub: name, args: args, context: context)
 	}
-% end
-
-	/// Calls the underlain Perl subroutine.
-	public func call() throws -> Void {
-		try withUnsafeSvContext {
-			try $0.perl.call(sv: $0.sv)
-		}
+%         else:
+	public static func call${fqGeneric(ret)}(_ name: ${subType}, ${args}, context: ${contextType(context, ret)}) throws -> ${ret} {
+		return try name.withUnsafeSvContext { try $0.perl.call(sub: name, args: args, context: context) }
 	}
-
-% for r in calls:
-	/// Calls the underlain Perl subroutine.
-	///
-	/// Arguments of the call will be automagically converted to mortalized Perl scalar
-	/// values with the lifetime of the scope of this call. The similar thing will
-	/// happen to Perl return values: they will be destroyed before the call
-	/// returns (but after conversion to Swift values was done).
-	///
-	/// - Parameter args: Arguments of the call.
-	/// - Returns: Return value of the call.
-	public func call${fqGeneric(r)}(_ args: PerlSvConvertible?...) throws -> ${r} {
-		return try withUnsafeSvContext {
-			return try $0.perl.call(sv: $0.sv, args: args)
-		}
-	}
-% end
-}
-
-extension PerlInterpreter {
-% for r in calls:
-	/// Tells Perl to "eval" the string in the `sv`.
-	public func eval${fqGeneric(r)}(sv: UnsafeSvPointer, flags: Int32 = ${context(r)}) throws -> ${r} {
-		enterScope()
-		defer { leaveScope() }
-%   if r == "Void":
-		_ = try unsafeEval(sv: sv, flags: flags)
-%   else:
-		let svResult = try unsafeEval(sv: sv, flags: flags)
-		return try ${result(r)}
+%         end
+%       end
+%     end
 %   end
-	}
 % end
 
-% for r in calls:
-	/// Tells Perl to "eval" the string.
-	public func eval${fqGeneric(r)}(_ string: String, flags: Int32 = ${context(r)}) throws -> ${r} {
-		return try eval(sv: newSV(string, mortal: true), flags: flags)
+% for context in contextVariants:
+%   for ret in returnVariants(context):
+%     for args in argsVariants:
+	/// Calls the underlain Perl subroutine.
+	///
+	/// The arguments of the call will be automagically converted to mortalized Perl scalar
+	/// values with the lifetime of the scope of this call. The similar thing will
+	/// happen to the Perl return values: they will be destroyed before the call
+	/// returns (but after conversion to Swift values was done).
+	///
+	/// - Parameter args: Arguments to pass to the Perl subroutine.
+	/// - Parameter context: Context of the call.
+	/// - Returns: Values returned by the Perl subroutine converted to requested Swift types.
+	public func call${fqGeneric(ret)}(${args}, context: ${contextType(context, ret)}) throws -> ${ret} {
+		return try withUnsafeSvContext {
+			let perl = $0.perl
+			perl.enterScope()
+			defer { perl.leaveScope() }
+			return try perl.call(sv: $0.sv, args: args, flags: context.rawValue)
+		}
 	}
+%     end
+%   end
 % end
 }
 
 extension PerlObject {
-	/// Calls Perl method on the current instance.
+% for context in contextVariants:
+%   for ret in returnVariants(context):
+%     for args in argsVariants:
+%       for subType in subVariants("method"):
+	/// Calls the Perl method on the current instance.
 	///
-	/// - Parameter name: A name of the method to call.
-	public func call(method: String) throws -> Void {
-		try unsafeSvContext.perl.call(method: method, args: CollectionOfOne(.some(self)))
-	}
-
-% for r in calls:
-	/// Calls Perl method on the current instance.
-	///
-	/// Arguments of the call will be automagically converted to mortalized Perl scalar
+	/// The arguments of the call will be automagically converted to mortalized Perl scalar
 	/// values with the lifetime of the scope of this call. The similar thing will
-	/// happen to Perl return values: they will be destroyed before the call
+	/// happen to the Perl return values: they will be destroyed before the call
 	/// returns (but after conversion to Swift values was done).
 	///
-	/// - Parameter name: A name of the method to call.
-	/// - Parameter args: A collection of arguments.
-	/// - Returns: Return value of the call.
-	public func call<C : Collection${moreGeneric(r)}>(method: String, args: C) throws -> ${r}
-		where C.Iterator.Element == PerlSvConvertible? {
-		var fullArgs = ContiguousArray<PerlSvConvertible?>()
-		fullArgs.reserveCapacity(1 + numericCast(args.count))
-		fullArgs.append(self)
-		fullArgs.append(contentsOf: args)
-		return try unsafeSvContext.perl.call(method: method, args: fullArgs)
+	/// - Parameter method: The name of the method to call.
+	/// - Parameter args: Arguments to pass to the Perl method.
+	/// - Parameter context: Context of the call.
+	/// - Returns: Values returned by the Perl method converted to requested Swift types.
+	public func call${fqGeneric(ret)}(method: ${subType}, ${args}, context: ${contextType(context, ret)}) throws -> ${ret} {
+		return try unsafeSvContext.perl.call(method: method, args: [self] + args, context: context)
 	}
-
-	/// Calls Perl method on the current instance.
-	///
-	/// Arguments of the call will be automagically converted to mortalized Perl scalar
-	/// values with the lifetime of the scope of this call. The similar thing will
-	/// happen to Perl return values: they will be destroyed before the call
-	/// returns (but after conversion to Swift values was done).
-	///
-	/// - Parameter name: A name of the method to call.
-	/// - Parameter args: A variable list of arguments.
-	/// - Returns: Return value of the call.
-	public func call${fqGeneric(r)}(method: String, _ args: PerlSvConvertible?...) throws -> ${r} {
-		return try call(method: method, args: args)
-	}
+%       end
+%     end
+%   end
 % end
 }
 
 extension PerlNamedClass {
-	/// Calls Perl method on the class specified by `perlClassName` attribute.
+% for context in contextVariants:
+%   for ret in returnVariants(context):
+%     for args in argsVariants:
+%       for subType in subVariants("method"):
+	/// Calls the Perl method specified by `perlClassName` attribute on the current class.
 	///
-	/// - Parameter name: A name of the method to call.
-	public static func call(method: String, perl: PerlInterpreter = .current) throws -> Void {
-		return try perl.call(method: method, args: CollectionOfOne(.some(perlClassName)))
-	}
-
-% for r in calls:
-	/// Calls Perl method on the class specified by `perlClassName` attribute.
-	///
-	/// Arguments of the call will be automagically converted to mortalized Perl scalar
+	/// The arguments of the call will be automagically converted to mortalized Perl scalar
 	/// values with the lifetime of the scope of this call. The similar thing will
-	/// happen to Perl return values: they will be destroyed before the call
+	/// happen to the Perl return values: they will be destroyed before the call
 	/// returns (but after conversion to Swift values was done).
 	///
-	/// - Parameter name: A name of the method to call.
-	/// - Parameter args: A collection of arguments.
-	/// - Returns: Return value of the call.
-	public static func call<C : Collection${moreGeneric(r)}>(method: String, args: C, perl: PerlInterpreter = .current) throws -> ${r}
-		where C.Iterator.Element == PerlSvConvertible? {
-		var fullArgs = ContiguousArray<PerlSvConvertible?>()
-		fullArgs.reserveCapacity(1 + numericCast(args.count))
-		fullArgs.append(perlClassName)
-		fullArgs.append(contentsOf: args)
-		return try perl.call(method: method, args: fullArgs)
+	/// - Parameter method: The name of the method to call.
+	/// - Parameter args: Arguments to pass to the Perl method.
+	/// - Parameter context: Context of the call.
+	/// - Returns: Values returned by the Perl method converted to requested Swift types.
+%         if subType == "String":
+	public static func call${fqGeneric(ret)}(method: ${subType}, ${args}, context: ${contextType(context, ret)}, perl: PerlInterpreter = .current) throws -> ${ret} {
+		return try perl.call(method: method, args: [perlClassName] + args, context: context)
+	}
+%         else:
+	public static func call${fqGeneric(ret)}(method: ${subType}, ${args}, context: ${contextType(context, ret)}) throws -> ${ret} {
+		return try method.withUnsafeSvContext { try $0.perl.call(method: method, args: [perlClassName] + args, context: context) }
+	}
+%         end
+%       end
+%     end
+%   end
+% end
+}
+
+extension PerlInterpreter {
+% for ret in allReturnVariants:
+	func eval${fqGeneric(ret)}(sv: UnsafeSvPointer, flags: Int32 = ${contextFlags(ret)}) throws -> ${ret} {
+%   if ret == "Void":
+		_ = try unsafeEval(sv: sv, flags: flags)
+%   else:
+		let svResult = try unsafeEval(sv: sv, flags: flags)
+		return ${result(ret)}
+%   end
+	}
+% end
+
+% for context in contextVariants:
+%   for ret in returnVariants(context):
+	/// Tells Perl to "eval" the string.
+	public func eval${fqGeneric(ret)}(_ string: String, context: ${contextType(context, ret)}) throws -> ${ret} {
+		enterScope()
+		defer { leaveScope() }
+		return try eval(sv: newSV(string, mortal: true), flags: context.rawValue)
 	}
 
-	/// Calls Perl method on the current instance.
-	///
-	/// Arguments of the call will be automagically converted to mortalized Perl scalar
-	/// values with the lifetime of the scope of this call. The similar thing will
-	/// happen to Perl return values: they will be destroyed before the call
-	/// returns (but after conversion to Swift values was done).
-	///
-	/// - Parameter name: A name of the method to call.
-	/// - Parameter args: A variable list of arguments.
-	/// - Returns: Return value of the call.
-	public static func call${fqGeneric(r)}(method: String, _ args: PerlSvConvertible?..., perl: PerlInterpreter = .current) throws -> ${r} {
-		return try call(method: method, args: args)
+	/// Tells Perl to "eval" the string.
+	public func eval${fqGeneric(ret)}(_ string: PerlScalar, context: ${contextType(context, ret)}) throws -> ${ret} {
+		enterScope()
+		defer { leaveScope() }
+		return try string.withUnsafeSvContext { try eval(sv: $0.sv, flags: context.rawValue) }
 	}
+%   end
 % end
 }

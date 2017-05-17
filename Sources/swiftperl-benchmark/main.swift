@@ -6,6 +6,11 @@ func run(_ code: String, count: Int = 1000000) {
 	print("\"\(code)\",\(sample.cpu)")
 }
 
+func run(_ name: String, count: Int = 1000000, body: () -> Void) {
+	let sample = benchmark(count: count, body)
+	print("\"\(name)\",\(sample.cpu)")
+}
+
 let perl = PerlInterpreter.new()
 defer { perl.destroy() }
 
@@ -47,3 +52,19 @@ run("in_dictscalar(k => undef)")
 run("out_int()")
 run("out_string()")
 run("out_scalar()")
+
+try perl.eval("sub nop {}")
+run("nop()") { try! perl.call(sub: "nop") }
+
+let nop = PerlSub(get: "nop")!
+run("$nop->()") { try! nop.call() }
+
+final class Test : PerlNamedClass {
+	static var perlClassName = "Test"
+}
+
+try perl.eval("sub Test::nop {}")
+run("Test->nop()") { try! Test.call(method: "nop") }
+
+let obj: PerlObject = try perl.eval("bless {}, 'Test'")
+run("$obj->nop()") { try! obj.call(method: "nop") }
