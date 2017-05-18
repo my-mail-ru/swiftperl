@@ -32,6 +32,18 @@ PerlSub(name: "out_int") { () -> Int in 10 }
 PerlSub(name: "out_string") { () -> String in "string" }
 PerlSub(name: "out_scalar") { () -> PerlScalar in PerlScalar() }
 
+PerlSub(name: "last_resort") { [try $0.get(0) as Int, try $0.get(1) as String] }
+
+PerlSub(name: "lr_void") { (_: PerlSub.Args) in [] }
+
+PerlSub(name: "lr_in_int") { (args: PerlSub.Args) in _ = try args.get(0) as Int; return [] }
+PerlSub(name: "lr_in_string") { (args: PerlSub.Args) in _ = try args.get(0) as String; return [] }
+PerlSub(name: "lr_in_scalar") { (args: PerlSub.Args) in _ = args[0]; return [] }
+
+PerlSub(name: "lr_out_int") { _ in [10] }
+PerlSub(name: "lr_out_string") { _ in ["string"] }
+PerlSub(name: "lr_out_scalar") { _ in [PerlScalar()] }
+
 run("void()")
 
 run("in_int(10)")
@@ -52,6 +64,18 @@ run("in_dictscalar(k => undef)")
 run("out_int()")
 run("out_string()")
 run("out_scalar()")
+
+run("last_resort(10, 'string')")
+
+run("lr_void()")
+
+run("lr_in_int(10)")
+run("lr_in_string('ascii-string')")
+run("lr_in_scalar(undef)")
+
+run("lr_out_int()")
+run("lr_out_string()")
+run("lr_out_scalar()")
 
 try perl.eval("sub nop {}")
 run("nop()") { try! perl.call(sub: "nop") }

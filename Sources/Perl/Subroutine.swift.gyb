@@ -93,14 +93,27 @@ public final class PerlSub : PerlValue, PerlDerived {
 		return "PerlSub(\(text) at \(file))"
 	}
 
-	/// A copy of arguments passed to a subroutine or returned from it.
-	public final class Args : RandomAccessCollection {
+% for Self in ("Args", "ReturnValues"):
+%   rc = "copy" if Self == "Args" else "inc"
+%   if Self == "Args":
+	/// Arguments passed to a subroutine.
+	public struct Args : RandomAccessCollection {
+		let unsafeArgs: UnsafeStackBufferPointer
+		let perl: PerlInterpreter
+
+		init(_ args: UnsafeStackBufferPointer, perl: PerlInterpreter) {
+			unsafeArgs = args
+			self.perl = perl
+		}
+%   else:
+	/// A copy of values returned from a Perl subroutine.
+	public final class ReturnValues : RandomAccessCollection {
 		let unsafeArgs: [UnsafeSvPointer]
 		let perl: PerlInterpreter
 
-		init(_ args: UnsafeStackBufferPointer, perl: PerlInterpreter = .current) {
+		init(_ args: UnsafeStackBufferPointer, perl: PerlInterpreter) {
 			unsafeArgs = args.map {
-				// not `newSVsv` to enable TEMP buffers stealing
+				// Copy SV: not `newSVsv` to enable TEMP buffers stealing
 				let sv = perl.pointee.newSV()!
 				perl.pointee.sv_setsv(sv, $0)
 				return sv
@@ -113,16 +126,32 @@ public final class PerlSub : PerlValue, PerlDerived {
 				SvREFCNT_dec(perl.pointer, sv)
 			}
 		}
+%   end
+
+		/// Fetches the argument at the specified position.
+		///
+		/// - Parameter index: The position of the argument to fetch.
+		/// - Throws: If the argument not exists, is undefined or not
+		///   convertible to the desired type.
+		///
+		/// - Complexity: O(1).
+		public func get<T : PerlSvConvertible>(_ index: Int) throws -> T {
+			guard index >= startIndex && index < endIndex else {
+				throw PerlError.noArgumentOnStack(at: index)
+			}
+			return try T(_fromUnsafeSvContext${rc.title()}: UnsafeSvContext(sv: unsafeArgs[index], perl: perl))
+		}
 
 		/// Fetches the argument at the specified position.
 		///
 		/// - Parameter index: The position of the argument to fetch.
 		/// - Returns: `nil` if the argument not exists or is undefined.
+		/// - Throws: If the argument is not convertible to the desired type.
 		///
 		/// - Complexity: O(1).
-		public func fetch<T : PerlSvConvertible>(_ index: Int) throws -> T? {
+		public func get<T : PerlSvConvertible>(_ index: Int) throws -> T? {
 			guard index >= startIndex && index < endIndex else { return nil }
-			return try T?(_fromUnsafeSvContextInc: UnsafeSvContext(sv: unsafeArgs[index], perl: perl))
+			return try T?(_fromUnsafeSvContext${rc.title()}: UnsafeSvContext(sv: unsafeArgs[index], perl: perl))
 		}
 
 		/// The position of the first argument.
@@ -143,33 +172,41 @@ public final class PerlSub : PerlValue, PerlDerived {
 		/// - Complexity: O(1).
 		public subscript(index: Int) -> PerlScalar {
 			guard index >= startIndex && index < endIndex else { return PerlScalar(perl: perl) }
-			return PerlScalar(incUnchecked: UnsafeSvContext(sv: unsafeArgs[index], perl: perl))
+			return PerlScalar(${rc}Unchecked: UnsafeSvContext(sv: unsafeArgs[index], perl: perl))
 		}
 	}
+% end
 }
 
 %{
-	def optrange(count):
-		return range(0, (count + 1) if count < 2 else 2)
-
-	def generic(prefix, count, tail):
-		list = map(lambda n: "P" + str(n) + ": PerlSvConvertible", range(0, prefix)) + map(lambda n: "R" + str(n) + ": PerlSvConvertible", range(0, count))
+	def generic(count, tail):
+		list = map(lambda n: "P" + str(n) + ": PerlSvConvertible", range(0, count))
 		if tail != "fixed":
 			list.append("T: PerlSvConvertible")
 		g = ", ".join(list)
 		return "" if g == "" else "<" + g + ">"
 
-	def tuple(prefix, count, optional, tail):
-		if optional == 0:
-			list = map(lambda n: prefix + str(n), range(0, count))
-		elif optional == 1:
-			list = map(lambda n: prefix + str(n) + "?", range(0, count))
+	def paramsRange(tail):
+		if tail == "fixed":
+			return range(0, 4)
 		else:
-			list = [prefix + "0"] + map(lambda n: prefix + str(n) + "?", range(1, count))
-		if tail == "array":
-			list.append("[T]")
-		elif tail == "hash":
-			list.append("[String: T]")
+			return range(0, 3)
+
+	def paramsVariants(count, tail, method):
+		vars = []
+		for optmask in range(0, 1 << count):
+			if method and optmask & 1 != 0:
+				continue
+			params = map(lambda n: "P" + str(n) + ("?" if (1 << n) & optmask != 0 else ""), range(0, count))
+			if tail == "array":
+				params.append("[T]")
+			elif tail == "hash":
+				params.append("[String: T]")
+			vars.append("(" + ", ".join(params) + ")")
+		return vars
+
+	def result(count):
+		list = map(lambda n: "PerlSvConvertible?", range(0, count))
 		return "(" + ", ".join(list) + ")"
 
 	def bodyArgs(count, tail):
@@ -181,11 +218,10 @@ public final class PerlSub : PerlValue, PerlDerived {
 
 extension PerlSub {
 % for tail in ("fixed", "array", "hash"):
-%   for p in range(0, 8):
+%   for p in paramsRange(tail):
 %     args = bodyArgs(p, tail)
 %     for r in range(0, 3):
-%       for po in optrange(p):
-%         for ro in optrange(r):
+%       for params in paramsVariants(p, tail, False):
 
 	/// Creates a new Perl XSUB.
 	///
@@ -198,7 +234,7 @@ extension PerlSub {
 	/// - Parameter file: A name of a source file subroutine was declared in. Used for debug purposes only.
 	/// - Parameter body: The body of the XSUB.
 	@discardableResult
-	public convenience init${generic(p, r, tail)}(name: String? = nil, file: StaticString = #file, body: @escaping ${tuple("P", p, po, tail)} throws -> ${tuple("R", r, ro, "fixed")}) {
+	public convenience init${generic(p, tail)}(name: String? = nil, file: StaticString = #file, body: @escaping ${params} throws -> ${result(r)}) {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
 %           if r == 0:
@@ -206,16 +242,15 @@ extension PerlSub {
 			stack.xsReturn(EmptyCollection())
 %           elif r == 1:
 			let result = try body(${args})
-			stack.xsReturn(CollectionOfOne(result._toUnsafeSvPointer(perl: stack.perl)))
+			stack.xsReturn(CollectionOfOne(result?._toUnsafeSvPointer(perl: stack.perl) ?? stack.perl.pointee.newSV()))
 %           else:
 			let result = try body(${args})
-			let svResult: ContiguousArray = [ ${", ".join(map(lambda n: "result." + str(n) + "._toUnsafeSvPointer(perl: stack.perl)", range(0, r)))} ]
+			let svResult: ContiguousArray<UnsafeSvPointer> = [ ${", ".join(map(lambda n: "result." + str(n) + "?._toUnsafeSvPointer(perl: stack.perl) ?? stack.perl.pointee.newSV()", range(0, r)))} ]
 			stack.xsReturn(svResult)
 %           end
 		}
 	}
 
-%         end
 %       end
 %     end
 %   end
@@ -235,23 +270,20 @@ extension PerlSub {
 	/// - Parameter file: A name of a source file subroutine was declared in. Used for debug purposes only.
 	/// - Parameter body: The body of the XSUB.
 	@discardableResult
-	public convenience init<R: Collection>(name: String? = nil, file: StaticString = #file, body: @escaping ([PerlScalar], PerlInterpreter) throws -> R)
-		where R.Iterator.Element == PerlScalar {
+	public convenience init(name: String? = nil, file: StaticString = #file, body: @escaping (Args) throws -> [PerlSvConvertible?]) {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
-			let args = try stack.args.map { try PerlScalar(_fromUnsafeSvContextInc: UnsafeSvContext(sv: $0, perl: stack.perl)) }
-			let result = try body(args, stack.perl)
-			stack.xsReturn(result.map { $0._toUnsafeSvPointer(perl: stack.perl) })
+			let result = try body(Args(stack.args, perl: stack.perl))
+			stack.xsReturn(result.map { $0?._toUnsafeSvPointer(perl: stack.perl) ?? stack.perl.pointee.newSV() })
 		}
 	}
 }
 
 extension PerlNamedClass {
 % for tail in ("fixed", "array", "hash"):
-%   for p in range(0, 8):
+%   for p in paramsRange(tail):
 %     for r in range(0, 3):
-%       for po in optrange(p):
-%         for ro in optrange(r):
+%       for params in paramsVariants(p, tail, True):
 
 	/// Creates a new method in the Perl class specified in `perlClassName` attribute.
 	///
@@ -265,11 +297,10 @@ extension PerlNamedClass {
 	/// - Parameter file: A name of a source file subroutine was declared in. Used for debug purposes only.
 	/// - Parameter body: The body of the XSUB.
 	@discardableResult
-	public static func createPerlMethod${generic(p, r, tail)}(_ method: String, file: StaticString = #file, body: @escaping ${tuple("P", p, po, tail)} throws -> ${tuple("R", r, ro, "fixed")}) -> PerlSub {
+	public static func createPerlMethod${generic(p, tail)}(_ method: String, file: StaticString = #file, body: @escaping ${params} throws -> ${result(r)}) -> PerlSub {
 		return PerlSub(name: perlClassName + "::" + method, file: file, body: body)
 	}
 
-%         end
 %       end
 %     end
 %   end
@@ -286,8 +317,7 @@ extension PerlNamedClass {
 	/// - Parameter file: A name of a source file subroutine was declared in. Used for debug purposes only.
 	/// - Parameter body: The body of the XSUB.
 	@discardableResult
-	public static func createPerlMethod<R: Collection>(_ method: String, file: StaticString = #file, body: @escaping ([PerlScalar], PerlInterpreter) throws -> R) -> PerlSub
-		where R.Iterator.Element == PerlScalar {
+	public static func createPerlMethod(_ method: String, file: StaticString = #file, body: @escaping (PerlSub.Args) throws -> [PerlSvConvertible?]) -> PerlSub {
 		return PerlSub(name: perlClassName + "::" + method, file: file, body: body)
 	}
 }

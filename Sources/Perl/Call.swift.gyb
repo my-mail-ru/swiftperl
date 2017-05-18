@@ -52,18 +52,18 @@ extension PerlInterpreter {
 %{
 	import re
 
-	allReturnVariants = ["Void", "R", "R?", "(R0, R1)", "(R0, R1, R2)", "PerlSub.Args"]
+	allReturnVariants = ["Void", "R", "R?", "(R0, R1)", "PerlSub.ReturnValues"]
 
 	def contextFlags(r):
 		if r == "Void":
 			return "G_VOID"
-		elif ',' in r or r == "PerlSub.Args":
+		elif ',' in r or r == "PerlSub.ReturnValues":
 			return "G_ARRAY"
 		else:
 			return "G_SCALAR"
 	
 	def generic(r):
-		return ", ".join(map(lambda r: r + " : PerlSvConvertible", re.findall("R\\d*", r)))
+		return ", ".join(map(lambda r: r + " : PerlSvConvertible", re.findall("\\bR\\d*\\b", r)))
 	
 	def fqGeneric(r):
 		g = generic(r)
@@ -74,8 +74,8 @@ extension PerlInterpreter {
 		return "" if g == "" else ", " + g
 	
 	def result(ret):
-		if ret == "PerlSub.Args":
-			return "PerlSub.Args(svResult, perl: self)"
+		if ret == "PerlSub.ReturnValues":
+			return "PerlSub.ReturnValues(svResult, perl: self)"
 		else:
 			return "try " + re.sub("(R(\\d*)\\??)", lambda m: m.group(1) + "(_fromUnsafeSvContextCopy: UnsafeSvContext(sv: svResult[" + (m.group(2) or "0") + "], perl: self))", ret)
 
@@ -91,7 +91,7 @@ extension PerlInterpreter {
 		elif context == "scalar":
 			return ["R", "R?"]
 		else:
-			return ["R", "R?", "(R0, R1)", "(R0, R1, R2)", "PerlSub.Args"]
+			return ["R", "R?", "(R0, R1)", "PerlSub.ReturnValues"]
 
 	def contextType(context, ret):
 		c = "PerlSub." + context.title() + "Context"
