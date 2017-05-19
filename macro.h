@@ -45,13 +45,23 @@ PERL_STATIC_INLINE int sPerl_parse(_Nonnull PerlInterpreter *my_perl, XSINIT_t x
 	return perl_parse(my_perl, xsinit, argc, argv, env);
 }
 
-SWIFT_NAME(getter:PerlInterpreter.current())
-PERL_STATIC_INLINE _Nonnull PerlInterpreter *sPerl_PERL_GET_THX(void) {
+SWIFT_NAME(PERL_GET_INTERP())
+PERL_STATIC_INLINE PerlInterpreter *_Nonnull sPerl_PERL_GET_INTERP(void) {
+	return PERL_GET_INTERP;
+}
+
+SWIFT_NAME(PERL_SET_INTERP(_:))
+PERL_STATIC_INLINE void sPerl_PERL_SET_INTERP(PerlInterpreter *_Nonnull p) {
+	PERL_SET_INTERP(p);
+}
+
+SWIFT_NAME(PERL_GET_THX())
+PERL_STATIC_INLINE PerlInterpreter *_Nonnull sPerl_PERL_GET_THX(void) {
 	return PERL_GET_THX;
 }
 
-SWIFT_NAME(setter:PerlInterpreter.current(_:))
-PERL_STATIC_INLINE void sPerl_PERL_SET_THX(_Nonnull PerlInterpreter *p) {
+SWIFT_NAME(PERL_SET_THX(_:))
+PERL_STATIC_INLINE void sPerl_PERL_SET_THX(PerlInterpreter *_Nonnull p) {
 	PERL_SET_THX(p);
 }
 
