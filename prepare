@@ -21,6 +21,7 @@ module CPerl [system] {
 	header "$archlib/CORE/perl.h"
 	header "$archlib/CORE/XSUB.h"
 	header "macro.h"
+	header "func.h"
 	link "$perl"
 	use SwiftGlibc
 	export *
