@@ -15,7 +15,7 @@ extension PerlInterpreter {
 	static func sysInit() {
 		var argc = CommandLine.argc
 		var argv = CommandLine.unsafeArgv
-		var env = environ
+		var env = environ!
 		PERL_SYS_INIT3(&argc, &argv, &env)
 	}
 

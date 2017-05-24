@@ -149,7 +149,7 @@ extension Optional where Wrapped : PerlSvConvertible {
 			case .some(let value):
 				return value._toUnsafeSvPointer(perl: perl)
 			case .none:
-				return perl.pointee.newSV()
+				return perl.pointee.newSV(0)
 		}
 	}
 }

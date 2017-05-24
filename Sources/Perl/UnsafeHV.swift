@@ -8,11 +8,10 @@ struct UnsafeHvContext {
 	let perl: PerlInterpreter
 
 	static func new(perl: PerlInterpreter) -> UnsafeHvContext {
-		return UnsafeHvContext(hv: perl.pointee.newHV()!, perl: perl)
+		return UnsafeHvContext(hv: perl.pointee.newHV(), perl: perl)
 	}
 
 	func fetch(_ key: String, lval: Bool = false) -> UnsafeSvContext? {
-		let lval: Int32 = lval ? 1 : 0
 		return key.withCStringWithLength { perl.pointee.hv_fetch(hv, $0, -Int32($1), lval) }
 			.flatMap { $0.pointee.map { UnsafeSvContext(sv: $0, perl: perl) } }
 	}
@@ -37,7 +36,7 @@ struct UnsafeHvContext {
 	}
 
 	func fetch(_ key: UnsafeSvPointer, lval: Bool = false) -> UnsafeSvContext? {
-		return perl.pointee.hv_fetch_ent(hv, key, lval ? 1 : 0, 0)
+		return perl.pointee.hv_fetch_ent(hv, key, lval, 0)
 			.map(HeVAL).map { UnsafeSvContext(sv: $0, perl: perl) }
 	}
 
@@ -92,7 +91,7 @@ extension UnsafeHvContext: Sequence, IteratorProtocol {
 	func next() -> Element? {
 		guard let he = perl.pointee.hv_iternext(hv) else { return nil }
 		var klen = 0
-		let ckey = perl.pointee.HePV(he, &klen)!
+		let ckey = perl.pointee.HePV(he, &klen)
 		let key = String(cString: ckey, withLength: klen)
 		let value = UnsafeSvContext(sv: HeVAL(he), perl: perl)
 		return (key: key, value: value)

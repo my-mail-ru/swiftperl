@@ -44,7 +44,7 @@ struct UnsafeCvContext {
 
 	static func new(name: String? = nil, file: StaticString = #file, body: @escaping CvBody, perl: PerlInterpreter) -> UnsafeCvContext {
 		func newXS(_ name: UnsafePointer<CChar>?) -> UnsafeCvPointer {
-			return perl.pointee.newXS_flags(name, cvResolver, file.description, nil, UInt32(XS_DYNAMIC_FILENAME))!
+			return perl.pointee.newXS_flags(name, cvResolver, file.description, nil, UInt32(XS_DYNAMIC_FILENAME))
 		}
 		let cv = name?.withCString(newXS) ?? newXS(nil)
 		cv.withMemoryRebound(to: UnsafeSV.self, capacity: 1) {
@@ -56,16 +56,19 @@ struct UnsafeCvContext {
 		return UnsafeCvContext(cv: cv, perl: perl)
 	}
 
-	var name: String {
-		return String(cString: GvNAME(perl.pointee.CvGV(cv)))
+	var name: String? {
+		guard let gv = perl.pointee.CvGV(cv) else { return nil }
+		return String(cString: GvNAME(gv))
 	}
 
-	var fullname: String {
-		return "\(String(cString: HvNAME(GvSTASH(perl.pointee.CvGV(cv)))))::\(name)"
+	var fullname: String? {
+		guard let name = name else { return nil }
+		guard let gv = perl.pointee.CvGV(cv), let stash = GvSTASH(gv), let hvn = HvNAME(stash) else { return name }
+		return "\(String(cString: hvn))::\(name)"
 	}
 
-	var file: String {
-		return String(cString: CvFILE(cv))
+	var file: String? {
+		return CvFILE(cv).map { String(cString: $0) }
 	}
 }
 
@@ -99,8 +102,9 @@ private func cvResolver(perl: PerlInterpreter.Pointer, cv: UnsafeCvPointer) -> V
 		errsv = perl.pointee.sv_2mortal(usv)
 	} catch {
 		errsv = "\(error)".withCString { error in
-			UnsafeCvContext(cv: cv, perl: perl).fullname.withCString { name in
-				withVaList([name, error]) { perl.pointee.vmess("Exception in %s: %s", $0) }
+			let name = UnsafeCvContext(cv: cv, perl: perl).fullname ?? "__ANON__"
+			return name.withCString { name in
+				withVaList([name, error]) { perl.pointee.vmess("Exception in %s: %s", unsafeBitCast($0, to: UnsafeMutablePointer<va_list>.self)) }
 			}
 		}
 	}

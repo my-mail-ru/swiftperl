@@ -81,7 +81,7 @@ public final class PerlSub : PerlValue, PerlDerived {
 		}
 	}
 
-	var file: String {
+	var file: String? {
 		return withUnsafeCvContext { $0.file }
 	}
 
@@ -90,7 +90,10 @@ public final class PerlSub : PerlValue, PerlDerived {
 		let deparse: PerlObject = try! unsafeSvContext.perl.eval("use B::Deparse; B::Deparse->new('-sCi0')")
 		var text: String = try! deparse.call(method: "coderef2text", self)
 		text = text.characters.split { $0 == "\n" } .map(String.init).joined(separator: " ")
-		return "PerlSub(\(text) at \(file))"
+		if let file = file {
+			text += " at \(file)"
+		}
+		return "PerlSub(\(text))"
 	}
 
 % for Self in ("Args", "ReturnValues"):
@@ -114,7 +117,7 @@ public final class PerlSub : PerlValue, PerlDerived {
 		init(_ args: UnsafeStackBufferPointer, perl: PerlInterpreter) {
 			unsafeArgs = args.map {
 				// Copy SV: not `newSVsv` to enable TEMP buffers stealing
-				let sv = perl.pointee.newSV()!
+				let sv = perl.pointee.newSV(0)
 				perl.pointee.sv_setsv(sv, $0)
 				return sv
 			}
@@ -123,7 +126,7 @@ public final class PerlSub : PerlValue, PerlDerived {
 
 		deinit {
 			for sv in unsafeArgs {
-				SvREFCNT_dec(perl.pointer, sv)
+				perl.pointee.SvREFCNT_dec_NN(sv)
 			}
 		}
 %   end
@@ -242,10 +245,10 @@ extension PerlSub {
 			stack.xsReturn(EmptyCollection())
 %           elif r == 1:
 			let result = try body(${args})
-			stack.xsReturn(CollectionOfOne(result?._toUnsafeSvPointer(perl: stack.perl) ?? stack.perl.pointee.newSV()))
+			stack.xsReturn(CollectionOfOne(result?._toUnsafeSvPointer(perl: stack.perl) ?? stack.perl.pointee.newSV(0)))
 %           else:
 			let result = try body(${args})
-			let svResult: ContiguousArray<UnsafeSvPointer> = [ ${", ".join(map(lambda n: "result." + str(n) + "?._toUnsafeSvPointer(perl: stack.perl) ?? stack.perl.pointee.newSV()", range(0, r)))} ]
+			let svResult: ContiguousArray<UnsafeSvPointer> = [ ${", ".join(map(lambda n: "result." + str(n) + "?._toUnsafeSvPointer(perl: stack.perl) ?? stack.perl.pointee.newSV(0)", range(0, r)))} ]
 			stack.xsReturn(svResult)
 %           end
 		}
@@ -274,7 +277,7 @@ extension PerlSub {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
 			let result = try body(Args(stack.args, perl: stack.perl))
-			stack.xsReturn(result.map { $0?._toUnsafeSvPointer(perl: stack.perl) ?? stack.perl.pointee.newSV() })
+			stack.xsReturn(result.map { $0?._toUnsafeSvPointer(perl: stack.perl) ?? stack.perl.pointee.newSV(0) })
 		}
 	}
 }

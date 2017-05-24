@@ -110,7 +110,7 @@ extension PerlInterpreter {
 extension PerlInterpreter {
 % for ret in allReturnVariants:
 	func call${fqGeneric(ret)}(sv: UnsafeSvPointer, args: [PerlSvConvertible?], flags: Int32 = ${contextFlags(ret)}) throws -> ${ret} {
-		let svArgs: [UnsafeSvPointer] = args.map { $0?._toUnsafeSvPointer(perl: self) ?? pointee.newSV() }
+		let svArgs: [UnsafeSvPointer] = args.map { $0?._toUnsafeSvPointer(perl: self) ?? pointee.newSV(0) }
 %   if ret == "Void":
 		_ = try unsafeCall(sv: sv, args: svArgs, flags: flags)
 %   else:

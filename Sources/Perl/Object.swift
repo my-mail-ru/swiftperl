@@ -105,7 +105,7 @@ open class PerlObject : PerlValue, PerlDerived {
 		defer { perl.leaveScope() }
 		let classname = named.perlClassName
 		let args = [classname as PerlSvConvertible?] + args
-		let svArgs: [UnsafeSvPointer] = args.map { $0?._toUnsafeSvPointer(perl: perl) ?? perl.pointee.newSV() }
+		let svArgs: [UnsafeSvPointer] = args.map { $0?._toUnsafeSvPointer(perl: perl) ?? perl.pointee.newSV(0) }
 		let sv = try perl.unsafeCall(sv: perl.newSV(method, mortal: true), args: svArgs, flags: G_METHOD|G_SCALAR)[0]
 		let svc = UnsafeSvContext(sv: sv, perl: perl)
 		guard svc.isObject else {

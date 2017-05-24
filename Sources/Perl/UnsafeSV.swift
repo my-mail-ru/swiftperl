@@ -30,16 +30,16 @@ public struct UnsafeSvContext {
 
 	@discardableResult
 	func refcntInc() -> UnsafeSvPointer {
-		return SvREFCNT_inc(sv)
+		return SvREFCNT_inc_NN(sv)
 	}
 
 	func refcntDec() {
-		SvREFCNT_dec(perl.pointer, sv)
+		perl.pointee.SvREFCNT_dec_NN(sv)
 	}
 
 	@discardableResult
 	func mortal() -> UnsafeSvPointer {
-		return perl.pointee.sv_2mortal(sv)
+		return perl.pointee.sv_2mortal(sv)!
 	}
 
 	var type: SvType { return SvType(SvTYPE(sv)) }
@@ -50,7 +50,7 @@ public struct UnsafeSvContext {
 	var isRef: Bool { return SvROK(sv) }
 
 	var referent: UnsafeSvContext? {
-		return SvROK(sv) ? UnsafeSvContext(sv: SvRV(sv), perl: perl) : nil
+		return SvROK(sv) ? UnsafeSvContext(sv: SvRV(sv)!, perl: perl) : nil
 	}
 
 	func withUnsafeBytes<R>(_ body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R {
@@ -68,7 +68,7 @@ public struct UnsafeSvContext {
 
 	var classname: String? {
 		guard isObject else { return nil }
-		return String(cString: perl.pointee.sv_reftype(SvRV(sv), true))
+		return String(cString: perl.pointee.sv_reftype(SvRV(sv)!, true))
 	}
 
 	private var hasSwiftObjectMagic: Bool {
@@ -85,7 +85,7 @@ public struct UnsafeSvContext {
 	}
 
 	static func new(perl: PerlInterpreter) -> UnsafeSvContext {
-		return UnsafeSvContext(sv: perl.pointee.newSV(), perl: perl)
+		return UnsafeSvContext(sv: perl.pointee.newSV(0), perl: perl)
 	}
 
 	static func new(copy src: UnsafeSvContext) -> UnsafeSvContext {
@@ -101,11 +101,11 @@ public struct UnsafeSvContext {
 	}
 
 	static func new(rvInc svc: UnsafeSvContext) -> UnsafeSvContext {
-		return UnsafeSvContext(sv: svc.perl.pointee.newRV_inc(svc.sv)!, perl: svc.perl)
+		return UnsafeSvContext(sv: svc.perl.pointee.newRV_inc(svc.sv), perl: svc.perl)
 	}
 
 	static func new(_ v: UnsafeRawBufferPointer, utf8: Bool = false, mortal: Bool = false, perl: PerlInterpreter) -> UnsafeSvContext {
-		let sv = perl.pointee.newSVpvn_flags(v.baseAddress?.assumingMemoryBound(to: CChar.self), v.count, UInt32(mortal ? SVs_TEMP : 0))!
+		let sv = perl.pointee.newSVpvn_flags(v.baseAddress?.assumingMemoryBound(to: CChar.self), v.count, UInt32(mortal ? SVs_TEMP : 0))
 		if utf8 {
 			perl.pointee.sv_utf8_decode(sv)
 		}
@@ -199,7 +199,7 @@ extension UnsafeSvContext {
 
 extension PerlInterpreter {
 	func newSV(_ v: Bool) -> UnsafeSvPointer {
-		return pointee.newSVsv(pointee.boolSV(v))
+		return pointee.newSVsv(pointee.boolSV(v))!
 	}
 
 	func newSV(_ v: String, mortal: Bool = false) -> UnsafeSvPointer {
@@ -218,8 +218,8 @@ extension PerlInterpreter {
 	func newSV(_ v: AnyObject, isa: String) -> UnsafeSvPointer {
 		let u = Unmanaged<AnyObject>.passRetained(v)
 		let iv = unsafeBitCast(u, to: Int.self)
-		let sv = pointee.sv_setref_iv(pointee.newSV(), isa, iv)
-		pointee.sv_magicext(SvRV(sv), nil, PERL_MAGIC_ext, &objectMgvtbl, nil, 0)
+		let sv = pointee.sv_setref_iv(pointee.newSV(0), isa, iv)
+		pointee.sv_magicext(SvRV(sv)!, nil, PERL_MAGIC_ext, &objectMgvtbl, nil, 0)
 		return sv
 	}
 

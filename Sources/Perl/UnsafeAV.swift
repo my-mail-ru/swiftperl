@@ -8,11 +8,11 @@ struct UnsafeAvContext {
 	let perl: PerlInterpreter
 
 	static func new(perl: PerlInterpreter) -> UnsafeAvContext {
-		return UnsafeAvContext(av: perl.pointee.newAV()!, perl: perl)
+		return UnsafeAvContext(av: perl.pointee.newAV(), perl: perl)
 	}
 
 	func fetch(_ i: Index, lval: Bool = false) -> UnsafeSvContext? {
-		return perl.pointee.av_fetch(av, i, lval ? 1 : 0)
+		return perl.pointee.av_fetch(av, i, lval)
 			.flatMap { $0.pointee.map { UnsafeSvContext(sv: $0, perl: perl) } }
 	}
 
@@ -68,7 +68,7 @@ extension UnsafeAvContext : RandomAccessCollection {
 	typealias Indices = CountableRange<Int>
 
 	var startIndex: Index { return 0 }
-	var endIndex: Index { return perl.pointee.av_top_index(av) + 1 }
+	var endIndex: Index { return perl.pointee.av_len(av) + 1 }
 
 	subscript(i: Index) -> Element? {
 		get {
