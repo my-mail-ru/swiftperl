@@ -122,13 +122,27 @@ PERL_STATIC_INLINE U32 CPerlMacro_SvREFCNT(SV *_Nonnull sv) {
 }
 
 SWIFT_NAME(SvREFCNT_inc(_:))
-PERL_STATIC_INLINE SV *_Nonnull CPerlMacro_SvREFCNT_inc(SV *_Nullable sv) {
+PERL_STATIC_INLINE SV *_Nullable CPerlMacro_SvREFCNT_inc(SV *_Nullable sv) {
 	return SvREFCNT_inc(sv);
 }
 
-SWIFT_NAME(SvREFCNT_dec(_:_:))
+SWIFT_NAME(SvREFCNT_inc_NN(_:))
+PERL_STATIC_INLINE SV *_Nonnull CPerlMacro_SvREFCNT_inc_NN(SV *_Nonnull sv) {
+	return SvREFCNT_inc_NN(sv);
+}
+
+SWIFT_NAME(PerlInterpreter.SvREFCNT_dec(self:_:))
 PERL_STATIC_INLINE void CPerlMacro_SvREFCNT_dec(pTHX_ SV *_Nullable sv) {
 	return SvREFCNT_dec(sv);
+}
+
+SWIFT_NAME(PerlInterpreter.SvREFCNT_dec_NN(self:_:))
+PERL_STATIC_INLINE void CPerlMacro_SvREFCNT_dec_NN(pTHX_ SV *_Nonnull sv) {
+#ifdef SvREFCNT_dec_NN
+	return SvREFCNT_dec_NN(sv);
+#else
+	return SvREFCNT_dec(sv);
+#endif
 }
 
 // SV
