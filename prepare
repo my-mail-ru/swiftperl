@@ -20,6 +20,7 @@ module CPerl [system] {
 	header "$archlib/CORE/EXTERN.h"
 	header "$archlib/CORE/perl.h"
 	header "$archlib/CORE/XSUB.h"
+	header "custom.h"
 	header "macro.h"
 	header "func.h"
 	link "$perl"
