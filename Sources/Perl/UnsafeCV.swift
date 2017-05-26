@@ -104,7 +104,7 @@ private func cvResolver(perl: PerlInterpreter.Pointer, cv: UnsafeCvPointer) -> V
 		errsv = "\(error)".withCString { error in
 			let name = UnsafeCvContext(cv: cv, perl: perl).fullname ?? "__ANON__"
 			return name.withCString { name in
-				withVaList([name, error]) { perl.pointee.vmess("Exception in %s: %s", unsafeBitCast($0, to: UnsafeMutablePointer<va_list>.self)) }
+				withVaList([name, error]) { perl.pointee.vmess("Exception in %s: %s", unsafeBitCast($0, to: UnsafeMutablePointer.self)) }
 			}
 		}
 	}
