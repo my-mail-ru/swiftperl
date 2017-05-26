@@ -25,7 +25,6 @@ module CPerl [system] {
 	header "func.h"
 	link "$perl"
 	use SwiftGlibc
-	export *
 }
 EOF
 
