@@ -23,7 +23,7 @@ open class PerlValue : AnyPerl, CustomDebugStringConvertible {
 		self.init(noincUnchecked: svc)
 	}
 
-	/// Unsafely creates an nstance incrementing a reference counter of a SV.
+	/// Unsafely creates an instance incrementing a reference counter of a SV.
 	/// Performs type checks and throws an error unless compatible.
 	public convenience init(inc svc: UnsafeSvContext) throws {
 		svc.refcntInc()

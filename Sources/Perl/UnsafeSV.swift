@@ -25,8 +25,13 @@ public typealias UnsafeSV = CPerl.SV
 public typealias UnsafeSvPointer = UnsafeMutablePointer<UnsafeSV>
 
 public struct UnsafeSvContext {
-	let sv: UnsafeSvPointer
-	let perl: PerlInterpreter
+	public let sv: UnsafeSvPointer
+	public let perl: PerlInterpreter
+
+	public init(sv: UnsafeSvPointer, perl: PerlInterpreter) {
+		self.sv = sv
+		self.perl = perl
+	}
 
 	@discardableResult
 	func refcntInc() -> UnsafeSvPointer {

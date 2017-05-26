@@ -122,6 +122,13 @@ open class PerlObject : PerlValue, PerlDerived {
 		try self.init(inc: scalar.unsafeSvContext)
 	}
 
+	/// Returns the specified Perl global or package object with the given name (so it won't work on lexical variables).
+	/// If the variable does not exist then `nil` is returned.
+	public convenience init?(get name: String, perl: PerlInterpreter = .current) throws {
+		guard let sv = perl.getSV(name) else { return nil }
+		try self.init(inc: UnsafeSvContext(sv: sv, perl: perl))
+	}
+
 	var perlClassName: String {
 		defer { _fixLifetime(self) }
 		return unsafeSvContext.classname!
