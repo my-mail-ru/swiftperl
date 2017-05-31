@@ -30,6 +30,15 @@ open class PerlValue : AnyPerl, CustomDebugStringConvertible {
 		try self.init(noinc: svc)
 	}
 
+	/// Dereferences `ref`.
+	public convenience init(dereferencing ref: PerlScalar) throws {
+		guard let svc = ref.unsafeSvContext.referent else {
+			throw PerlError.notReference(fromUnsafeSvContext(inc: ref.unsafeSvContext))
+		}
+		try self.init(inc: svc)
+		_fixLifetime(ref)
+	}
+
 	deinit {
 		unsafeSvContext.refcntDec()
 	}

@@ -105,8 +105,12 @@ public struct UnsafeSvContext {
 		return dst
 	}
 
-	static func new(rvInc svc: UnsafeSvContext) -> UnsafeSvContext {
-		return UnsafeSvContext(sv: svc.perl.pointee.newRV_inc(svc.sv), perl: svc.perl)
+	static func new<V : UnsafeValueContext>(rvInc vc: V) -> UnsafeSvContext {
+		return vc.withUnsafeSvContext { UnsafeSvContext(sv: $0.perl.pointee.newRV_inc($0.sv), perl: $0.perl) }
+	}
+
+	static func new<V : UnsafeValueContext>(rvNoinc vc: V) -> UnsafeSvContext {
+		return vc.withUnsafeSvContext { UnsafeSvContext(sv: $0.perl.pointee.newRV_noinc($0.sv), perl: $0.perl) }
 	}
 
 	static func new(_ v: UnsafeRawBufferPointer, utf8: Bool = false, mortal: Bool = false, perl: PerlInterpreter) -> UnsafeSvContext {
@@ -210,14 +214,6 @@ extension PerlInterpreter {
 	func newSV(_ v: String, mortal: Bool = false) -> UnsafeSvPointer {
 		let flags = (v._core.isASCII ? 0 : SVf_UTF8) | (mortal ? SVs_TEMP : 0)
 		return v.withCStringWithLength { pointee.newSVpvn_flags($0, $1, UInt32(flags)) }
-	}
-
-	func newRV<T: UnsafeSvCastable>(inc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
-		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { pointee.newRV_inc($0) }
-	}
-
-	func newRV<T: UnsafeSvCastable>(noinc v: UnsafeMutablePointer<T>) -> UnsafeSvPointer {
-		return v.withMemoryRebound(to: UnsafeSV.self, capacity: 1) { pointee.newRV_noinc($0) }
 	}
 
 	func newSV(_ v: AnyObject, isa: String) -> UnsafeSvPointer {

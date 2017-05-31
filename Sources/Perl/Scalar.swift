@@ -29,9 +29,7 @@ import CPerl
 /// let arrayref: PerlScalar = [200, "OK"];
 /// let hashref: PerlScalar = ["type": "string", "value": 10]
 /// ```
-public final class PerlScalar : PerlValue, PerlDerived {
-	public typealias UnsafeValue = UnsafeSV
-
+public final class PerlScalar : PerlValue {
 	/// Creates a `SV` containing an undefined value.
 	public convenience init() { self.init(perl: .current) } // default bellow doesn't work...
 
@@ -40,8 +38,8 @@ public final class PerlScalar : PerlValue, PerlDerived {
 	}
 
 	convenience init(copy svc: UnsafeSvContext) throws {
-		guard svc.type == UnsafeValue.type else {
-			throw PerlError.unexpectedSvType(fromUnsafeSvContext(inc: svc), want: UnsafeValue.type)
+		guard svc.type == .scalar else {
+			throw PerlError.unexpectedSvType(fromUnsafeSvContext(inc: svc), want: .scalar)
 		}
 		self.init(copyUnchecked: svc)
 	}
@@ -75,15 +73,25 @@ public final class PerlScalar : PerlValue, PerlDerived {
 		_fixLifetime(scalar)
 	}
 
-	/// Creates a `RV` pointing to a `sv`.
+	/// Creates a new reference pointing to `value`.
 	public convenience init<T : PerlValue>(referenceTo value: T) {
 		self.init(noincUnchecked: UnsafeSvContext.new(rvInc: value.unsafeSvContext))
 		_fixLifetime(value)
 	}
 
-	/// Creates a `RV` pointing to a `sv`.
-	public convenience init<T : PerlValue>(_ sv: T) where T : PerlDerived, T.UnsafeValue : UnsafeSvCastable {
-		self.init(referenceTo: sv)
+	/// Short form of `init(referenceTo:)`.
+	public convenience init(_ value: PerlArray) {
+		self.init(referenceTo: value)
+	}
+
+	/// Short form of `init(referenceTo:)`.
+	public convenience init(_ value: PerlHash) {
+		self.init(referenceTo: value)
+	}
+
+	/// Short form of `init(referenceTo:)`.
+	public convenience init(_ value: PerlSub) {
+		self.init(referenceTo: value)
 	}
 
 	/// Creates a `RV` pointing to a `AV` which contains `SV`s with elements of an `array`.

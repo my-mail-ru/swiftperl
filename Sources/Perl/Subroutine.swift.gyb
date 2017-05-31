@@ -47,9 +47,7 @@ import CPerl
 /// ```swift
 /// let sum = summer.call(10, 20)
 /// ```
-public final class PerlSub : PerlValue, PerlDerived {
-	public typealias UnsafeValue = UnsafeCV
-
+public final class PerlSub : PerlValue {
 	convenience init(noinc cvc: UnsafeCvContext) {
 		self.init(noincUnchecked: UnsafeSvContext(rebind: cvc))
 	}
@@ -65,6 +63,11 @@ public final class PerlSub : PerlValue, PerlDerived {
 			unsafeSvContext.refcntInc()
 			_fixLifetime(self)
 		}
+	}
+
+	/// Short form of `init(dereferencing:)`.
+	public convenience init(_ ref: PerlScalar) throws {
+		try self.init(dereferencing: ref)
 	}
 
 	/// Returns the specified Perl subroutine with the given name.

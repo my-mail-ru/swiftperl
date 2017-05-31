@@ -45,9 +45,7 @@ import var CPerl.GV_ADD
 /// Swiftification. It was done to make subscript behavior match behavior of
 /// subscripts in `Dictionary`. So, when a key does not exist subscript returns
 /// `nil` not an undefined SV as a Perl programmer could expect.
-public final class PerlHash : PerlValue, PerlDerived {
-	public typealias UnsafeValue = UnsafeHV
-
+public final class PerlHash : PerlValue {
 	convenience init(noinc hvc: UnsafeHvContext) {
 		self.init(noincUnchecked: UnsafeSvContext(rebind: hvc))
 	}
@@ -90,6 +88,11 @@ public final class PerlHash : PerlValue, PerlDerived {
 		for (k, v) in dict {
 			self[k] = v as? PerlScalar ?? PerlScalar(v)
 		}
+	}
+
+	/// Short form of `init(dereferencing:)`.
+	public convenience init(_ ref: PerlScalar) throws {
+		try self.init(dereferencing: ref)
 	}
 
 	/// Returns the specified Perl global or package hash with the given name (so it won't work on lexical variables).

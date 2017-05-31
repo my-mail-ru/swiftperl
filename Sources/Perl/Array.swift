@@ -42,9 +42,7 @@ import var CPerl.GV_ADD
 /// let first = list.removeFirst()
 /// let second = list[0]
 /// ```
-public final class PerlArray : PerlValue, PerlDerived {
-	public typealias UnsafeValue = UnsafeAV
-
+public final class PerlArray : PerlValue {
 	convenience init(noinc avc: UnsafeAvContext) {
 		self.init(noincUnchecked: UnsafeSvContext(rebind: avc))
 	}
@@ -71,6 +69,11 @@ public final class PerlArray : PerlValue, PerlDerived {
 		for (i, v) in c.enumerated() {
 			self[i] = v as? PerlScalar ?? PerlScalar(v, perl: perl)
 		}
+	}
+
+	/// Short form of `init(dereferencing:)`.
+	public convenience init(_ ref: PerlScalar) throws {
+		try self.init(dereferencing: ref)
 	}
 
 	/// Returns the specified Perl global or package array with the given name (so it won't work on lexical variables).

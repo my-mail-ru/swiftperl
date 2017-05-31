@@ -161,7 +161,7 @@ extension Array where Element : PerlSvConvertible {
 		for (i, v) in enumerated() {
 			avc.store(i, value: v._toUnsafeSvPointer(perl: perl))
 		}
-		return perl.newRV(noinc: avc.av)
+		return UnsafeSvContext.new(rvNoinc: avc).sv
 	}
 }
 
@@ -171,6 +171,6 @@ extension Dictionary where Value : PerlSvConvertible {
 		for (k, v) in self {
 			hvc.store("\(k)", value: v._toUnsafeSvPointer(perl: perl))
 		}
-		return perl.newRV(noinc: hvc.hv)
+		return UnsafeSvContext.new(rvNoinc: hvc).sv
 	}
 }

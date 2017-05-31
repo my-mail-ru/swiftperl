@@ -46,9 +46,7 @@ import CPerl
 /// 	var secure: Bool { return try! call(method: "secure") }
 /// }
 /// ```
-open class PerlObject : PerlValue, PerlDerived {
-	public typealias UnsafeValue = UnsafeSV
-
+open class PerlObject : PerlValue, PerlSvConvertible {
 	convenience init(noinc svc: UnsafeSvContext) throws {
 		guard svc.isObject else {
 			throw PerlError.notObject(fromUnsafeSvContext(noinc: svc))
