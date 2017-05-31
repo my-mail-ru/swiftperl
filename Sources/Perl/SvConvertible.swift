@@ -96,45 +96,6 @@ extension PerlSvConvertible where Self : PerlBridgedObject {
 	}
 }
 
-extension PerlSvConvertible where Self : PerlObject {
-	private init(fromUnsafeSvContextNoinc svc: UnsafeSvContext) throws {
-		guard let classname = svc.classname else {
-			throw PerlError.notObject(Perl.fromUnsafeSvContext(noinc: svc))
-		}
-		if let nc = Self.self as? PerlNamedClass.Type, nc.perlClassName == classname {
-			self.init(noincUnchecked: svc)
-		} else {
-			let derivedClass = PerlObject.derivedClass(for: classname)
-			if derivedClass == Self.self {
-				self.init(noincUnchecked: svc)
-			} else {
-				guard let dc = derivedClass as? Self.Type else {
-					throw PerlError.unexpectedObjectType(Perl.fromUnsafeSvContext(noinc: svc), want: Self.self)
-				}
-				self.init(as: dc, noinc: svc)
-			}
-		}
-	}
-
-	private init(as derivedClass: Self.Type, noinc svc: UnsafeSvContext) {
-		self = derivedClass.init(noincUnchecked: svc)
-	}
-
-	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
-		svc.refcntInc()
-		try self.init(fromUnsafeSvContextNoinc: svc)
-	}
-
-	public init(_fromUnsafeSvContextCopy svc: UnsafeSvContext) throws {
-		try self.init(fromUnsafeSvContextNoinc: UnsafeSvContext.new(stealingCopy: svc))
-	}
-
-	public func _toUnsafeSvPointer(perl: PerlInterpreter) -> UnsafeSvPointer {
-		defer { _fixLifetime(self) }
-		return unsafeSvContext.refcntInc()
-	}
-}
-
 extension Optional where Wrapped : PerlSvConvertible {
 	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
 		self = svc.defined ? .some(try Wrapped(_fromUnsafeSvContextInc: svc)) : .none

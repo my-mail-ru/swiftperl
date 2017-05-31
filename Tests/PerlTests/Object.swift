@@ -12,11 +12,14 @@ class ObjectTests : EmbeddedTestCase {
 	}
 
 	func testPerlObject() throws {
-		try URI.require()
+		try URI.initialize()
 		let uri = try URI("https://my.mail.ru/music")
 		XCTAssertEqual(uri.path, "/music")
 		uri.path = "/video"
 		XCTAssertEqual(uri.asString, "https://my.mail.ru/video")
+		XCTAssertNoThrow(try perl.eval("bless {}, 'XXX'") as PerlObject)
+		XCTAssertThrowsError(try perl.eval("bless {}, 'XXX'") as URI)
+		XCTAssert((try perl.eval("bless {}, 'URI'") as PerlObject) is URI)
 	}
 
 	func testSwiftObject() throws {

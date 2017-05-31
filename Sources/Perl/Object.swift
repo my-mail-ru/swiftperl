@@ -154,6 +154,56 @@ open class PerlObject : PerlValue, PerlSvConvertible {
 	public static func register<T>(_ swiftClass: T.Type, as classname: String) where T : PerlObject, T : PerlNamedClass {
 		classMapping[classname] = swiftClass
 	}
+
+	// Workaround for https://bugs.swift.org/browse/SR-5056
+	public required init(noincUnchecked svc: UnsafeSvContext) {
+		super.init(noincUnchecked: svc)
+	}
+
+	// Workaround for https://bugs.swift.org/browse/SR-5056
+	public required init(incUnchecked svc: UnsafeSvContext) {
+		super.init(incUnchecked: svc)
+	}
+
+	private convenience init(_fromUnsafeSvContextNoinc svc: UnsafeSvContext) throws {
+		guard let classname = svc.classname else {
+			throw PerlError.notObject(Perl.fromUnsafeSvContext(noinc: svc))
+		}
+		if let nc = type(of: self) as? PerlNamedClass.Type, nc.perlClassName == classname {
+			self.init(noincUnchecked: svc)
+		} else {
+			let derivedClass = PerlObject.derivedClass(for: classname)
+			if derivedClass == type(of: self) {
+				self.init(noincUnchecked: svc)
+			} else {
+				guard isStrictSubclass(derivedClass, of: type(of: self)) else {
+					throw PerlError.unexpectedObjectType(Perl.fromUnsafeSvContext(noinc: svc), want: type(of: self))
+				}
+				self.init(as: derivedClass, noinc: svc)
+			}
+		}
+	}
+
+	public required convenience init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
+		svc.refcntInc()
+		try self.init(_fromUnsafeSvContextNoinc: svc)
+	}
+
+	public required convenience init(_fromUnsafeSvContextCopy svc: UnsafeSvContext) throws {
+		try self.init(_fromUnsafeSvContextNoinc: UnsafeSvContext.new(stealingCopy: svc))
+	}
+
+	public func _toUnsafeSvPointer(perl: PerlInterpreter) -> UnsafeSvPointer {
+		defer { _fixLifetime(self) }
+		return unsafeSvContext.refcntInc()
+	}
+}
+
+// Dirty hack to initialize instance of another class (subclass).
+extension PerlSvConvertible where Self : PerlObject {
+	init(as derivedClass: Self.Type, noinc svc: UnsafeSvContext) {
+		self = derivedClass.init(noincUnchecked: svc)
+	}
 }
 
 /// A Swift class which instances can be passed to Perl as a blessed SV.
