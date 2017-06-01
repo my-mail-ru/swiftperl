@@ -70,7 +70,7 @@ public final class PerlArray : PerlValue {
 
 	/// Initializes Perl array with elements of collection `c`.
 	public convenience init<C : Collection>(_ c: C, perl: PerlInterpreter = .current)
-		where C.Iterator.Element : PerlSvConvertible {
+		where C.Iterator.Element : PerlScalarConvertible {
 		self.init(perl: perl)
 		reserveCapacity(numericCast(c.count))
 		for (i, v) in c.enumerated() {
@@ -121,7 +121,7 @@ extension PerlArray {
 	/// - Returns: `nil` if the element not exists or is undefined.
 	///
 	/// - Complexity: O(1).
-	public func fetch<T : PerlSvConvertible>(_ index: Int) throws -> T? {
+	public func fetch<T : PerlScalarConvertible>(_ index: Int) throws -> T? {
 		return try withUnsafeAvContext { c in
 			try c.fetch(index).flatMap {
 				try T?(_fromUnsafeSvContextInc: $0)
@@ -135,7 +135,7 @@ extension PerlArray {
 	/// - Parameter value: The value to store in the array.
 	///
 	/// - Complexity: O(1).
-	public func store<T : PerlSvConvertible>(_ index: Int, value: T) {
+	public func store<T : PerlScalarConvertible>(_ index: Int, value: T) {
 		withUnsafeAvContext {
 			$0.store(index, value: value._toUnsafeSvPointer(perl: $0.perl))
 		}
@@ -145,7 +145,7 @@ extension PerlArray {
 	///
 	/// - Parameter index: The position of the element to fetch.
 	/// - Returns: Deleted element or `nil` if the element not exists or is undefined.
-	public func delete<T : PerlSvConvertible>(_ index: Int) throws -> T? {
+	public func delete<T : PerlScalarConvertible>(_ index: Int) throws -> T? {
 		return try withUnsafeAvContext { c in
 			try c.delete(index).flatMap {
 				try T?(_fromUnsafeSvContextInc: $0)
@@ -296,7 +296,7 @@ extension PerlArray: ExpressibleByArrayLiteral {
 	}
 }
 
-extension Array where Element : PerlSvConvertible {
+extension Array where Element : PerlScalarConvertible {
 	/// Creates an array from the Perl array.
 	///
 	/// - Parameter av: The Perl array with the elements compatible with `Element`.

@@ -63,7 +63,7 @@ extension PerlInterpreter {
 			return "G_SCALAR"
 	
 	def generic(r):
-		return ", ".join(map(lambda r: r + " : PerlSvConvertible", re.findall("\\bR\\d*\\b", r)))
+		return ", ".join(map(lambda r: r + " : PerlScalarConvertible", re.findall("\\bR\\d*\\b", r)))
 	
 	def fqGeneric(r):
 		g = generic(r)
@@ -83,7 +83,7 @@ extension PerlInterpreter {
 
 	dispatchVariants = ["sub", "method"]
 
-	argsVariants = ["args: [PerlSvConvertible?]", "_ args: PerlSvConvertible?..."]
+	argsVariants = ["args: [PerlScalarConvertible?]", "_ args: PerlScalarConvertible?..."]
 
 	def returnVariants(context):
 		if context == "void":
@@ -109,7 +109,7 @@ extension PerlInterpreter {
 
 extension PerlInterpreter {
 % for ret in allReturnVariants:
-	func call${fqGeneric(ret)}(sv: UnsafeSvPointer, args: [PerlSvConvertible?], flags: Int32 = ${contextFlags(ret)}) throws -> ${ret} {
+	func call${fqGeneric(ret)}(sv: UnsafeSvPointer, args: [PerlScalarConvertible?], flags: Int32 = ${contextFlags(ret)}) throws -> ${ret} {
 		let svArgs: [UnsafeSvPointer] = args.map { $0?._toUnsafeSvPointer(perl: self) ?? pointee.newSV(0) }
 %   if ret == "Void":
 		_ = try unsafeCall(sv: sv, args: svArgs, flags: flags)

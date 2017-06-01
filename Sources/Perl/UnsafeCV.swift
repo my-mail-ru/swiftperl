@@ -88,7 +88,7 @@ private func cvResolver(perl: PerlInterpreter.Pointer, cv: UnsafeCvPointer) -> V
 		errsv = nil
 	} catch PerlError.died(let scalar) {
 		errsv = scalar.withUnsafeSvContext { UnsafeSvContext.new(copy: $0).mortal() }
-	} catch let error as PerlSvConvertible {
+	} catch let error as PerlScalarConvertible {
 		let usv = error._toUnsafeSvPointer(perl: perl)
 		errsv = perl.pointee.sv_2mortal(usv)
 	} catch {

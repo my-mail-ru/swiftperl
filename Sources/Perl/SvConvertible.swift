@@ -1,41 +1,41 @@
-public protocol PerlSvConvertible {
+public protocol PerlScalarConvertible {
 	init(_fromUnsafeSvContextInc: UnsafeSvContext) throws
 	init(_fromUnsafeSvContextCopy: UnsafeSvContext) throws
 	func _toUnsafeSvPointer(perl: PerlInterpreter) -> UnsafeSvPointer
 }
 
-extension PerlSvConvertible {
+extension PerlScalarConvertible {
 	public init(_fromUnsafeSvContextCopy svc: UnsafeSvContext) throws {
 		try self.init(_fromUnsafeSvContextInc: svc)
 	}
 }
 
-extension Bool : PerlSvConvertible {
+extension Bool : PerlScalarConvertible {
 	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) { self.init(svc) }
 	public func _toUnsafeSvPointer(perl: PerlInterpreter) -> UnsafeSvPointer { return perl.newSV(self) }
 }
 
-extension Int : PerlSvConvertible {
+extension Int : PerlScalarConvertible {
 	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws { try self.init(svc) }
 	public func _toUnsafeSvPointer(perl: PerlInterpreter) -> UnsafeSvPointer { return perl.pointee.newSViv(self) }
 }
 
-extension UInt : PerlSvConvertible {
+extension UInt : PerlScalarConvertible {
 	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws { try self.init(svc) }
 	public func _toUnsafeSvPointer(perl: PerlInterpreter) -> UnsafeSvPointer { return perl.pointee.newSVuv(self) }
 }
 
-extension Double : PerlSvConvertible {
+extension Double : PerlScalarConvertible {
 	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws { try self.init(svc) }
 	public func _toUnsafeSvPointer(perl: PerlInterpreter) -> UnsafeSvPointer { return perl.pointee.newSVnv(self) }
 }
 
-extension String : PerlSvConvertible {
+extension String : PerlScalarConvertible {
 	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws { try self.init(svc) }
 	public func _toUnsafeSvPointer(perl: PerlInterpreter) -> UnsafeSvPointer { return perl.newSV(self) }
 }
 
-extension PerlScalar : PerlSvConvertible {
+extension PerlScalar : PerlScalarConvertible {
 	public convenience init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
 		try self.init(inc: svc)
 	}
@@ -50,7 +50,7 @@ extension PerlScalar : PerlSvConvertible {
 	}
 }
 
-extension PerlArray : PerlSvConvertible {
+extension PerlArray : PerlScalarConvertible {
 	public convenience init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
 		try self.init(inc: UnsafeAvContext(dereference: svc))
 	}
@@ -60,7 +60,7 @@ extension PerlArray : PerlSvConvertible {
 	}
 }
 
-extension PerlHash : PerlSvConvertible {
+extension PerlHash : PerlScalarConvertible {
 	public convenience init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
 		try self.init(inc: UnsafeHvContext(dereference: svc))
 	}
@@ -70,7 +70,7 @@ extension PerlHash : PerlSvConvertible {
 	}
 }
 
-extension PerlSub : PerlSvConvertible {
+extension PerlSub : PerlScalarConvertible {
 	public convenience init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
 		try self.init(inc: UnsafeCvContext(dereference: svc))
 	}
@@ -80,7 +80,7 @@ extension PerlSub : PerlSvConvertible {
 	}
 }
 
-extension PerlSvConvertible where Self : PerlBridgedObject {
+extension PerlScalarConvertible where Self : PerlBridgedObject {
 	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
 		guard let object = svc.swiftObject else {
 			throw PerlError.notSwiftObject(Perl.fromUnsafeSvContext(inc: svc))
@@ -96,7 +96,7 @@ extension PerlSvConvertible where Self : PerlBridgedObject {
 	}
 }
 
-extension Optional where Wrapped : PerlSvConvertible {
+extension Optional where Wrapped : PerlScalarConvertible {
 	public init(_fromUnsafeSvContextInc svc: UnsafeSvContext) throws {
 		self = svc.defined ? .some(try Wrapped(_fromUnsafeSvContextInc: svc)) : .none
 	}
@@ -115,7 +115,7 @@ extension Optional where Wrapped : PerlSvConvertible {
 	}
 }
 
-extension Array where Element : PerlSvConvertible {
+extension Array where Element : PerlScalarConvertible {
 	func _toUnsafeSvPointer(perl: PerlInterpreter) -> UnsafeSvPointer {
 		let avc = UnsafeAvContext.new(perl: perl)
 		avc.reserveCapacity(numericCast(count))
@@ -126,7 +126,7 @@ extension Array where Element : PerlSvConvertible {
 	}
 }
 
-extension Dictionary where Value : PerlSvConvertible {
+extension Dictionary where Value : PerlScalarConvertible {
 	func _toUnsafeSvPointer(perl: PerlInterpreter) -> UnsafeSvPointer {
 		let hvc = UnsafeHvContext.new(perl: perl)
 		for (k, v) in self {

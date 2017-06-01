@@ -46,7 +46,7 @@ import CPerl
 /// 	var secure: Bool { return try! call(method: "secure") }
 /// }
 /// ```
-open class PerlObject : PerlValue, PerlSvConvertible {
+open class PerlObject : PerlValue, PerlScalarConvertible {
 	convenience init(noinc svc: UnsafeSvContext) throws {
 		guard svc.isObject else {
 			throw PerlError.notObject(fromUnsafeSvContext(noinc: svc))
@@ -95,14 +95,14 @@ open class PerlObject : PerlValue, PerlSvConvertible {
 	/// - Parameter method: A name of the constuctor. Usually it is *new*.
 	/// - Parameter args: Arguments to pass to the constructor.
 	/// - Parameter perl: The Perl interpreter.
-	public convenience init(method: String, args: [PerlSvConvertible?], perl: PerlInterpreter = .current) throws {
+	public convenience init(method: String, args: [PerlScalarConvertible?], perl: PerlInterpreter = .current) throws {
 		guard let named = type(of: self) as? PerlNamedClass.Type else {
 			fatalError("PerlObject.init(method:args:perl) is only supported for subclasses conforming to PerlNamedClass")
 		}
 		perl.enterScope()
 		defer { perl.leaveScope() }
 		let classname = named.perlClassName
-		let args = [classname as PerlSvConvertible?] + args
+		let args = [classname as PerlScalarConvertible?] + args
 		let svArgs: [UnsafeSvPointer] = args.map { $0?._toUnsafeSvPointer(perl: perl) ?? perl.pointee.newSV(0) }
 		let sv = try perl.unsafeCall(sv: perl.newSV(method, mortal: true), args: svArgs, flags: G_METHOD|G_SCALAR)[0]
 		let svc = UnsafeSvContext(sv: sv, perl: perl)
@@ -200,7 +200,7 @@ open class PerlObject : PerlValue, PerlSvConvertible {
 }
 
 // Dirty hack to initialize instance of another class (subclass).
-extension PerlSvConvertible where Self : PerlObject {
+extension PerlScalarConvertible where Self : PerlObject {
 	init(as derivedClass: Self.Type, noinc svc: UnsafeSvContext) {
 		self = derivedClass.init(noincUnchecked: svc)
 	}
@@ -212,7 +212,7 @@ extension PerlSvConvertible where Self : PerlObject {
 /// Declare a `static var perlClassName` that contains a name of the Perl class
 /// your Swift class should be bridged to. Use `addPerlMethod` method on
 /// startup to provide ability to access your methods and attributes from Perl.
-public protocol PerlBridgedObject : AnyPerl, PerlNamedClass, PerlSvConvertible {}
+public protocol PerlBridgedObject : AnyPerl, PerlNamedClass, PerlScalarConvertible {}
 
 /// A class having Perl representation.
 public protocol PerlNamedClass : class {

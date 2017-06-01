@@ -89,8 +89,8 @@ public final class PerlHash : PerlValue {
 	/// ```
 	///
 	/// - Parameter dict: a dictionary with `String` keys and values
-	///   convertible to Perl scalars (conforming to `PerlSvConvertible`).
-	public convenience init<T : PerlSvConvertible>(_ dict: [String: T]) {
+	///   convertible to Perl scalars (conforming to `PerlScalarConvertible`).
+	public convenience init<T : PerlScalarConvertible>(_ dict: [String: T]) {
 		self.init()
 		for (k, v) in dict {
 			self[k] = v as? PerlScalar ?? PerlScalar(v)
@@ -136,7 +136,7 @@ extension PerlHash {
 	/// - Parameter key: The key to find in the hash.
 	/// - Returns: The value associated with `key` if `key` is in the hash;
 	///   otherwise, `nil`.
-	public func fetch<T : PerlSvConvertible>(_ key: String) throws -> T? {
+	public func fetch<T : PerlScalarConvertible>(_ key: String) throws -> T? {
 		return try withUnsafeHvContext { c in
 			try c.fetch(key).flatMap { try T?(_fromUnsafeSvContextInc: $0) }
 		}
@@ -146,7 +146,7 @@ extension PerlHash {
 	///
 	/// - Parameter key: The key to associate with `value`.
 	/// - Parameter value: The value to store in the hash.
-	public func store<T : PerlSvConvertible>(key: String, value: T) {
+	public func store<T : PerlScalarConvertible>(key: String, value: T) {
 		withUnsafeHvContext { c in
 			c.store(key, value: value._toUnsafeSvPointer(perl: c.perl))
 		}
@@ -156,7 +156,7 @@ extension PerlHash {
 	///
 	/// - Parameter key: The key to remove along with its associated value.
 	/// - Returns: The value that was removed, or `nil` if the key was not found in the hash.
-	public func delete<T : PerlSvConvertible>(_ key: String) throws -> T? {
+	public func delete<T : PerlScalarConvertible>(_ key: String) throws -> T? {
 		return try withUnsafeHvContext { c in
 			try c.delete(key).flatMap { try T?(_fromUnsafeSvContextInc: $0) }
 		}
@@ -177,7 +177,7 @@ extension PerlHash {
 	/// - Parameter key: The key to find in the hash.
 	/// - Returns: The value associated with `key` if `key` is in the hash;
 	///   otherwise, `nil`.
-	public func fetch<T : PerlSvConvertible>(_ key: PerlScalar) throws -> T? {
+	public func fetch<T : PerlScalarConvertible>(_ key: PerlScalar) throws -> T? {
 		return try withUnsafeHvContext { c in
 			try key.withUnsafeSvContext {
 				try c.fetch($0.sv).flatMap { try T?(_fromUnsafeSvContextInc: $0) }
@@ -189,7 +189,7 @@ extension PerlHash {
 	///
 	/// - Parameter key: The key to associate with `value`.
 	/// - Parameter value: The value to store in the hash.
-	public func store<T : PerlSvConvertible>(key: PerlScalar, value: T) {
+	public func store<T : PerlScalarConvertible>(key: PerlScalar, value: T) {
 		withUnsafeHvContext { c in
 			key.withUnsafeSvContext {
 				c.store($0.sv, value: value._toUnsafeSvPointer(perl: c.perl))
@@ -201,7 +201,7 @@ extension PerlHash {
 	///
 	/// - Parameter key: The key to remove along with its associated value.
 	/// - Returns: The value that was removed, or `nil` if the key was not found in the hash.
-	public func delete<T : PerlSvConvertible>(_ key: PerlScalar) throws -> T? {
+	public func delete<T : PerlScalarConvertible>(_ key: PerlScalar) throws -> T? {
 		return try withUnsafeHvContext { c in
 			try key.withUnsafeSvContext {
 				try c.delete($0.sv).flatMap { try T?(_fromUnsafeSvContextInc: $0) }
@@ -377,7 +377,7 @@ extension PerlHash : ExpressibleByDictionaryLiteral {
 }
 
 // where Key == String, but it is unsupported
-extension Dictionary where Value : PerlSvConvertible {
+extension Dictionary where Value : PerlScalarConvertible {
 	/// Creates a dictionary from the Perl hash.
 	///
 	/// - Parameter hv: The Perl hash with the values compatible with `Value`.

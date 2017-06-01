@@ -49,7 +49,7 @@ struct UnsafeXSubStack : UnsafeStack {
 		return args[i]
 	}
 
-	func fetch<T : PerlSvConvertible>(at index: Int) throws -> T {
+	func fetch<T : PerlScalarConvertible>(at index: Int) throws -> T {
 		guard index < args.count else {
 			if T.self == PerlScalar.self {
 				return PerlScalar() as! T
@@ -60,13 +60,13 @@ struct UnsafeXSubStack : UnsafeStack {
 		return try T(_fromUnsafeSvContextCopy: UnsafeSvContext(sv: args[index], perl: perl))
 	}
 
-	func fetch<T : PerlSvConvertible>(at index: Int) throws -> T? {
+	func fetch<T : PerlScalarConvertible>(at index: Int) throws -> T? {
 		guard index < args.count else { return nil }
 		return try Optional<T>(_fromUnsafeSvContextCopy: UnsafeSvContext(sv: args[index], perl: perl))
 	}
 
 	@_specialize(Bool) @_specialize(Int) @_specialize(UInt) @_specialize(Double) @_specialize(String) @_specialize(PerlScalar)
-	func fetchTail<T : PerlSvConvertible>(startingAt index: Int) throws -> [T] {
+	func fetchTail<T : PerlScalarConvertible>(startingAt index: Int) throws -> [T] {
 		guard index < args.count else { return [] }
 		var tail: [T] = []
 		tail.reserveCapacity(args.count - index)
@@ -77,7 +77,7 @@ struct UnsafeXSubStack : UnsafeStack {
 	}
 
 	@_specialize(Bool) @_specialize(Int) @_specialize(UInt) @_specialize(Double) @_specialize(String) @_specialize(PerlScalar)
-	func fetchTail<T : PerlSvConvertible>(startingAt index: Int) throws -> [String: T] {
+	func fetchTail<T : PerlScalarConvertible>(startingAt index: Int) throws -> [String: T] {
 		guard index < args.count else { return [:] }
 		var tail: [String: T] = [:]
 		var i = args[index..<args.count].makeIterator()

@@ -148,7 +148,7 @@ public final class PerlSub : PerlValue {
 		///   convertible to the desired type.
 		///
 		/// - Complexity: O(1).
-		public func get<T : PerlSvConvertible>(_ index: Int) throws -> T {
+		public func get<T : PerlScalarConvertible>(_ index: Int) throws -> T {
 			guard index >= startIndex && index < endIndex else {
 				throw PerlError.noArgumentOnStack(at: index)
 			}
@@ -162,7 +162,7 @@ public final class PerlSub : PerlValue {
 		/// - Throws: If the argument is not convertible to the desired type.
 		///
 		/// - Complexity: O(1).
-		public func get<T : PerlSvConvertible>(_ index: Int) throws -> T? {
+		public func get<T : PerlScalarConvertible>(_ index: Int) throws -> T? {
 			guard index >= startIndex && index < endIndex else { return nil }
 			return try T?(_fromUnsafeSvContext${rc.title()}: UnsafeSvContext(sv: unsafeArgs[index], perl: perl))
 		}
@@ -193,9 +193,9 @@ public final class PerlSub : PerlValue {
 
 %{
 	def generic(count, tail):
-		list = map(lambda n: "P" + str(n) + ": PerlSvConvertible", range(0, count))
+		list = map(lambda n: "P" + str(n) + ": PerlScalarConvertible", range(0, count))
 		if tail != "fixed":
-			list.append("T: PerlSvConvertible")
+			list.append("T: PerlScalarConvertible")
 		g = ", ".join(list)
 		return "" if g == "" else "<" + g + ">"
 
@@ -219,7 +219,7 @@ public final class PerlSub : PerlValue {
 		return vars
 
 	def result(count):
-		list = map(lambda n: "PerlSvConvertible?", range(0, count))
+		list = map(lambda n: "PerlScalarConvertible?", range(0, count))
 		return "(" + ", ".join(list) + ")"
 
 	def bodyArgs(count, tail):
@@ -283,7 +283,7 @@ extension PerlSub {
 	/// - Parameter file: A name of a source file subroutine was declared in. Used for debug purposes only.
 	/// - Parameter body: The body of the XSUB.
 	@discardableResult
-	public convenience init(name: String? = nil, file: StaticString = #file, body: @escaping (Args) throws -> [PerlSvConvertible?]) {
+	public convenience init(name: String? = nil, file: StaticString = #file, body: @escaping (Args) throws -> [PerlScalarConvertible?]) {
 		self.init(name: name, file: file) {
 			(stack: UnsafeXSubStack) in
 			let result = try body(Args(stack.args, perl: stack.perl))
@@ -330,7 +330,7 @@ extension PerlNamedClass {
 	/// - Parameter file: A name of a source file subroutine was declared in. Used for debug purposes only.
 	/// - Parameter body: The body of the XSUB.
 	@discardableResult
-	public static func createPerlMethod(_ method: String, file: StaticString = #file, body: @escaping (PerlSub.Args) throws -> [PerlSvConvertible?]) -> PerlSub {
+	public static func createPerlMethod(_ method: String, file: StaticString = #file, body: @escaping (PerlSub.Args) throws -> [PerlScalarConvertible?]) -> PerlSub {
 		return PerlSub(name: perlClassName + "::" + method, file: file, body: body)
 	}
 }

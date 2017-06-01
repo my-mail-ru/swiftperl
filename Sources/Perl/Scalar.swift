@@ -59,7 +59,7 @@ public final class PerlScalar : PerlValue {
 	}
 
 	/// Creates a `SV` containig a `v`.
-	public convenience init<T : PerlSvConvertible>(_ v: T, perl: PerlInterpreter = .current) {
+	public convenience init<T : PerlScalarConvertible>(_ v: T, perl: PerlInterpreter = .current) {
 		self.init(noincUnchecked: UnsafeSvContext(sv: v._toUnsafeSvPointer(perl: perl), perl: perl))
 	}
 
@@ -104,17 +104,17 @@ public final class PerlScalar : PerlValue {
 	}
 
 	/// Creates a `RV` pointing to a `AV` which contains `SV`s with elements of an `array`.
-	public convenience init<T : PerlSvConvertible>(_ array: [T], perl: PerlInterpreter = .current) {
+	public convenience init<T : PerlScalarConvertible>(_ array: [T], perl: PerlInterpreter = .current) {
 		self.init(noincUnchecked: UnsafeSvContext(sv: array._toUnsafeSvPointer(perl: perl), perl: perl))
 	}
 
 	/// Creates a `RV` pointing to a `HV` which contains `SV`s with elements of a `dict`.
-	public convenience init<T : PerlSvConvertible>(_ dict: [String: T], perl: PerlInterpreter = .current) {
+	public convenience init<T : PerlScalarConvertible>(_ dict: [String: T], perl: PerlInterpreter = .current) {
 		self.init(noincUnchecked: UnsafeSvContext(sv: dict._toUnsafeSvPointer(perl: perl), perl: perl))
 	}
 
 	/// Creates a `SV` containig an unwrapped value of a `v` if `v != nil` or an `undef` in other case.
-	public convenience init<T : PerlSvConvertible>(_ v: T?, perl: PerlInterpreter = .current) {
+	public convenience init<T : PerlScalarConvertible>(_ v: T?, perl: PerlInterpreter = .current) {
 		if let v = v {
 			self.init(v, perl: perl)
 		} else {
