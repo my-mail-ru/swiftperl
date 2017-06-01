@@ -157,8 +157,8 @@ public final class PerlScalar : PerlValue {
 	}
 
 	/// A boolean value indicating whether the `SV` is a reference.
-	public var isRef: Bool {
-		return withUnsafeSvContext { $0.isRef }
+	public var isReference: Bool {
+		return withUnsafeSvContext { $0.isReference }
 	}
 
 	/// A boolean value indicating whether the `SV` is an object.

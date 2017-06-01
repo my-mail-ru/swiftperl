@@ -100,7 +100,7 @@ class ConvertToPerlTests : EmbeddedTestCase {
 
 	func testScalarRef() throws {
 		let v = PerlScalar(referenceTo: PerlScalar(10 as Int))
-		XCTAssert(v.isRef)
+		XCTAssert(v.isReference)
 		try perl.eval("sub is_ref_10 { return ${$_[0]} == 10 }")
 		XCTAssert(try perl.call(sub: "is_ref_10", v))
 	}
@@ -108,7 +108,7 @@ class ConvertToPerlTests : EmbeddedTestCase {
 	func testArrayRef() throws {
 		let array = [10, 20]
 		let v = PerlScalar(referenceTo: PerlArray(array))
-		XCTAssert(v.isRef)
+		XCTAssert(v.isReference)
 		try perl.eval("sub is_array { return @{$_[0]} == 2 && $_[0][0] == 10 && $_[0][1] == 20 }")
 		XCTAssert(try perl.call(sub: "is_array", v))
 		let v2 = PerlScalar(PerlArray(array))
@@ -120,7 +120,7 @@ class ConvertToPerlTests : EmbeddedTestCase {
 	func testHashRef() throws {
 		let dict = ["a": 10, "b": 20]
 		let v = PerlScalar(referenceTo: PerlHash(dict))
-		XCTAssert(v.isRef)
+		XCTAssert(v.isReference)
 		try perl.eval("sub is_hash { return keys(%{$_[0]}) == 2 && $_[0]{a} == 10 && $_[0]{b} == 20 }")
 		XCTAssert(try perl.call(sub: "is_hash", v))
 		let v2 = PerlScalar(PerlHash(dict))

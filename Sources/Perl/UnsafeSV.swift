@@ -30,7 +30,7 @@ public struct UnsafeSvContext {
 	var isInteger: Bool { return SvIOK(sv) }
 	var isDouble: Bool { return SvNOK(sv) }
 	var isString: Bool { return SvPOK(sv) }
-	var isRef: Bool { return SvROK(sv) }
+	var isReference: Bool { return SvROK(sv) }
 
 	var referent: UnsafeSvContext? {
 		return SvROK(sv) ? UnsafeSvContext(sv: SvRV(sv)!, perl: perl) : nil
