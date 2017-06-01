@@ -1,4 +1,4 @@
-import var CPerl.GV_ADD
+import CPerl
 
 /// Provides a safe wrapper for Perl array (`AV`).
 /// Performs reference counting on initialization and deinitialization.
@@ -51,6 +51,13 @@ public final class PerlArray : PerlValue {
 		self.init(incUnchecked: UnsafeSvContext(rebind: avc))
 	}
 
+	convenience init(noinc svc: UnsafeSvContext) throws {
+		guard svc.type == SVt_PVAV else {
+			throw PerlError.unexpectedValueType(fromUnsafeSvContext(noinc: svc), want: PerlArray.self)
+		}
+		self.init(noincUnchecked: svc)
+	}
+
 	/// Creates an empty Perl array.
 	public convenience init() {
 		self.init(perl: .current)
@@ -92,7 +99,7 @@ public final class PerlArray : PerlValue {
 
 	func withUnsafeAvContext<R>(_ body: (UnsafeAvContext) throws -> R) rethrows -> R {
 		defer { _fixLifetime(self) }
-		return try unsafeSvContext.sv.withMemoryRebound(to: UnsafeAV.self, capacity: 1) {
+		return try unsafeSvContext.sv.withMemoryRebound(to: AV.self, capacity: 1) {
 			return try body(UnsafeAvContext(av: $0, perl: unsafeSvContext.perl))
 		}
 	}
@@ -165,9 +172,6 @@ extension PerlArray {
 //struct PerlArray: MutableCollection {
 extension PerlArray : RandomAccessCollection {
 	public typealias Element = PerlScalar
-	public typealias Index = Int
-	public typealias Iterator = IndexingIterator<PerlArray>
-	public typealias Indices = CountableRange<Int>
 
 	/// The position of the first element in a nonempty array.
 	/// It is always 0 and does not respect Perl variable `$[`.
@@ -317,8 +321,11 @@ extension Array where Element : PerlSvConvertible {
 	///
 	/// - Complexity: O(*n*), where *n* is the count of the array.
 	public init(_ ref: PerlScalar) throws {
-		self = try ref.withReferentUnsafeSvContext(type: .array) { svc in
-			try svc.withUnsafeAvContext { avc in
+		self = try ref.withUnsafeSvContext {
+			guard let svc = $0.referent else {
+				throw PerlError.notReference(fromUnsafeSvContext(inc: $0))
+			}
+			return try svc.withUnsafeAvContext { avc in
 				try avc.enumerated().map {
 					guard let svc = $1 else { throw PerlError.elementNotExists(PerlArray(inc: avc), at: $0) }
 					return try Element(_fromUnsafeSvContextInc: svc)

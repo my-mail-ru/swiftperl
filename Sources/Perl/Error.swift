@@ -11,7 +11,7 @@ public enum PerlError : Error {
 	case unexpectedUndef(_: AnyPerl)
 
 	/// SV of an unexpected type was recevied.
-	case unexpectedSvType(_: AnyPerl, want: SvType)
+	case unexpectedValueType(_: AnyPerl, want: PerlValue.Type)
 
 	/// SV is not a number (integer or double) of appropriate range.
 	case notNumber(_: AnyPerl, want: Any.Type)

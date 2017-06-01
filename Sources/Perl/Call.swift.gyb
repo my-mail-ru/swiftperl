@@ -3,17 +3,17 @@ import CPerl
 extension PerlSub {
 	public enum VoidContext {
 		case void
-		public var rawValue: Int32 { return G_VOID }
+		var rawValue: Int32 { return G_VOID }
 	}
 
 	public enum ScalarContext {
 		case scalar
-		public var rawValue: Int32 { return G_SCALAR }
+		var rawValue: Int32 { return G_SCALAR }
 	}
 
 	public enum ArrayContext {
 		case array
-		public var rawValue: Int32 { return G_ARRAY }
+		var rawValue: Int32 { return G_ARRAY }
 	}
 }
 

@@ -1,3 +1,5 @@
+import CPerl
+
 /// Provides a safe wrapper for any SV, which can contain any Perl value,
 /// not only scalars. Performs reference counting on initialization and
 /// deinitialization.
@@ -58,22 +60,22 @@ open class PerlValue : AnyPerl, CustomDebugStringConvertible {
 		return try body(unsafeSvContext)
 	}
 
-	var type: SvType {
+	var type: svtype {
 		defer { _fixLifetime(self) }
 		return unsafeSvContext.type
 	}
 
 	static func derivedClass(for svc: UnsafeSvContext) -> PerlValue.Type {
 		switch svc.type {
-			case .scalar:
+			case let t where t.rawValue < SVt_PVAV.rawValue:
 				if let classname = svc.classname {
 					return PerlObject.derivedClass(for: classname)
 				} else {
 					return PerlScalar.self
 				}
-			case .array: return PerlArray.self
-			case .hash: return PerlHash.self
-			case .code: return PerlSub.self
+			case SVt_PVAV: return PerlArray.self
+			case SVt_PVHV: return PerlHash.self
+			case SVt_PVCV: return PerlSub.self
 			default: return PerlValue.self
 		}
 	}

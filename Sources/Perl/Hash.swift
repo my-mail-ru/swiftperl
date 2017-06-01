@@ -1,4 +1,4 @@
-import var CPerl.GV_ADD
+import CPerl
 
 /// Provides a safe wrapper for Perl hash (`HV`).
 /// Performs reference counting on initialization and deinitialization.
@@ -52,6 +52,13 @@ public final class PerlHash : PerlValue {
 
 	convenience init(inc hvc: UnsafeHvContext) {
 		self.init(incUnchecked: UnsafeSvContext(rebind: hvc))
+	}
+
+	convenience init(noinc svc: UnsafeSvContext) throws {
+		guard svc.type == SVt_PVHV else {
+			throw PerlError.unexpectedValueType(fromUnsafeSvContext(noinc: svc), want: PerlHash.self)
+		}
+		self.init(noincUnchecked: svc)
 	}
 
 	/// Creates an empty Perl hash.
@@ -111,7 +118,7 @@ public final class PerlHash : PerlValue {
 
 	func withUnsafeHvContext<R>(_ body: (UnsafeHvContext) throws -> R) rethrows -> R {
 		defer { _fixLifetime(self) }
-		return try unsafeSvContext.sv.withMemoryRebound(to: UnsafeHV.self, capacity: 1) {
+		return try unsafeSvContext.sv.withMemoryRebound(to: HV.self, capacity: 1) {
 			return try body(UnsafeHvContext(hv: $0, perl: unsafeSvContext.perl))
 		}
 	}
@@ -379,8 +386,8 @@ extension Dictionary where Value : PerlSvConvertible {
 	/// - Complexity: O(*n*), where *n* is the count of the hash.
 	public init(_ hv: PerlHash) throws {
 		self.init()
-		try hv.withUnsafeHvContext {
-			for (k, v) in $0 {
+		try hv.withUnsafeHvContext { hvc in
+			for (k, v) in hvc {
 				self[k as! Key] = try Value(_fromUnsafeSvContextInc: v)
 			}
 		}
@@ -396,9 +403,12 @@ extension Dictionary where Value : PerlSvConvertible {
 	/// - Complexity: O(*n*), where *n* is the count of the hash.
 	public init(_ ref: PerlScalar) throws {
 		self.init()
-		try ref.withReferentUnsafeSvContext(type: .hash) { svc in
-			try svc.sv.withMemoryRebound(to: UnsafeHV.self, capacity: 1) { hv in
-				for (k, v) in UnsafeHvContext(hv: hv, perl: svc.perl) {
+		try ref.withUnsafeSvContext {
+			guard let svc = $0.referent else {
+				throw PerlError.notReference(fromUnsafeSvContext(inc: $0))
+			}
+			try svc.withUnsafeHvContext { hvc in
+				for (k, v) in hvc {
 					self[k as! Key] = try Value(_fromUnsafeSvContextInc: v)
 				}
 			}

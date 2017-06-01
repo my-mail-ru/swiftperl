@@ -1,7 +1,6 @@
 import CPerl
 
-public typealias UnsafeAV = CPerl.AV
-public typealias UnsafeAvPointer = UnsafeMutablePointer<UnsafeAV>
+public typealias UnsafeAvPointer = UnsafeMutablePointer<AV>
 
 struct UnsafeAvContext {
 	let av: UnsafeAvPointer
@@ -50,14 +49,14 @@ struct UnsafeAvContext {
 
 extension UnsafeAvContext {
 	init(dereference svc: UnsafeSvContext) throws {
-		guard let rvc = svc.referent, rvc.type == .array else {
-			throw PerlError.unexpectedSvType(fromUnsafeSvContext(inc: svc), want: .array)
+		guard let rvc = svc.referent, rvc.type == SVt_PVAV else {
+			throw PerlError.unexpectedValueType(fromUnsafeSvContext(inc: svc), want: PerlArray.self)
 		}
 		self.init(rebind: rvc)
 	}
 
 	init(rebind svc: UnsafeSvContext) {
-		let av = UnsafeMutableRawPointer(svc.sv).bindMemory(to: UnsafeAV.self, capacity: 1)
+		let av = UnsafeMutableRawPointer(svc.sv).bindMemory(to: AV.self, capacity: 1)
 		self.init(av: av, perl: svc.perl)
 	}
 }

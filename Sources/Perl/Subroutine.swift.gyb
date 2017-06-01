@@ -56,6 +56,13 @@ public final class PerlSub : PerlValue {
 		self.init(incUnchecked: UnsafeSvContext(rebind: cvc))
 	}
 
+	convenience init(noinc svc: UnsafeSvContext) throws {
+		guard svc.type == SVt_PVCV else {
+			throw PerlError.unexpectedValueType(fromUnsafeSvContext(noinc: svc), want: PerlSub.self)
+		}
+		self.init(noincUnchecked: svc)
+	}
+
 	@discardableResult
 	convenience init(name: String?, perl: PerlInterpreter = .current, file: StaticString = #file, body: @escaping CvBody) {
 		self.init(noinc: UnsafeCvContext.new(name: name, file: file, body: body, perl: perl))
@@ -79,7 +86,7 @@ public final class PerlSub : PerlValue {
 
 	func withUnsafeCvContext<R>(_ body: (UnsafeCvContext) throws -> R) rethrows -> R {
 		defer { _fixLifetime(self) }
-		return try unsafeSvContext.sv.withMemoryRebound(to: UnsafeCV.self, capacity: 1) {
+		return try unsafeSvContext.sv.withMemoryRebound(to: CV.self, capacity: 1) {
 			return try body(UnsafeCvContext(cv: $0, perl: unsafeSvContext.perl))
 		}
 	}

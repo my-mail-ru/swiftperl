@@ -1,33 +1,29 @@
 import CPerl
 
-public typealias UnsafeCV = CPerl.CV
-public typealias UnsafeCvPointer = UnsafeMutablePointer<UnsafeCV>
+public typealias UnsafeCvPointer = UnsafeMutablePointer<CV>
 
 typealias CvBody = (UnsafeXSubStack) throws -> Void
 typealias UnsafeCvBodyPointer = UnsafeMutablePointer<CvBody>
 
-extension UnsafeCV {
-	var body: CvBody {
-		mutating get { return bodyPointer.pointee }
-		mutating set {
-			bodyPointer.deinitialize()
-			bodyPointer.initialize(to: newValue)
-		}
-	}
-
+extension CV {
 	fileprivate var bodyPointer: UnsafeCvBodyPointer {
 		mutating get { return CvXSUBANY(&self).pointee.any_ptr.assumingMemoryBound(to: CvBody.self) }
 		mutating set { CvXSUBANY(&self).pointee.any_ptr = UnsafeMutableRawPointer(newValue) }
 	}
+}
 
-	fileprivate static var mgvtbl = MGVTBL(
+struct UnsafeCvContext {
+	let cv: UnsafeCvPointer
+	let perl: PerlInterpreter
+
+	private static var mgvtbl = MGVTBL(
 		svt_get: nil,
 		svt_set: nil,
 		svt_len: nil,
 		svt_clear: nil,
 		svt_free: {
 			(perl, sv, magic) in
-			let bodyPointer = UnsafeMutableRawPointer(sv!).assumingMemoryBound(to: UnsafeCV.self).pointee.bodyPointer
+			let bodyPointer = UnsafeMutableRawPointer(sv!).assumingMemoryBound(to: CV.self).pointee.bodyPointer
 			bodyPointer.deinitialize()
 			bodyPointer.deallocate(capacity: 1)
 			return 0
@@ -36,19 +32,14 @@ extension UnsafeCV {
 		svt_dup: nil,
 		svt_local: nil
 	)
-}
-
-struct UnsafeCvContext {
-	let cv: UnsafeCvPointer
-	let perl: PerlInterpreter
 
 	static func new(name: String? = nil, file: StaticString = #file, body: @escaping CvBody, perl: PerlInterpreter) -> UnsafeCvContext {
 		func newXS(_ name: UnsafePointer<CChar>?) -> UnsafeCvPointer {
 			return perl.pointee.newXS_flags(name, cvResolver, file.description, nil, UInt32(XS_DYNAMIC_FILENAME))
 		}
 		let cv = name?.withCString(newXS) ?? newXS(nil)
-		cv.withMemoryRebound(to: UnsafeSV.self, capacity: 1) {
-			_ = perl.pointee.sv_magicext($0, nil, PERL_MAGIC_ext, &UnsafeCV.mgvtbl, nil, 0)
+		cv.withMemoryRebound(to: SV.self, capacity: 1) {
+			_ = perl.pointee.sv_magicext($0, nil, PERL_MAGIC_ext, &mgvtbl, nil, 0)
 		}
 		let bodyPointer = UnsafeCvBodyPointer.allocate(capacity: 1)
 		bodyPointer.initialize(to: body)
@@ -74,14 +65,14 @@ struct UnsafeCvContext {
 
 extension UnsafeCvContext {
 	init(dereference svc: UnsafeSvContext) throws {
-		guard let rvc = svc.referent, rvc.type == .code else {
-			throw PerlError.unexpectedSvType(fromUnsafeSvContext(inc: svc), want: .code)
+		guard let rvc = svc.referent, rvc.type == SVt_PVCV else {
+			throw PerlError.unexpectedValueType(fromUnsafeSvContext(inc: svc), want: PerlSub.self)
 		}
 		self.init(rebind: rvc)
 	}
 
 	init(rebind svc: UnsafeSvContext) {
-		let cv = UnsafeMutableRawPointer(svc.sv).bindMemory(to: UnsafeCV.self, capacity: 1)
+		let cv = UnsafeMutableRawPointer(svc.sv).bindMemory(to: CV.self, capacity: 1)
 		self.init(cv: cv, perl: svc.perl)
 	}
 }
@@ -93,7 +84,7 @@ private func cvResolver(perl: PerlInterpreter.Pointer, cv: UnsafeCvPointer) -> V
 	let errsv: UnsafeSvPointer?
 	do {
 		let stack = UnsafeXSubStack(perl: perl)
-		try cv.pointee.body(stack)
+		try cv.pointee.bodyPointer.pointee(stack)
 		errsv = nil
 	} catch PerlError.died(let scalar) {
 		errsv = scalar.withUnsafeSvContext { UnsafeSvContext.new(copy: $0).mortal() }

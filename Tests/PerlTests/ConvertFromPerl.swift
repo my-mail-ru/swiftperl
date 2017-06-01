@@ -325,6 +325,9 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		let r = v.referent! as! PerlScalar
 		XCTAssert(r.isInteger)
 		XCTAssertEqual(try Int(r), 42)
+		XCTAssertEqual(try Int(PerlScalar(dereferencing: v)), 42)
+		let x: PerlScalar = try perl.eval("[]")
+		XCTAssertThrowsError(try PerlScalar(dereferencing: x))
 	}
 
 	func testArrayRef() throws {
@@ -365,6 +368,9 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		let s: PerlScalar = try perl.eval("[qw/one two three/]")
 		let strings: [String] = try [String](s)
 		XCTAssertEqual(strings, ["one", "two", "three"])
+
+		let x: PerlScalar = try perl.eval("\\42")
+		XCTAssertThrowsError(try PerlArray(dereferencing: x))
 	}
 
 	func testHashRef() throws {
@@ -387,6 +393,9 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		XCTAssertEqual(sd, ["one": 1, "two": 2, "три": 3])
 		XCTAssertEqual(try [String: Int](hv), ["one": 1, "two": 2, "три": 3])
 		XCTAssertEqual(try [String: Int](sv), ["one": 1, "two": 2, "три": 3])
+
+		let x: PerlScalar = try perl.eval("\\42")
+		XCTAssertThrowsError(try PerlHash(dereferencing: x))
 	}
 
 	func testCodeRef() throws {
@@ -420,6 +429,9 @@ class ConvertFromPerlTests : EmbeddedTestCase {
 		}.call()
 		ret.withUnsafeSvContext { XCTAssertNotEqual($0.sv, origsv, "Returned SV is not copied") }
 		ret.withUnsafeBytes { XCTAssertEqual($0.baseAddress, origptr, "String of returned SV is not stealed") }
+
+		let x: PerlScalar = try perl.eval("\\42")
+		XCTAssertThrowsError(try PerlSub(dereferencing: x))
 	}
 
 	func testInterpreterMisc() throws {

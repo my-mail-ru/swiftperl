@@ -1,7 +1,6 @@
 import CPerl
 
-public typealias UnsafeHV = CPerl.HV
-public typealias UnsafeHvPointer = UnsafeMutablePointer<UnsafeHV>
+public typealias UnsafeHvPointer = UnsafeMutablePointer<HV>
 
 struct UnsafeHvContext {
 	let hv: UnsafeHvPointer
@@ -66,14 +65,14 @@ struct UnsafeHvContext {
 
 extension UnsafeHvContext {
 	init(dereference svc: UnsafeSvContext) throws {
-		guard let rvc = svc.referent, rvc.type == .hash else {
-			throw PerlError.unexpectedSvType(fromUnsafeSvContext(inc: svc), want: .hash)
+		guard let rvc = svc.referent, rvc.type == SVt_PVHV else {
+			throw PerlError.unexpectedValueType(fromUnsafeSvContext(inc: svc), want: PerlHash.self)
 		}
 		self.init(rebind: rvc)
 	}
 
 	init(rebind svc: UnsafeSvContext) {
-		let hv = UnsafeMutableRawPointer(svc.sv).bindMemory(to: UnsafeHV.self, capacity: 1)
+		let hv = UnsafeMutableRawPointer(svc.sv).bindMemory(to: HV.self, capacity: 1)
 		self.init(hv: hv, perl: svc.perl)
 	}
 }

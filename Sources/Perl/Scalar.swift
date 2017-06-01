@@ -30,18 +30,27 @@ import CPerl
 /// let hashref: PerlScalar = ["type": "string", "value": 10]
 /// ```
 public final class PerlScalar : PerlValue {
-	/// Creates a `SV` containing an undefined value.
-	public convenience init() { self.init(perl: .current) } // default bellow doesn't work...
+	convenience init(noinc svc: UnsafeSvContext) throws {
+		guard svc.type.rawValue < SVt_PVAV.rawValue else {
+			throw PerlError.unexpectedValueType(fromUnsafeSvContext(noinc: svc), want: PerlScalar.self)
+		}
+		self.init(noincUnchecked: svc)
+	}
 
 	convenience init(copyUnchecked svc: UnsafeSvContext) {
 		self.init(noincUnchecked: UnsafeSvContext.new(stealingCopy: svc))
 	}
 
 	convenience init(copy svc: UnsafeSvContext) throws {
-		guard svc.type == .scalar else {
-			throw PerlError.unexpectedSvType(fromUnsafeSvContext(inc: svc), want: .scalar)
+		guard svc.type.rawValue < SVt_PVAV.rawValue else {
+			throw PerlError.unexpectedValueType(fromUnsafeSvContext(inc: svc), want: PerlScalar.self)
 		}
 		self.init(copyUnchecked: svc)
+	}
+
+	/// Creates a `SV` containing an undefined value.
+	public convenience init() {
+		self.init(perl: .current)
 	}
 
 	/// Creates a `SV` containing an undefined value.
@@ -136,9 +145,6 @@ public final class PerlScalar : PerlValue {
 	public var isInteger: Bool {
 		return withUnsafeSvContext { $0.isInteger }
 	}
-
-	@available(*, deprecated, renamed: "isInteger")
-	public var isInt: Bool { return isInteger }
 
 	/// A boolean value indicating whether the `SV` contains a double.
 	public var isDouble: Bool {
@@ -275,18 +281,6 @@ public final class PerlScalar : PerlValue {
 			values.append("undef")
 		}
 		return "PerlScalar(\(values.joined(separator: ", ")))"
-	}
-
-	func withReferentUnsafeSvContext<R>(type: SvType, body: (UnsafeSvContext) throws -> R) throws -> R {
-		return try withUnsafeSvContext {
-			guard let svc = $0.referent else {
-				throw PerlError.notReference(fromUnsafeSvContext(inc: $0))
-			}
-			guard svc.type == type else {
-				throw PerlError.unexpectedSvType(fromUnsafeSvContext(inc: svc), want: type)
-			}
-			return try body(svc)
-		}
 	}
 }
 

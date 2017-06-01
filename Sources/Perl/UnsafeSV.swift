@@ -1,28 +1,6 @@
 import CPerl
 
-public enum SvType {
-	case scalar, array, hash, code, format, io
-
-	init(_ t: svtype) {
-		switch t {
-			case SVt_PVAV:
-				self = .array
-			case SVt_PVHV:
-				self = .hash
-			case SVt_PVCV:
-				self = .code
-			case SVt_PVFM:
-				self = .format
-			case SVt_PVIO:
-				self = .io
-			default:
-				self = .scalar
-		}
-	}
-}
-
-public typealias UnsafeSV = CPerl.SV
-public typealias UnsafeSvPointer = UnsafeMutablePointer<UnsafeSV>
+public typealias UnsafeSvPointer = UnsafeMutablePointer<SV>
 
 public struct UnsafeSvContext {
 	public let sv: UnsafeSvPointer
@@ -47,7 +25,7 @@ public struct UnsafeSvContext {
 		return perl.pointee.sv_2mortal(sv)!
 	}
 
-	var type: SvType { return SvType(SvTYPE(sv)) }
+	var type: svtype { return SvTYPE(sv) }
 	var defined: Bool { return SvOK(sv) }
 	var isInteger: Bool { return SvIOK(sv) }
 	var isDouble: Bool { return SvNOK(sv) }
@@ -77,7 +55,7 @@ public struct UnsafeSvContext {
 	}
 
 	private var hasSwiftObjectMagic: Bool {
-		return SvTYPE(sv) == SVt_PVMG && perl.pointee.mg_findext(sv, PERL_MAGIC_ext, &objectMgvtbl) != nil
+		return type == SVt_PVMG && perl.pointee.mg_findext(sv, PERL_MAGIC_ext, &objectMgvtbl) != nil
 	}
 
 	var swiftObject: PerlBridgedObject? {
@@ -168,41 +146,6 @@ public struct UnsafeSvContext {
 
 	static func eq(_ lhs: UnsafeSvContext, _ rhs: UnsafeSvContext) -> Bool {
 		return lhs.perl.pointee.sv_eq(lhs.sv, rhs.sv)
-	}
-}
-
-extension UnsafeSvContext {
-	func withUnsafeAvContext<R>(_ body: (UnsafeAvContext) throws -> R) rethrows -> R {
-		return try sv.withMemoryRebound(to: UnsafeAV.self, capacity: 1) { av in
-			try body(UnsafeAvContext(av: av, perl: perl))
-		}
-	}
-
-	func withUnsafeHvContext<R>(_ body: (UnsafeHvContext) throws -> R) rethrows -> R {
-		return try sv.withMemoryRebound(to: UnsafeHV.self, capacity: 1) { hv in
-			try body(UnsafeHvContext(hv: hv, perl: perl))
-		}
-	}
-
-	func withUnsafeCvContext<R>(_ body: (UnsafeCvContext) throws -> R) rethrows -> R {
-		return try sv.withMemoryRebound(to: UnsafeCV.self, capacity: 1) { cv in
-			try body(UnsafeCvContext(cv: cv, perl: perl))
-		}
-	}
-
-	init(rebind avc: UnsafeAvContext) {
-		let sv = UnsafeMutableRawPointer(avc.av).bindMemory(to: UnsafeSV.self, capacity: 1)
-		self.init(sv: sv, perl: avc.perl)
-	}
-
-	init(rebind hvc: UnsafeHvContext) {
-		let sv = UnsafeMutableRawPointer(hvc.hv).bindMemory(to: UnsafeSV.self, capacity: 1)
-		self.init(sv: sv, perl: hvc.perl)
-	}
-
-	init(rebind cvc: UnsafeCvContext) {
-		let sv = UnsafeMutableRawPointer(cvc.cv).bindMemory(to: UnsafeSV.self, capacity: 1)
-		self.init(sv: sv, perl: cvc.perl)
 	}
 }
 

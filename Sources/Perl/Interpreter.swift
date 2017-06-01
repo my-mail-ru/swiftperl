@@ -1,8 +1,8 @@
 import CPerl
 
 public struct PerlInterpreter {
-	public typealias Pointee = CPerl.PerlInterpreter
-	public typealias Pointer = UnsafeMutablePointer<Pointee>
+	typealias Pointee = CPerl.PerlInterpreter
+	public typealias Pointer = UnsafeMutablePointer<CPerl.PerlInterpreter>
 
 	public let pointer: Pointer
 
