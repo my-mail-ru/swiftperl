@@ -32,7 +32,7 @@ in Swift environment is also possible.
 
 
 %build
-./generate-modulemap
+./prepare
 
 
 %install
