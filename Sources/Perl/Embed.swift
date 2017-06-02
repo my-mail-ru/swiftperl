@@ -23,6 +23,7 @@ extension PerlInterpreter {
 		PERL_SYS_TERM()
 	}
 
+	/// Creates a new embedded Perl interpreter.
 	public static func new() -> PerlInterpreter {
 		_ = perlInitialized
 		let perl = PerlInterpreter(Pointee.alloc()!)
@@ -31,6 +32,7 @@ extension PerlInterpreter {
 		return perl
 	}
 
+	/// Shuts down the Perl interpreter.
 	public func destroy() {
 		pointee.destruct()
 		pointee.free()

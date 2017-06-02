@@ -337,6 +337,7 @@ extension PerlHash: Sequence, IteratorProtocol {
 }
 
 extension PerlHash {
+	/// Creates a Perl hash from a Swift dictionary.
 	public convenience init(_ dict: [Key: Value]) {
 		self.init()
 		for (k, v) in dict {
@@ -344,6 +345,7 @@ extension PerlHash {
 		}
 	}
 
+	/// Creates a Perl hash from a Swift array of key/value tuples.
 	public convenience init(_ elements: [(Key, Value)]) {
 		self.init()
 		for (k, v) in elements {

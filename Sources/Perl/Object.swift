@@ -115,6 +115,9 @@ open class PerlObject : PerlValue, PerlScalarConvertible {
 		self.init(incUnchecked: svc)
 	}
 
+	/// Casts an instance of `PerlScalar` to `PerlObject`.
+	///
+	/// - Throws: If underlying SV is not an object.
 	public convenience init(_ scalar: PerlScalar) throws {
 		defer { _fixLifetime(scalar) }
 		try self.init(inc: scalar.unsafeSvContext)
