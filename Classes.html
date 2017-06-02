@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Classes  Reference</title>
+    <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="js/jquery.min.js" defer></script>
+    <script src="js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a title="Classes  Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="index.html">Perl Docs</a></p>
+        <p class="header-right"><a href="https://github.com/my-mail-ru/swiftperl"><img src="img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="index.html">Perl Reference</a>
+        <img id="carat" src="img/carat.png" />
+        Classes  Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Classes/PerlArray.html">PerlArray</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/PerlHash.html">PerlHash</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/PerlObject.html">PerlObject</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/PerlScalar.html">PerlScalar</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/PerlScalar/StringUnits.html">– StringUnits</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/PerlSub.html">PerlSub</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/PerlSub/Args.html">– Args</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/PerlSub/ReturnValues.html">– ReturnValues</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/PerlValue.html">PerlValue</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Enums.html">Enums</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Enums/PerlError.html">PerlError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Extensions/Array.html">Array</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Bool.html">Bool</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Dictionary.html">Dictionary</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Double.html">Double</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Int.html">Int</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions.html#/s:Sq">Optional</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/String.html">String</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/UInt.html">UInt</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols.html#/s:P4Perl17PerlBridgedObject">PerlBridgedObject</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/PerlNamedClass.html">PerlNamedClass</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Structs.html">Structs</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Structs/PerlInterpreter.html">PerlInterpreter</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>Classes</h1>
+            <p>The following classes are available globally.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:C4Perl9PerlArray"></a>
+                    <a name="//apple_ref/swift/Class/PerlArray" class="dashAnchor"></a>
+                    <a class="token" href="#/s:C4Perl9PerlArray">PerlArray</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Provides a safe wrapper for Perl array (<code>AV</code>).
+Performs reference counting on initialization and deinitialization.</p>
+<h2 id='cheat-sheet' class='heading'>Cheat Sheet</h2>
+<h3 id='array-of-strings' class='heading'>Array of strings</h3>
+<pre class="highlight perl"><code><span class="k">my</span> <span class="nv">@list</span> <span class="o">=</span> <span class="p">(</span><span class="s">"one"</span><span class="p">,</span> <span class="s">"two"</span><span class="p">,</span> <span class="s">"three"</span><span class="p">);</span>
+</code></pre>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">list</span><span class="p">:</span> <span class="kt">PerlArray</span> <span class="o">=</span> <span class="p">[</span><span class="s">"one"</span><span class="p">,</span> <span class="s">"two"</span><span class="p">,</span> <span class="s">"three"</span><span class="p">]</span>
+</code></pre>
+<h3 id='array-of-mixed-type-data-psgi-response' class='heading'>Array of mixed type data (PSGI response)</h3>
+<pre class="highlight perl"><code><span class="k">my</span> <span class="nv">@response</span> <span class="o">=</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="p">[</span><span class="s">"Content-Type"</span> <span class="o">=&gt;</span> <span class="s">"application/json"</span><span class="p">],</span> <span class="p">[</span><span class="s">"{}"</span><span class="p">]);</span>
+</code></pre>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">response</span><span class="p">:</span> <span class="kt">PerlArray</span> <span class="o">=</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="p">[</span><span class="s">"Content-Type"</span><span class="p">,</span> <span class="s">"application/json"</span><span class="p">],</span> <span class="p">[</span><span class="s">"{}"</span><span class="p">]]</span>
+</code></pre>
+<h3 id='accessing-elements-of-the-array' class='heading'>Accessing elements of the array</h3>
+<pre class="highlight perl"><code><span class="k">my</span> <span class="nv">@list</span><span class="p">;</span>
+<span class="nv">$list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="nb">push</span> <span class="nv">@list</span><span class="p">,</span> <span class="mi">20</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$first</span> <span class="o">=</span> <span class="nb">shift</span> <span class="nv">@list</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$second</span> <span class="o">=</span> <span class="nv">$list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</code></pre>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">list</span><span class="p">:</span> <span class="kt">PerlArray</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">list</span><span class="o">.</span><span class="nf">append</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="k">let</span> <span class="nv">first</span> <span class="o">=</span> <span class="n">list</span><span class="o">.</span><span class="nf">removeFirst</span><span class="p">()</span>
+<span class="k">let</span> <span class="nv">second</span> <span class="o">=</span> <span class="n">list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</code></pre>
+
+                        <a href="Classes/PerlArray.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">PerlArray</span> <span class="p">:</span> <span class="kt"><a href="Classes/PerlValue.html">PerlValue</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L45-L115">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:C4Perl7PerlSub"></a>
+                    <a name="//apple_ref/swift/Class/PerlSub" class="dashAnchor"></a>
+                    <a class="token" href="#/s:C4Perl7PerlSub">PerlSub</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Provides a safe wrapper for Perl subroutine (<code>CV</code>).
+Performs reference counting on initialization and deinitialization.</p>
+<h2 id='cheat-sheet' class='heading'>Cheat Sheet</h2>
+<h3 id='creation-of-an-anonymous-subroutine' class='heading'>Creation of an anonymous subroutine</h3>
+<pre class="highlight perl"><code><span class="k">my</span> <span class="nv">$summer</span> <span class="o">=</span> <span class="k">sub </span><span class="p">{</span>
+    <span class="k">my</span> <span class="p">(</span><span class="nv">$lv</span><span class="p">,</span> <span class="nv">$rv</span><span class="p">)</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nv">$lv</span> <span class="o">+</span> <span class="nv">$rv</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">summer</span> <span class="o">=</span> <span class="kt">PerlSub</span> <span class="p">{</span>
+    <span class="p">(</span><span class="nv">lv</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">rv</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Int</span> <span class="k">in</span>
+    <span class="k">return</span> <span class="n">lv</span> <span class="o">+</span> <span class="n">rv</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>In fact, these examples are not fully equal. The Perl version returns a SV pointing to a CV,
+whereas the Swift version returns just a CV.</p>
+<h3 id='creation-of-a-named-subroutine' class='heading'>Creation of a named subroutine</h3>
+<pre class="highlight perl"><code><span class="k">sub </span><span class="nf">strlen</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nb">length</span> <span class="nv">$_</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="p">}</span>
+</code></pre>
+<pre class="highlight swift"><code><span class="kt">PerlSub</span><span class="p">(</span><span class="nv">name</span><span class="p">:</span> <span class="s">"strlen"</span><span class="p">)</span> <span class="p">{</span> <span class="p">(</span><span class="nv">s</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">in</span>
+    <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">characters</span><span class="o">.</span><span class="n">count</span>
+<span class="p">}</span>
+</code></pre>
+<h3 id='calling-a-subroutine' class='heading'>Calling a subroutine</h3>
+<pre class="highlight perl"><code><span class="k">my</span> <span class="nv">$sum</span> <span class="o">=</span> <span class="nv">$summer</span><span class="o">-&gt;</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">);</span>
+</code></pre>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">sum</span> <span class="o">=</span> <span class="n">summer</span><span class="o">.</span><span class="nf">call</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+</code></pre>
+
+                        <a href="Classes/PerlSub.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">PerlSub</span> <span class="p">:</span> <span class="kt"><a href="Classes/PerlValue.html">PerlValue</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Subroutine.swift#L51-L240">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:C4Perl10PerlObject"></a>
+                    <a name="//apple_ref/swift/Class/PerlObject" class="dashAnchor"></a>
+                    <a class="token" href="#/s:C4Perl10PerlObject">PerlObject</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Provides a safe wrapper for Perl objects (blessed references).
+Performs reference counting on initialization and deinitialization.</p>
+
+<p>Any Perl object of unregistered type will be imported to Swift
+as an instance of this class. To provide clean API to your
+Perl object implement class derived from <code>PerlObject</code>, make it
+conforming to <code><a href="Protocols/PerlNamedClass.html">PerlNamedClass</a></code> and supply it with methods and
+calculated attributes providing access to Perl methods of your
+object. Use <code>register</code> method on startup to enable automatical
+conversion of Perl objects of class <code>perlClassName</code> to instances
+of your Swift class.</p>
+
+<p>For example:</p>
+<pre class="highlight swift"><code><span class="kd">final</span> <span class="kd">class</span> <span class="kt">URI</span> <span class="p">:</span> <span class="kt">PerlObject</span><span class="p">,</span> <span class="kt">PerlNamedClass</span> <span class="p">{</span>
+    <span class="kd">static</span> <span class="k">let</span> <span class="nv">perlClassName</span> <span class="o">=</span> <span class="s">"URI"</span>
+
+    <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">str</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="p">{</span>
+        <span class="k">try</span> <span class="k">self</span><span class="o">.</span><span class="nf">init</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"new"</span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="n">str</span><span class="p">])</span>
+    <span class="p">}</span>
+
+    <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">str</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">scheme</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="p">{</span>
+        <span class="k">try</span> <span class="k">self</span><span class="o">.</span><span class="nf">init</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"new"</span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="n">str</span><span class="p">,</span> <span class="n">scheme</span><span class="p">])</span>
+    <span class="p">}</span>
+
+    <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">copyOf</span> <span class="nv">uri</span><span class="p">:</span> <span class="kt">URI</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">try!</span> <span class="k">self</span><span class="o">.</span><span class="nf">init</span><span class="p">(</span><span class="n">uri</span><span class="o">.</span><span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"clone"</span><span class="p">)</span> <span class="k">as</span> <span class="kt">PerlScalar</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">var</span> <span class="nv">scheme</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">return</span> <span class="k">try!</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"scheme"</span><span class="p">)</span> <span class="p">}</span>
+    <span class="kd">func</span> <span class="nf">scheme</span><span class="p">(</span><span class="n">_</span> <span class="nv">scheme</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">return</span> <span class="k">try</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"scheme"</span><span class="p">,</span> <span class="n">scheme</span><span class="p">)</span> <span class="p">}</span>
+
+    <span class="k">var</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span>
+        <span class="k">get</span> <span class="p">{</span> <span class="k">return</span> <span class="k">try!</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"path"</span><span class="p">)</span> <span class="p">}</span>
+        <span class="k">set</span> <span class="p">{</span> <span class="k">try!</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"path"</span><span class="p">,</span> <span class="n">newValue</span><span class="p">)</span> <span class="k">as</span> <span class="kt">Void</span> <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">var</span> <span class="nv">asString</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">return</span> <span class="k">try!</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"as_string"</span><span class="p">)</span> <span class="p">}</span>
+
+    <span class="kd">func</span> <span class="nf">abs</span><span class="p">(</span><span class="nv">base</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">return</span> <span class="k">try!</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"abs"</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span> <span class="p">}</span>
+    <span class="kd">func</span> <span class="nf">rel</span><span class="p">(</span><span class="nv">base</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">return</span> <span class="k">try!</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"rel"</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span> <span class="p">}</span>
+
+    <span class="k">var</span> <span class="nv">secure</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">return</span> <span class="k">try!</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"secure"</span><span class="p">)</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+
+                        <a href="Classes/PerlObject.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="n">open</span> <span class="kd">class</span> <span class="kt">PerlObject</span> <span class="p">:</span> <span class="kt"><a href="Classes/PerlValue.html">PerlValue</a></span><span class="p">,</span> <span class="kt">PerlScalarConvertible</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Object.swift#L49-L203">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:C4Perl8PerlHash"></a>
+                    <a name="//apple_ref/swift/Class/PerlHash" class="dashAnchor"></a>
+                    <a class="token" href="#/s:C4Perl8PerlHash">PerlHash</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Provides a safe wrapper for Perl hash (<code>HV</code>).
+Performs reference counting on initialization and deinitialization.</p>
+<h2 id='cheat-sheet' class='heading'>Cheat Sheet</h2>
+<h3 id='creating-of-a-hash' class='heading'>Creating of a hash</h3>
+<pre class="highlight perl"><code><span class="k">my</span> <span class="nv">%hash</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="nv">id</span> <span class="o">=&gt;</span> <span class="mi">42</span><span class="p">,</span>
+    <span class="nv">name</span> <span class="o">=&gt;</span> <span class="s">"Иван"</span><span class="p">,</span>
+    <span class="nv">aliases</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s">"Ваня"</span><span class="p">,</span> <span class="s">"John"</span><span class="p">],</span>
+<span class="p">);</span>
+</code></pre>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">hash</span><span class="p">:</span> <span class="kt">PerlHash</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">"id"</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span>
+    <span class="s">"name"</span><span class="p">:</span> <span class="s">"Иван"</span><span class="p">,</span>
+    <span class="s">"aliases"</span><span class="p">:</span> <span class="p">[</span><span class="s">"Ваня"</span><span class="p">,</span> <span class="s">"John"</span><span class="p">],</span>
+<span class="p">]</span>
+</code></pre>
+<h3 id='accessing-a-hash' class='heading'>Accessing a hash</h3>
+<pre class="highlight perl"><code><span class="nv">$hash</span><span class="p">{</span><span class="nv">age</span><span class="p">}</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$age</span> <span class="o">=</span> <span class="nv">$hash</span><span class="p">{</span><span class="nv">age</span><span class="p">};</span>
+<span class="nb">delete</span> <span class="nv">$hash</span><span class="p">{</span><span class="nv">age</span><span class="p">};</span>
+<span class="k">my</span> <span class="nv">$has_age</span> <span class="o">=</span> <span class="nb">exists</span> <span class="nv">$hash</span><span class="p">{</span><span class="nv">age</span><span class="p">};</span>
+<span class="nv">$hash</span><span class="p">{</span><span class="nv">age</span><span class="p">}</span> <span class="o">=</span> <span class="nb">undef</span><span class="p">;</span>
+</code></pre>
+<pre class="highlight swift"><code><span class="n">hash</span><span class="p">[</span><span class="s">"age"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="k">let</span> <span class="nv">age</span> <span class="o">=</span> <span class="n">hash</span><span class="p">[</span><span class="s">"age"</span><span class="p">]</span> <span class="p">??</span> <span class="kt">PerlScalar</span><span class="p">()</span>
+<span class="n">hash</span><span class="p">[</span><span class="s">"age"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">nil</span>
+<span class="k">let</span> <span class="nv">hasAge</span> <span class="o">=</span> <span class="n">hash</span><span class="p">[</span><span class="s">"age"</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">nil</span>
+<span class="n">hash</span><span class="p">[</span><span class="s">"age"</span><span class="p">]</span> <span class="o">=</span> <span class="kt">PerlScalar</span><span class="p">()</span>
+</code></pre>
+
+<p>The difference between Perl and Swift hash element access APIs is the result of
+Swiftification. It was done to make subscript behavior match behavior of
+subscripts in <code>Dictionary</code>. So, when a key does not exist subscript returns
+<code>nil</code> not an undefined SV as a Perl programmer could expect.</p>
+
+                        <a href="Classes/PerlHash.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">PerlHash</span> <span class="p">:</span> <span class="kt"><a href="Classes/PerlValue.html">PerlValue</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Hash.swift#L48-L131">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:C4Perl10PerlScalar"></a>
+                    <a name="//apple_ref/swift/Class/PerlScalar" class="dashAnchor"></a>
+                    <a class="token" href="#/s:C4Perl10PerlScalar">PerlScalar</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Provides a safe wrapper for Perl scalar (<code>SV</code>).
+Performs reference counting on initialization and deinitialization.</p>
+
+<p>Can contain any scalar SV with <code>SvTYPE(sv) &lt; SVt_PVAV</code> such as:
+undefined values, integers (<code>IV</code>), numbers (<code>NV</code>), strings (<code>PV</code>),
+references (<code>RV</code>), objects and others.
+Objects as exception have their own type <code><a href="Classes/PerlObject.html">PerlObject</a></code> which
+provides more specific methods to work with them. Nevertheless
+objects are compatible with and can be represented as <code>PerlScalar</code>.</p>
+<h2 id='cheat-sheet' class='heading'>Cheat Sheet</h2>
+<h3 id='creation-of-various-scalars' class='heading'>Creation of various scalars</h3>
+<pre class="highlight perl"><code><span class="k">my</span> <span class="nv">$int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$str</span> <span class="o">=</span> <span class="s">"Строченька"</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$intref</span> <span class="o">=</span> <span class="o">\</span><span class="mi">10</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$arrayref</span> <span class="o">=</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="s">"OK"</span><span class="p">];</span>
+<span class="k">my</span> <span class="nv">$hashref</span> <span class="o">=</span> <span class="p">{</span> <span class="nv">type</span> <span class="o">=&gt;</span> <span class="s">"string"</span><span class="p">,</span> <span class="nv">value</span> <span class="o">=&gt;</span> <span class="mi">10</span> <span class="p">};</span>
+</code></pre>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">int</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="k">let</span> <span class="nv">str</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="s">"Строченька"</span>
+<span class="k">let</span> <span class="nv">intref</span> <span class="o">=</span> <span class="kt">PerlScalar</span><span class="p">(</span><span class="nv">referenceTo</span><span class="p">:</span> <span class="kt">PerlScalar</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+<span class="k">let</span> <span class="nv">arrayref</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="s">"OK"</span><span class="p">];</span>
+<span class="k">let</span> <span class="nv">hashref</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="p">[</span><span class="s">"type"</span><span class="p">:</span> <span class="s">"string"</span><span class="p">,</span> <span class="s">"value"</span><span class="p">:</span> <span class="mi">10</span><span class="p">]</span>
+</code></pre>
+
+                        <a href="Classes/PerlScalar.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">PerlScalar</span> <span class="p">:</span> <span class="kt"><a href="Classes/PerlValue.html">PerlValue</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L32-L285">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:C4Perl9PerlValue"></a>
+                    <a name="//apple_ref/swift/Class/PerlValue" class="dashAnchor"></a>
+                    <a class="token" href="#/s:C4Perl9PerlValue">PerlValue</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Provides a safe wrapper for any SV, which can contain any Perl value,
+not only scalars. Performs reference counting on initialization and
+deinitialization.</p>
+
+                        <a href="Classes/PerlValue.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="n">open</span> <span class="kd">class</span> <span class="kt">PerlValue</span> <span class="p">:</span> <span class="kt"><a href="Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a></span><span class="p">,</span> <span class="kt">CustomDebugStringConvertible</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Value.swift#L6-L102">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2017 <a class="link" href="https://my.mail.ru/" target="_blank" rel="external">Mail.Ru</a>. All rights reserved. (Last updated: 2017-06-02)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.8.2</a>.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

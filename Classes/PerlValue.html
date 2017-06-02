@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>PerlValue Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Class/PerlValue" class="dashAnchor"></a>
+    <a title="PerlValue Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">Perl Docs</a></p>
+        <p class="header-right"><a href="https://github.com/my-mail-ru/swiftperl"><img src="../img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">Perl Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        PerlValue Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/PerlArray.html">PerlArray</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlHash.html">PerlHash</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlObject.html">PerlObject</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlScalar.html">PerlScalar</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlScalar/StringUnits.html">– StringUnits</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub.html">PerlSub</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub/Args.html">– Args</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub/ReturnValues.html">– ReturnValues</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlValue.html">PerlValue</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enums</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/PerlError.html">PerlError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/Array.html">Array</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Bool.html">Bool</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Dictionary.html">Dictionary</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Double.html">Double</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Int.html">Int</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:Sq">Optional</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/UInt.html">UInt</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols.html#/s:P4Perl17PerlBridgedObject">PerlBridgedObject</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/PerlNamedClass.html">PerlNamedClass</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structs</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/PerlInterpreter.html">PerlInterpreter</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>PerlValue</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight"><code><span class="n">open</span> <span class="kd">class</span> <span class="kt">PerlValue</span> <span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a></span><span class="p">,</span> <span class="kt">CustomDebugStringConvertible</span></code></pre>
+
+                </div>
+              </div>
+            <p>Provides a safe wrapper for any SV, which can contain any Perl value,
+not only scalars. Performs reference counting on initialization and
+deinitialization.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlValuecFT14noincUncheckedVS_15UnsafeSvContext_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(noincUnchecked:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlValuecFT14noincUncheckedVS_15UnsafeSvContext_S0_">init(noincUnchecked:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Unsafely creates an instance without incrementing a reference counter of a SV.
+Performs no type checks and should be used only if compatibility is known.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">required</span> <span class="nf">init</span><span class="p">(</span><span class="n">noincUnchecked</span> <span class="nv">svc</span><span class="p">:</span> <span class="kt">UnsafeSvContext</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Value.swift#L11-L13">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlValuecFT12incUncheckedVS_15UnsafeSvContext_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(incUnchecked:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlValuecFT12incUncheckedVS_15UnsafeSvContext_S0_">init(incUnchecked:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Unsafely creates an instance incrementing a reference counter of a SV.
+Performs no type checks and should be used only if compatibility is known.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">required</span> <span class="nf">init</span><span class="p">(</span><span class="n">incUnchecked</span> <span class="nv">svc</span><span class="p">:</span> <span class="kt">UnsafeSvContext</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Value.swift#L17-L20">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlValuecFzT5noincVS_15UnsafeSvContext_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(noinc:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlValuecFzT5noincVS_15UnsafeSvContext_S0_">init(noinc:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Unsafely creates an instance without incrementing a reference counter of a SV.
+Performs type checks and throws an error unless compatible.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">noinc</span> <span class="nv">svc</span><span class="p">:</span> <span class="kt">UnsafeSvContext</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Value.swift#L24-L26">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlValuecFzT3incVS_15UnsafeSvContext_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(inc:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlValuecFzT3incVS_15UnsafeSvContext_S0_">init(inc:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Unsafely creates an instance incrementing a reference counter of a SV.
+Performs type checks and throws an error unless compatible.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">inc</span> <span class="nv">svc</span><span class="p">:</span> <span class="kt">UnsafeSvContext</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Value.swift#L30-L33">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlValuecFzT13dereferencingCS_10PerlScalar_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(dereferencing:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlValuecFzT13dereferencingCS_10PerlScalar_S0_">init(dereferencing:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Dereferences <code>ref</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">dereferencing</span> <span class="nv">ref</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Value.swift#L36-L42">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlValue19withUnsafeSvContexturFzFzVS_15UnsafeSvContextxx"></a>
+                    <a name="//apple_ref/swift/Method/withUnsafeSvContext(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlValue19withUnsafeSvContexturFzFzVS_15UnsafeSvContextxx">withUnsafeSvContext(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Invokes the given closure on the unsafe context containing pointers
+to the SV and the Perl interpreter.</p>
+
+<p>The <code>withUnsafeSvContext(_:)</code> method ensures that the SV&rsquo;s
+lifetime extends through the execution of <code>body</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">func</span> <span class="n">withUnsafeSvContext</span><span class="o">&lt;</span><span class="kt">R</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">body</span><span class="p">:</span> <span class="p">(</span><span class="kt">UnsafeSvContext</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span><span class="p">)</span> <span class="k">rethrows</span> <span class="o">-&gt;</span> <span class="kt">R</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>body</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A closure that takes <code>UnsafeSvContext</code> as its argument.
+If the closure has a return value, it is used as the
+return value of the <code>withUnsafeSvContext(_:)</code> method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The return value of the <code>body</code> closure, if any.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Value.swift#L58-L61">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlValue4dumpFT_T_"></a>
+                    <a name="//apple_ref/swift/Method/dump()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlValue4dumpFT_T_">dump()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Dumps the contents of the underlying SV to the <q>STDERR</q> filehandle.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">dump</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Value.swift#L94-L96">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC4Perl9PerlValue16debugDescriptionSS"></a>
+                    <a name="//apple_ref/swift/Property/debugDescription" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC4Perl9PerlValue16debugDescriptionSS">debugDescription</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A textual representation of the SV, suitable for debugging.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">debugDescription</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Value.swift#L99-L101">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2017 <a class="link" href="https://my.mail.ru/" target="_blank" rel="external">Mail.Ru</a>. All rights reserved. (Last updated: 2017-06-02)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.8.2</a>.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

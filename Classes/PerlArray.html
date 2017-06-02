@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>PerlArray Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Class/PerlArray" class="dashAnchor"></a>
+    <a title="PerlArray Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">Perl Docs</a></p>
+        <p class="header-right"><a href="https://github.com/my-mail-ru/swiftperl"><img src="../img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">Perl Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        PerlArray Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/PerlArray.html">PerlArray</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlHash.html">PerlHash</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlObject.html">PerlObject</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlScalar.html">PerlScalar</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlScalar/StringUnits.html">– StringUnits</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub.html">PerlSub</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub/Args.html">– Args</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub/ReturnValues.html">– ReturnValues</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlValue.html">PerlValue</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enums</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/PerlError.html">PerlError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/Array.html">Array</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Bool.html">Bool</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Dictionary.html">Dictionary</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Double.html">Double</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Int.html">Int</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:Sq">Optional</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/UInt.html">UInt</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols.html#/s:P4Perl17PerlBridgedObject">PerlBridgedObject</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/PerlNamedClass.html">PerlNamedClass</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structs</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/PerlInterpreter.html">PerlInterpreter</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>PerlArray</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">PerlArray</span> <span class="p">:</span> <span class="kt"><a href="../Classes/PerlValue.html">PerlValue</a></span></code></pre>
+
+                </div>
+              </div>
+            <p>Provides a safe wrapper for Perl array (<code>AV</code>).
+Performs reference counting on initialization and deinitialization.</p>
+<h2 id='cheat-sheet' class='heading'>Cheat Sheet</h2>
+<h3 id='array-of-strings' class='heading'>Array of strings</h3>
+<pre class="highlight perl"><code><span class="k">my</span> <span class="nv">@list</span> <span class="o">=</span> <span class="p">(</span><span class="s">"one"</span><span class="p">,</span> <span class="s">"two"</span><span class="p">,</span> <span class="s">"three"</span><span class="p">);</span>
+</code></pre>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">list</span><span class="p">:</span> <span class="kt">PerlArray</span> <span class="o">=</span> <span class="p">[</span><span class="s">"one"</span><span class="p">,</span> <span class="s">"two"</span><span class="p">,</span> <span class="s">"three"</span><span class="p">]</span>
+</code></pre>
+<h3 id='array-of-mixed-type-data-psgi-response' class='heading'>Array of mixed type data (PSGI response)</h3>
+<pre class="highlight perl"><code><span class="k">my</span> <span class="nv">@response</span> <span class="o">=</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="p">[</span><span class="s">"Content-Type"</span> <span class="o">=&gt;</span> <span class="s">"application/json"</span><span class="p">],</span> <span class="p">[</span><span class="s">"{}"</span><span class="p">]);</span>
+</code></pre>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">response</span><span class="p">:</span> <span class="kt">PerlArray</span> <span class="o">=</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="p">[</span><span class="s">"Content-Type"</span><span class="p">,</span> <span class="s">"application/json"</span><span class="p">],</span> <span class="p">[</span><span class="s">"{}"</span><span class="p">]]</span>
+</code></pre>
+<h3 id='accessing-elements-of-the-array' class='heading'>Accessing elements of the array</h3>
+<pre class="highlight perl"><code><span class="k">my</span> <span class="nv">@list</span><span class="p">;</span>
+<span class="nv">$list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="nb">push</span> <span class="nv">@list</span><span class="p">,</span> <span class="mi">20</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$first</span> <span class="o">=</span> <span class="nb">shift</span> <span class="nv">@list</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$second</span> <span class="o">=</span> <span class="nv">$list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</code></pre>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">list</span><span class="p">:</span> <span class="kt">PerlArray</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">list</span><span class="o">.</span><span class="nf">append</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="k">let</span> <span class="nv">first</span> <span class="o">=</span> <span class="n">list</span><span class="o">.</span><span class="nf">removeFirst</span><span class="p">()</span>
+<span class="k">let</span> <span class="nv">second</span> <span class="o">=</span> <span class="n">list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</code></pre>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArraycFT_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArraycFT_S0_">init()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates an empty Perl array.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L62-L64">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArraycFT4perlVS_15PerlInterpreter_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(perl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArraycFT4perlVS_15PerlInterpreter_S0_">init(perl:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates an empty Perl array.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">perl</span><span class="p">:</span> <span class="kt"><a href="../Structs/PerlInterpreter.html">PerlInterpreter</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">current</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L67-L69">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArraycuRxs10CollectionWx8Iterator7Element_S_21PerlScalarConvertiblerFTx4perlVS_15PerlInterpreter_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(_:perl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArraycuRxs10CollectionWx8Iterator7Element_S_21PerlScalarConvertiblerFTx4perlVS_15PerlInterpreter_S0_">init(_:perl:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Initializes Perl array with elements of collection <code>c</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="kd">init</span><span class="o">&lt;</span><span class="kt">C</span> <span class="p">:</span> <span class="kt">Collection</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">c</span><span class="p">:</span> <span class="kt">C</span><span class="p">,</span> <span class="nv">perl</span><span class="p">:</span> <span class="kt"><a href="../Structs/PerlInterpreter.html">PerlInterpreter</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">current</span><span class="p">)</span>
+		<span class="k">where</span> <span class="kt">C</span><span class="o">.</span><span class="kt">Iterator</span><span class="o">.</span><span class="kt">Element</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L72-L79">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArraycFzCS_10PerlScalarS0_"></a>
+                    <a name="//apple_ref/swift/Method/init(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArraycFzCS_10PerlScalarS0_">init(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Short form of <code>init(dereferencing:)</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">ref</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L82-L84">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArraycFT3getSS4perlVS_15PerlInterpreter_GSqS0__"></a>
+                    <a name="//apple_ref/swift/Method/init(get:perl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArraycFT3getSS4perlVS_15PerlInterpreter_GSqS0__">init(get:perl:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the specified Perl global or package array with the given name (so it won&rsquo;t work on lexical variables).
+If the variable does not exist then <code>nil</code> is returned.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">?(</span><span class="k">get</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">perl</span><span class="p">:</span> <span class="kt"><a href="../Structs/PerlInterpreter.html">PerlInterpreter</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">current</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L88-L91">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArraycFT11getCreatingSS4perlVS_15PerlInterpreter_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(getCreating:perl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArraycFT11getCreatingSS4perlVS_15PerlInterpreter_S0_">init(getCreating:perl:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the specified Perl global or package array with the given name (so it won&rsquo;t work on lexical variables).
+If the variable does not exist then it will be created.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">getCreating</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">perl</span><span class="p">:</span> <span class="kt"><a href="../Structs/PerlInterpreter.html">PerlInterpreter</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">current</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L95-L98">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC4Perl9PerlArray16debugDescriptionSS"></a>
+                    <a name="//apple_ref/swift/Property/debugDescription" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC4Perl9PerlArray16debugDescriptionSS">debugDescription</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A textual representation of the AV, suitable for debugging.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">override</span> <span class="k">var</span> <span class="nv">debugDescription</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L108-L114">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArray5fetchuRxS_21PerlScalarConvertiblerFzSiGSqx_"></a>
+                    <a name="//apple_ref/swift/Method/fetch(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArray5fetchuRxS_21PerlScalarConvertiblerFzSiGSqx_">fetch(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Fetches the element at the specified position.</p>
+<div class="aside aside-complexity">
+    <p class="aside-title">Complexity</p>
+    <p>O(1).</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">fetch</span><span class="o">&lt;</span><span class="kt">T</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">T</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>index</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The position of the element to fetch.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>nil</code> if the element not exists or is undefined.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L124-L130">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArray5storeuRxS_21PerlScalarConvertiblerFTSi5valuex_T_"></a>
+                    <a name="//apple_ref/swift/Method/store(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArray5storeuRxS_21PerlScalarConvertiblerFTSi5valuex_T_">store(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Stores the element at the specified position.</p>
+<div class="aside aside-complexity">
+    <p class="aside-title">Complexity</p>
+    <p>O(1).</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">store</span><span class="o">&lt;</span><span class="kt">T</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>index</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The position of the element to fetch.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to store in the array.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L138-L142">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArray6deleteuRxS_21PerlScalarConvertiblerFzSiGSqx_"></a>
+                    <a name="//apple_ref/swift/Method/delete(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArray6deleteuRxS_21PerlScalarConvertiblerFzSiGSqx_">delete(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deletes the element at the specified position.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">delete</span><span class="o">&lt;</span><span class="kt">T</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">T</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>index</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The position of the element to fetch.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Deleted element or <code>nil</code> if the element not exists or is undefined.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L148-L154">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArray6deleteFSiT_"></a>
+                    <a name="//apple_ref/swift/Method/delete(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArray6deleteFSiT_">delete(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deletes the element at the specified position.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">delete</span><span class="p">(</span><span class="n">_</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L157-L159">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArray6existsFSiSb"></a>
+                    <a name="//apple_ref/swift/Method/exists(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArray6existsFSiSb">exists(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns true if the element at the specified position is initialized.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">exists</span><span class="p">(</span><span class="n">_</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L162-L164">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArray5clearFT_T_"></a>
+                    <a name="//apple_ref/swift/Method/clear()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArray5clearFT_T_">clear()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Frees the all the elements of an array, leaving it empty.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">clear</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L167-L169">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC4Perl9PerlArray10startIndexSi"></a>
+                    <a name="//apple_ref/swift/Property/startIndex" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC4Perl9PerlArray10startIndexSi">startIndex</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The position of the first element in a nonempty array.
+It is always 0 and does not respect Perl variable <code>$[</code>.</p>
+
+<p>If the array is empty, <code>startIndex</code> is equal to <code><a href="../Classes/PerlArray.html#/s:vC4Perl9PerlArray8endIndexSi">endIndex</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">startIndex</span><span class="p">:</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L180">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC4Perl9PerlArray8endIndexSi"></a>
+                    <a name="//apple_ref/swift/Property/endIndex" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC4Perl9PerlArray8endIndexSi">endIndex</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The array&rsquo;s <q>past the end</q> position&mdash;that is, the position one greater
+than the last valid subscript argument.</p>
+
+<p>If the array is empty, <code>endIndex</code> is equal to <code><a href="../Classes/PerlArray.html#/s:vC4Perl9PerlArray10startIndexSi">startIndex</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">endIndex</span><span class="p">:</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L186">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:iC4Perl9PerlArray9subscriptFSiCS_10PerlScalar"></a>
+                    <a name="//apple_ref/swift/Method/subscript(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:iC4Perl9PerlArray9subscriptFSiCS_10PerlScalar">subscript(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Accesses the element at the specified position.</p>
+
+<p>If the element not exists then an undefined scalar is returned.
+  Setting a value to the nonexistent element creates that element.</p>
+<div class="aside aside-complexity">
+    <p class="aside-title">Complexity</p>
+    Reading an element from an array is O(1). Writing is O(1), too.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="nf">subscript</span><span class="p">(</span><span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>index</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The position of the element to access.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L196">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArraycFGSaCS_10PerlScalar_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArraycFGSaCS_10PerlScalar_S0_">init(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a Perl array from a Swift array of <code><a href="../Classes/PerlScalar.html">PerlScalar</a></code>s.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">array</span><span class="p">:</span> <span class="p">[</span><span class="kt">Element</span><span class="p">])</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L215-L220">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArray15reserveCapacityFSiT_"></a>
+                    <a name="//apple_ref/swift/Method/reserveCapacity(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArray15reserveCapacityFSiT_">reserveCapacity(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reserves enough space to store the specified number of elements.</p>
+
+<p>If you are adding a known number of elements to an array, use this method
+to avoid multiple reallocations. For performance reasons, the newly allocated
+storage may be larger than the requested capacity.</p>
+<div class="aside aside-complexity">
+    <p class="aside-title">Complexity</p>
+    <p>O(<em>n</em>), where <em>n</em> is the count of the array.</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">reserveCapacity</span><span class="p">(</span><span class="n">_</span> <span class="nv">minimumCapacity</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>minimumCapacity</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The requested number of elements to store.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L241-L243">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArray6appendFCS_10PerlScalarT_"></a>
+                    <a name="//apple_ref/swift/Method/append(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArray6appendFCS_10PerlScalarT_">append(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Adds a new element at the end of the array.</p>
+
+<p>Use this method to append a single element to the end of an array.</p>
+
+<p>Because arrays increase their allocated capacity using an exponential
+strategy, appending a single element to an array is an O(1) operation
+when averaged over many calls to the <code>append(_:)</code> method. When an array
+has additional capacity, appending an element is O(1). When an array
+needs to reallocate storage before appending, appending is O(<em>n</em>),
+where <em>n</em> is the length of the array.</p>
+<div class="aside aside-complexity">
+    <p class="aside-title">Complexity</p>
+    <p>Amortized O(1) over many additions.</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">append</span><span class="p">(</span><span class="n">_</span> <span class="nv">sv</span><span class="p">:</span> <span class="kt">Element</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>sv</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The element to append to the array.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L259-L266">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArray11removeFirstFT_CS_10PerlScalar"></a>
+                    <a name="//apple_ref/swift/Method/removeFirst()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArray11removeFirstFT_CS_10PerlScalar">removeFirst()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Removes and returns the first element of the array.</p>
+
+<p>The array can be empty. In this case undefined <code><a href="../Classes/PerlScalar.html">PerlScalar</a></code> is returned.</p>
+<div class="aside aside-complexity">
+    <p class="aside-title">Complexity</p>
+    <p>O(1)</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">removeFirst</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Element</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The first element of the array.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L276-L278">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl9PerlArraycFt12arrayLiteralGSaCS_10PerlScalar__S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(arrayLiteral:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl9PerlArraycFt12arrayLiteralGSaCS_10PerlScalar__S0_">init(arrayLiteral:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates Perl array from the given array literal.</p>
+
+<p>Do not call this initializer directly. It is used by the compiler
+when you use an array literal. Instead, create a new array by using an
+array literal as its value. To do this, enclose a comma-separated list of
+values in square brackets. For example:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">array</span><span class="p">:</span> <span class="kt">PerlArray</span> <span class="o">=</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="s">"OK"</span><span class="p">]</span>
+</code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span> <span class="p">(</span><span class="n">arrayLiteral</span> <span class="nv">elements</span><span class="p">:</span> <span class="kt">Element</span><span class="o">...</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>elements</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A variadic list of elements of the new array.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Array.swift#L294-L296">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2017 <a class="link" href="https://my.mail.ru/" target="_blank" rel="external">Mail.Ru</a>. All rights reserved. (Last updated: 2017-06-02)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.8.2</a>.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

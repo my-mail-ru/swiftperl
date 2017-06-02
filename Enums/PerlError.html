@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>PerlError Enum Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Enum/PerlError" class="dashAnchor"></a>
+    <a title="PerlError Enum Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">Perl Docs</a></p>
+        <p class="header-right"><a href="https://github.com/my-mail-ru/swiftperl"><img src="../img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">Perl Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        PerlError Enum Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/PerlArray.html">PerlArray</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlHash.html">PerlHash</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlObject.html">PerlObject</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlScalar.html">PerlScalar</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlScalar/StringUnits.html">– StringUnits</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub.html">PerlSub</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub/Args.html">– Args</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub/ReturnValues.html">– ReturnValues</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlValue.html">PerlValue</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enums</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/PerlError.html">PerlError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/Array.html">Array</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Bool.html">Bool</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Dictionary.html">Dictionary</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Double.html">Double</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Int.html">Int</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:Sq">Optional</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/UInt.html">UInt</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols.html#/s:P4Perl17PerlBridgedObject">PerlBridgedObject</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/PerlNamedClass.html">PerlNamedClass</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structs</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/PerlInterpreter.html">PerlInterpreter</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>PerlError</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">PerlError</span> <span class="p">:</span> <span class="kt">Error</span></code></pre>
+
+                </div>
+              </div>
+            <p>Enumeration of the possible errors.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FO4Perl9PerlError4diedFMS0_FCS_10PerlScalarS0_"></a>
+                    <a name="//apple_ref/swift/Element/died" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FO4Perl9PerlError4diedFMS0_FCS_10PerlScalarS0_">died</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A <code>die</code> occurred in Perl. Text of the error or a SV die was called with
+will be in an associated value.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="k">case</span> <span class="nf">died</span><span class="p">(</span><span class="nv">_</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Error.swift#L5">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FO4Perl9PerlError17noArgumentOnStackFMS0_FT2atSi_S0_"></a>
+                    <a name="//apple_ref/swift/Element/noArgumentOnStack" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FO4Perl9PerlError17noArgumentOnStackFMS0_FT2atSi_S0_">noArgumentOnStack</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A stack count is lower then an <code>at</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="k">case</span> <span class="nf">noArgumentOnStack</span><span class="p">(</span><span class="nv">at</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Error.swift#L8">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FO4Perl9PerlError15unexpectedUndefFMS0_FPS_7AnyPerl_S0_"></a>
+                    <a name="//apple_ref/swift/Element/unexpectedUndef" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FO4Perl9PerlError15unexpectedUndefFMS0_FPS_7AnyPerl_S0_">unexpectedUndef</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>An undefined value was received in place not supposed to.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="k">case</span> <span class="nf">unexpectedUndef</span><span class="p">(</span><span class="nv">_</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Error.swift#L11">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FO4Perl9PerlError19unexpectedValueTypeFMS0_FTPS_7AnyPerl_4wantMCS_9PerlValue_S0_"></a>
+                    <a name="//apple_ref/swift/Element/unexpectedValueType" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FO4Perl9PerlError19unexpectedValueTypeFMS0_FTPS_7AnyPerl_4wantMCS_9PerlValue_S0_">unexpectedValueType</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>SV of an unexpected type was recevied.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="k">case</span> <span class="nf">unexpectedValueType</span><span class="p">(</span><span class="nv">_</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a></span><span class="p">,</span> <span class="nv">want</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlValue.html">PerlValue</a></span><span class="o">.</span><span class="k">Type</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Error.swift#L14">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FO4Perl9PerlError9notNumberFMS0_FTPS_7AnyPerl_4wantPMP__S0_"></a>
+                    <a name="//apple_ref/swift/Element/notNumber" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FO4Perl9PerlError9notNumberFMS0_FTPS_7AnyPerl_4wantPMP__S0_">notNumber</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>SV is not a number (integer or double) of appropriate range.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="k">case</span> <span class="nf">notNumber</span><span class="p">(</span><span class="nv">_</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a></span><span class="p">,</span> <span class="nv">want</span><span class="p">:</span> <span class="kt">Any</span><span class="o">.</span><span class="k">Type</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Error.swift#L17">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FO4Perl9PerlError17notStringOrNumberFMS0_FPS_7AnyPerl_S0_"></a>
+                    <a name="//apple_ref/swift/Element/notStringOrNumber" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FO4Perl9PerlError17notStringOrNumberFMS0_FPS_7AnyPerl_S0_">notStringOrNumber</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>SV is not a string or a number (integer or double).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="k">case</span> <span class="nf">notStringOrNumber</span><span class="p">(</span><span class="nv">_</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Error.swift#L20">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FO4Perl9PerlError12notReferenceFMS0_FPS_7AnyPerl_S0_"></a>
+                    <a name="//apple_ref/swift/Element/notReference" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FO4Perl9PerlError12notReferenceFMS0_FPS_7AnyPerl_S0_">notReference</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>SV is not a reference.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="k">case</span> <span class="nf">notReference</span><span class="p">(</span><span class="nv">_</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Error.swift#L23">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FO4Perl9PerlError9notObjectFMS0_FPS_7AnyPerl_S0_"></a>
+                    <a name="//apple_ref/swift/Element/notObject" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FO4Perl9PerlError9notObjectFMS0_FPS_7AnyPerl_S0_">notObject</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>SV is not an object, but we suppose it to be.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="k">case</span> <span class="nf">notObject</span><span class="p">(</span><span class="nv">_</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Error.swift#L26">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FO4Perl9PerlError14notSwiftObjectFMS0_FPS_7AnyPerl_S0_"></a>
+                    <a name="//apple_ref/swift/Element/notSwiftObject" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FO4Perl9PerlError14notSwiftObjectFMS0_FPS_7AnyPerl_S0_">notSwiftObject</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>SV is not a wrapped Swift object, but we suppose it to be.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="k">case</span> <span class="nf">notSwiftObject</span><span class="p">(</span><span class="nv">_</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Error.swift#L29">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FO4Perl9PerlError20unexpectedObjectTypeFMS0_FTPS_7AnyPerl_4wantPMPS1___S0_"></a>
+                    <a name="//apple_ref/swift/Element/unexpectedObjectType" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FO4Perl9PerlError20unexpectedObjectTypeFMS0_FTPS_7AnyPerl_4wantPMPS1___S0_">unexpectedObjectType</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>SV bridges to an object of an unexpected type.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="k">case</span> <span class="nf">unexpectedObjectType</span><span class="p">(</span><span class="nv">_</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a></span><span class="p">,</span> <span class="nv">want</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a></span><span class="o">.</span><span class="k">Type</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Error.swift#L32">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FO4Perl9PerlError16elementNotExistsFMS0_FTCS_9PerlArray2atSi_S0_"></a>
+                    <a name="//apple_ref/swift/Element/elementNotExists" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FO4Perl9PerlError16elementNotExistsFMS0_FTCS_9PerlArray2atSi_S0_">elementNotExists</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Element with the index <code>at</code> not exists in the array.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="k">case</span> <span class="nf">elementNotExists</span><span class="p">(</span><span class="nv">_</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlArray.html">PerlArray</a></span><span class="p">,</span> <span class="nv">at</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Error.swift#L35">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FO4Perl9PerlError15oddElementsHashFMS0_S0_"></a>
+                    <a name="//apple_ref/swift/Element/oddElementsHash" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FO4Perl9PerlError15oddElementsHashFMS0_S0_">oddElementsHash</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Odd number of elements in hash assignment.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="k">case</span> <span class="n">oddElementsHash</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Error.swift#L38">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2017 <a class="link" href="https://my.mail.ru/" target="_blank" rel="external">Mail.Ru</a>. All rights reserved. (Last updated: 2017-06-02)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.8.2</a>.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

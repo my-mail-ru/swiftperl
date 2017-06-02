@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>PerlScalar Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Class/PerlScalar" class="dashAnchor"></a>
+    <a title="PerlScalar Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">Perl Docs</a></p>
+        <p class="header-right"><a href="https://github.com/my-mail-ru/swiftperl"><img src="../img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">Perl Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        PerlScalar Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/PerlArray.html">PerlArray</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlHash.html">PerlHash</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlObject.html">PerlObject</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlScalar.html">PerlScalar</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlScalar/StringUnits.html">– StringUnits</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub.html">PerlSub</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub/Args.html">– Args</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub/ReturnValues.html">– ReturnValues</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlValue.html">PerlValue</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enums</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/PerlError.html">PerlError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/Array.html">Array</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Bool.html">Bool</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Dictionary.html">Dictionary</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Double.html">Double</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Int.html">Int</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:Sq">Optional</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/UInt.html">UInt</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols.html#/s:P4Perl17PerlBridgedObject">PerlBridgedObject</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/PerlNamedClass.html">PerlNamedClass</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structs</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/PerlInterpreter.html">PerlInterpreter</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>PerlScalar</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">PerlScalar</span> <span class="p">:</span> <span class="kt"><a href="../Classes/PerlValue.html">PerlValue</a></span></code></pre>
+
+                </div>
+              </div>
+            <p>Provides a safe wrapper for Perl scalar (<code>SV</code>).
+Performs reference counting on initialization and deinitialization.</p>
+
+<p>Can contain any scalar SV with <code>SvTYPE(sv) &lt; SVt_PVAV</code> such as:
+undefined values, integers (<code>IV</code>), numbers (<code>NV</code>), strings (<code>PV</code>),
+references (<code>RV</code>), objects and others.
+Objects as exception have their own type <code><a href="../Classes/PerlObject.html">PerlObject</a></code> which
+provides more specific methods to work with them. Nevertheless
+objects are compatible with and can be represented as <code>PerlScalar</code>.</p>
+<h2 id='cheat-sheet' class='heading'>Cheat Sheet</h2>
+<h3 id='creation-of-various-scalars' class='heading'>Creation of various scalars</h3>
+<pre class="highlight perl"><code><span class="k">my</span> <span class="nv">$int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$str</span> <span class="o">=</span> <span class="s">"Строченька"</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$intref</span> <span class="o">=</span> <span class="o">\</span><span class="mi">10</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$arrayref</span> <span class="o">=</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="s">"OK"</span><span class="p">];</span>
+<span class="k">my</span> <span class="nv">$hashref</span> <span class="o">=</span> <span class="p">{</span> <span class="nv">type</span> <span class="o">=&gt;</span> <span class="s">"string"</span><span class="p">,</span> <span class="nv">value</span> <span class="o">=&gt;</span> <span class="mi">10</span> <span class="p">};</span>
+</code></pre>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">int</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="k">let</span> <span class="nv">str</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="s">"Строченька"</span>
+<span class="k">let</span> <span class="nv">intref</span> <span class="o">=</span> <span class="kt">PerlScalar</span><span class="p">(</span><span class="nv">referenceTo</span><span class="p">:</span> <span class="kt">PerlScalar</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+<span class="k">let</span> <span class="nv">arrayref</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="s">"OK"</span><span class="p">];</span>
+<span class="k">let</span> <span class="nv">hashref</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="p">[</span><span class="s">"type"</span><span class="p">:</span> <span class="s">"string"</span><span class="p">,</span> <span class="s">"value"</span><span class="p">:</span> <span class="mi">10</span><span class="p">]</span>
+</code></pre>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFT_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFT_S0_">init()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a <code>SV</code> containing an undefined value.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L52-L54">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFT4perlVS_15PerlInterpreter_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(perl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFT4perlVS_15PerlInterpreter_S0_">init(perl:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a <code>SV</code> containing an undefined value.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">perl</span><span class="p">:</span> <span class="kt"><a href="../Structs/PerlInterpreter.html">PerlInterpreter</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">current</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L57-L59">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcuRxS_21PerlScalarConvertiblerFTx4perlVS_15PerlInterpreter_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(_:perl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcuRxS_21PerlScalarConvertiblerFTx4perlVS_15PerlInterpreter_S0_">init(_:perl:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a <code>SV</code> containig a <code>v</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="kd">init</span><span class="o">&lt;</span><span class="kt">T</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">v</span><span class="p">:</span> <span class="kt">T</span><span class="p">,</span> <span class="nv">perl</span><span class="p">:</span> <span class="kt"><a href="../Structs/PerlInterpreter.html">PerlInterpreter</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">current</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L62-L64">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:OC4Perl10PerlScalar11StringUnits"></a>
+                    <a name="//apple_ref/swift/Enum/StringUnits" class="dashAnchor"></a>
+                    <a class="token" href="#/s:OC4Perl10PerlScalar11StringUnits">StringUnits</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Semantics of a Perl string data.</p>
+
+                        <a href="../Classes/PerlScalar/StringUnits.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">StringUnits</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L67-L72">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFTVs22UnsafeRawBufferPointer10containingOS0_11StringUnits4perlVS_15PerlInterpreter_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(_:containing:perl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFTVs22UnsafeRawBufferPointer10containingOS0_11StringUnits4perlVS_15PerlInterpreter_S0_">init(_:containing:perl:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a Perl string containing a copy of bytes or characters from <code>v</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">v</span><span class="p">:</span> <span class="kt">UnsafeRawBufferPointer</span><span class="p">,</span> <span class="nv">containing</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar/StringUnits.html">StringUnits</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">bytes</span><span class="p">,</span> <span class="nv">perl</span><span class="p">:</span> <span class="kt"><a href="../Structs/PerlInterpreter.html">PerlInterpreter</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">current</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L75-L77">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFT4copyS0__S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(copy:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFT4copyS0__S0_">init(copy:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a new SV which is an exact duplicate of the original SV.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">copy</span> <span class="nv">scalar</span><span class="p">:</span> <span class="kt">PerlScalar</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L80-L83">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcuRxCS_9PerlValuerFT11referenceTox_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(referenceTo:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcuRxCS_9PerlValuerFT11referenceTox_S0_">init(referenceTo:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a new reference pointing to <code>value</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="kd">init</span><span class="o">&lt;</span><span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../Classes/PerlValue.html">PerlValue</a></span><span class="o">&gt;</span><span class="p">(</span><span class="n">referenceTo</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L86-L89">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFCS_9PerlArrayS0_"></a>
+                    <a name="//apple_ref/swift/Method/init(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFCS_9PerlArrayS0_">init(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Short form of <code><a href="../Classes/PerlScalar.html#/s:FC4Perl10PerlScalarcuRxCS_9PerlValuerFT11referenceTox_S0_">init(referenceTo:)</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlArray.html">PerlArray</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L92-L94">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFCS_8PerlHashS0_"></a>
+                    <a name="//apple_ref/swift/Method/init(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFCS_8PerlHashS0_">init(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Short form of <code><a href="../Classes/PerlScalar.html#/s:FC4Perl10PerlScalarcuRxCS_9PerlValuerFT11referenceTox_S0_">init(referenceTo:)</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlHash.html">PerlHash</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L97-L99">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFCS_7PerlSubS0_"></a>
+                    <a name="//apple_ref/swift/Method/init(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFCS_7PerlSubS0_">init(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Short form of <code><a href="../Classes/PerlScalar.html#/s:FC4Perl10PerlScalarcuRxCS_9PerlValuerFT11referenceTox_S0_">init(referenceTo:)</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L102-L104">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcuRxS_21PerlScalarConvertiblerFTGSax_4perlVS_15PerlInterpreter_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(_:perl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcuRxS_21PerlScalarConvertiblerFTGSax_4perlVS_15PerlInterpreter_S0_">init(_:perl:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a <code>RV</code> pointing to a <code>AV</code> which contains <code>SV</code>s with elements of an <code>array</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="kd">init</span><span class="o">&lt;</span><span class="kt">T</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">array</span><span class="p">:</span> <span class="p">[</span><span class="kt">T</span><span class="p">],</span> <span class="nv">perl</span><span class="p">:</span> <span class="kt"><a href="../Structs/PerlInterpreter.html">PerlInterpreter</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">current</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L107-L109">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcuRxS_21PerlScalarConvertiblerFTGVs10DictionarySSx_4perlVS_15PerlInterpreter_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(_:perl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcuRxS_21PerlScalarConvertiblerFTGVs10DictionarySSx_4perlVS_15PerlInterpreter_S0_">init(_:perl:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a <code>RV</code> pointing to a <code>HV</code> which contains <code>SV</code>s with elements of a <code>dict</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="kd">init</span><span class="o">&lt;</span><span class="kt">T</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">dict</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">T</span><span class="p">],</span> <span class="nv">perl</span><span class="p">:</span> <span class="kt"><a href="../Structs/PerlInterpreter.html">PerlInterpreter</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">current</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L112-L114">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcuRxS_21PerlScalarConvertiblerFTGSqx_4perlVS_15PerlInterpreter_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(_:perl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcuRxS_21PerlScalarConvertiblerFTGSqx_4perlVS_15PerlInterpreter_S0_">init(_:perl:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a <code>SV</code> containig an unwrapped value of a <code>v</code> if <code>v != nil</code> or an <code>undef</code> in other case.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="kd">init</span><span class="o">&lt;</span><span class="kt">T</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">v</span><span class="p">:</span> <span class="kt">T</span><span class="p">?,</span> <span class="nv">perl</span><span class="p">:</span> <span class="kt"><a href="../Structs/PerlInterpreter.html">PerlInterpreter</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">current</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L117-L123">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFT3getSS4perlVS_15PerlInterpreter_GSqS0__"></a>
+                    <a name="//apple_ref/swift/Method/init(get:perl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFT3getSS4perlVS_15PerlInterpreter_GSqS0__">init(get:perl:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the specified Perl global or package scalar with the given name (so it won&rsquo;t work on lexical variables).
+If the variable does not exist then <code>nil</code> is returned.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">?(</span><span class="k">get</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">perl</span><span class="p">:</span> <span class="kt"><a href="../Structs/PerlInterpreter.html">PerlInterpreter</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">current</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L127-L130">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFT11getCreatingSS4perlVS_15PerlInterpreter_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(getCreating:perl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFT11getCreatingSS4perlVS_15PerlInterpreter_S0_">init(getCreating:perl:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the specified Perl global or package scalar with the given name (so it won&rsquo;t work on lexical variables).
+If the variable does not exist then it will be created.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">getCreating</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">perl</span><span class="p">:</span> <span class="kt"><a href="../Structs/PerlInterpreter.html">PerlInterpreter</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">current</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L134-L137">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC4Perl10PerlScalar7definedSb"></a>
+                    <a name="//apple_ref/swift/Property/defined" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC4Perl10PerlScalar7definedSb">defined</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A boolean value indicating whether the <code>SV</code> is defined.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">defined</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L140-L142">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC4Perl10PerlScalar9isIntegerSb"></a>
+                    <a name="//apple_ref/swift/Property/isInteger" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC4Perl10PerlScalar9isIntegerSb">isInteger</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A boolean value indicating whether the <code>SV</code> contains an integer (signed or unsigned).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isInteger</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L145-L147">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC4Perl10PerlScalar8isDoubleSb"></a>
+                    <a name="//apple_ref/swift/Property/isDouble" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC4Perl10PerlScalar8isDoubleSb">isDouble</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A boolean value indicating whether the <code>SV</code> contains a double.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isDouble</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L150-L152">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC4Perl10PerlScalar8isStringSb"></a>
+                    <a name="//apple_ref/swift/Property/isString" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC4Perl10PerlScalar8isStringSb">isString</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A boolean value indicating whether the <code>SV</code> contains a character string.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isString</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L155-L157">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC4Perl10PerlScalar11isReferenceSb"></a>
+                    <a name="//apple_ref/swift/Property/isReference" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC4Perl10PerlScalar11isReferenceSb">isReference</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A boolean value indicating whether the <code>SV</code> is a reference.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isReference</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L160-L162">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC4Perl10PerlScalar8isObjectSb"></a>
+                    <a name="//apple_ref/swift/Property/isObject" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC4Perl10PerlScalar8isObjectSb">isObject</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A boolean value indicating whether the <code>SV</code> is an object.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isObject</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L165-L167">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC4Perl10PerlScalar8referentGSqPS_7AnyPerl__"></a>
+                    <a name="//apple_ref/swift/Property/referent" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC4Perl10PerlScalar8referentGSqPS_7AnyPerl__">referent</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Dereferences the <code>SV</code> if it is a reference. Returns <code>nil</code> if not.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">referent</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L170-L175">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalar15withUnsafeBytesurFzFzVs22UnsafeRawBufferPointerxx"></a>
+                    <a name="//apple_ref/swift/Method/withUnsafeBytes(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalar15withUnsafeBytesurFzFzVs22UnsafeRawBufferPointerxx">withUnsafeBytes(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the closure with <code>UnsafeRawBufferPointer</code> to the string in the SV,
+or a stringified form of the SV if the SV does not contain a string.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">withUnsafeBytes</span><span class="o">&lt;</span><span class="kt">R</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">body</span><span class="p">:</span> <span class="p">(</span><span class="kt">UnsafeRawBufferPointer</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span><span class="p">)</span> <span class="k">rethrows</span> <span class="o">-&gt;</span> <span class="kt">R</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L179-L181">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalar3mapurFzFzS0_xGSqx_"></a>
+                    <a name="//apple_ref/swift/Method/map(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalar3mapurFzFzS0_xGSqx_">map(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Evaluates the given closure when this <code>PerlScalar</code> instance is defined,
+passing <code>self</code> as a parameter.</p>
+
+<p>Use the <code>map</code> method with a closure that returns a nonoptional value.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">map</span><span class="o">&lt;</span><span class="kt">R</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">transform</span><span class="p">:</span> <span class="p">(</span><span class="kt">PerlScalar</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span><span class="p">)</span> <span class="k">rethrows</span> <span class="o">-&gt;</span> <span class="kt">R</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>transform</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A closure that takes <code>self</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The result of the given closure. If this instance is undefined,
+returns <code>nil</code>.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L191-L193">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalar7flatMapurFzFzS0_GSqx_GSqx_"></a>
+                    <a name="//apple_ref/swift/Method/flatMap(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalar7flatMapurFzFzS0_GSqx_GSqx_">flatMap(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Evaluates the given closure when this <code>PerlScalar</code> instance is defined,
+passing <code>self</code> as a parameter.</p>
+
+<p>Use the <code>flatMap</code> method with a closure that returns an optional value.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">flatMap</span><span class="o">&lt;</span><span class="kt">R</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">transform</span><span class="p">:</span> <span class="p">(</span><span class="kt">PerlScalar</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span><span class="p">?)</span> <span class="k">rethrows</span> <span class="o">-&gt;</span> <span class="kt">R</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>transform</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A closure that takes <code>self</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The result of the given closure. If this instance is undefined,
+returns <code>nil</code>.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L203-L205">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFC4Perl10PerlScalaroi2qqFzTS0_KzT_S0__S0_"></a>
+                    <a name="//apple_ref/swift/Method/??(_:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC4Perl10PerlScalaroi2qqFzTS0_KzT_S0__S0_">??(_:_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Performs an undef-coalescing operation, returning <code>self</code> when it is defined,
+or a default value.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="p">??(</span><span class="nv">scalar</span><span class="p">:</span> <span class="kt">PerlScalar</span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">PerlScalar</span><span class="p">)</span> <span class="k">rethrows</span> <span class="o">-&gt;</span> <span class="kt">PerlScalar</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L209-L211">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalar3setFS0_T_"></a>
+                    <a name="//apple_ref/swift/Method/set(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalar3setFS0_T_">set(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Copies the contents of the source SV <code>value</code> into the destination SV <code>self</code>.
+Does not handle &lsquo;set&rsquo; magic on destination SV. Calls &lsquo;get&rsquo; magic on source SV.
+Loosely speaking, it performs a copy-by-value, obliterating any previous content of the destination.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">set</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">PerlScalar</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L216-L220">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalar3setFSbT_"></a>
+                    <a name="//apple_ref/swift/Method/set(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalar3setFSbT_">set(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Copies a boolean into <code>self</code>.
+Does not handle &lsquo;set&rsquo; magic.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">set</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L224-L226">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalar3setFSiT_"></a>
+                    <a name="//apple_ref/swift/Method/set(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalar3setFSiT_">set(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Copies a signed integer into <code>self</code>, upgrading first if necessary.
+Does not handle &lsquo;set&rsquo; magic.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">set</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L230-L232">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalar3setFSuT_"></a>
+                    <a name="//apple_ref/swift/Method/set(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalar3setFSuT_">set(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Copies an unsigned integer into <code>self</code>, upgrading first if necessary.
+Does not handle &lsquo;set&rsquo; magic.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">set</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">UInt</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L236-L238">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalar3setFSdT_"></a>
+                    <a name="//apple_ref/swift/Method/set(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalar3setFSdT_">set(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Copies a double into <code>self</code>, upgrading first if necessary.
+Does not handle &lsquo;set&rsquo; magic.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">set</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Double</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L242-L244">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalar3setFSST_"></a>
+                    <a name="//apple_ref/swift/Method/set(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalar3setFSST_">set(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Copies a string (possibly containing embedded <code>NUL</code> characters) into <code>self</code>.
+Does not handle &lsquo;set&rsquo; magic.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">set</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L248-L250">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalar3setFTVs22UnsafeRawBufferPointer10containingOS0_11StringUnits_T_"></a>
+                    <a name="//apple_ref/swift/Method/set(_:containing:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalar3setFTVs22UnsafeRawBufferPointer10containingOS0_11StringUnits_T_">set(_:containing:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Copies bytes or characters from <code>value</code> into <code>self</code>.
+Does not handle &lsquo;set&rsquo; magic.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">set</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">UnsafeRawBufferPointer</span><span class="p">,</span> <span class="nv">containing</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar/StringUnits.html">StringUnits</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">bytes</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L254-L256">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC4Perl10PerlScalar16debugDescriptionSS"></a>
+                    <a name="//apple_ref/swift/Property/debugDescription" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC4Perl10PerlScalar16debugDescriptionSS">debugDescription</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A textual representation of the SV, suitable for debugging.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">override</span> <span class="k">var</span> <span class="nv">debugDescription</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L259-L284">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC4Perl10PerlScalar9hashValueSi"></a>
+                    <a name="//apple_ref/swift/Property/hashValue" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC4Perl10PerlScalar9hashValueSi">hashValue</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The hash value of the stringified form of the scalar.</p>
+
+<p>Hash values are not guaranteed to be equal across different executions of
+your program. Do not save hash values to use during a future execution.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">hashValue</span><span class="p">:</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L292-L294">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFC4Perl10PerlScalaroi2eeFTS0_S0__Sb"></a>
+                    <a name="//apple_ref/swift/Method/==(_:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC4Perl10PerlScalaroi2eeFTS0_S0__Sb">==(_:_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns a Boolean value indicating whether two scalars stringify to identical strings.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="o">==</span> <span class="p">(</span><span class="nv">lhs</span><span class="p">:</span> <span class="kt">PerlScalar</span><span class="p">,</span> <span class="nv">rhs</span><span class="p">:</span> <span class="kt">PerlScalar</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L297-L303">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFT10nilLiteralT__S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(nilLiteral:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFT10nilLiteralT__S0_">init(nilLiteral:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates an instance which contains <code>undef</code>.</p>
+
+<p>Do not call this initializer directly. It is used by the compiler when
+you initialize an <code>PerlScalar</code> instance with a <code>nil</code> literal. For example:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">sv</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="kc">nil</span>
+</code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">nilLiteral</span><span class="p">:</span> <span class="p">())</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L315-L317">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFT14booleanLiteralSb_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(booleanLiteral:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFT14booleanLiteralSb_S0_">init(booleanLiteral:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates an instance initialized to the specified boolean literal.</p>
+
+<p>Do not call this initializer directly. It is used by the compiler when
+you use a boolean literal. Instead, create a new <code>PerlScalar</code> instance by
+using one of the boolean literals <code>true</code> and <code>false</code>.</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">sv</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="kc">true</span>
+</code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">booleanLiteral</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value of the new instance.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L332-L334">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFT14integerLiteralSi_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(integerLiteral:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFT14integerLiteralSi_S0_">init(integerLiteral:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates an instance from the given integer literal.</p>
+
+<p>Do not call this initializer directly. It is used by the compiler when
+you create a new <code>PerlScalar</code> instance by using an integer literal.
+Instead, create a new value by using a literal:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">x</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="mi">100</span>
+</code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">integerLiteral</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The new value.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L349-L351">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFT12floatLiteralSd_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(floatLiteral:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFT12floatLiteralSd_S0_">init(floatLiteral:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates an instance from the given floating-point literal.</p>
+
+<p>Do not call this initializer directly. It is used by the compiler when
+you create a new <code>PerlScalar</code> instance by using a floating-point literal.
+Instead, create a new value by using a literal:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">x</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="mf">1.1</span>
+</code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">floatLiteral</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Double</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The new value.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L366-L368">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFT20unicodeScalarLiteralSS_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(unicodeScalarLiteral:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFT20unicodeScalarLiteralSS_S0_">init(unicodeScalarLiteral:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates an instance initialized to the given Unicode scalar value.</p>
+
+<p>Don&rsquo;t call this initializer directly. It may be used by the compiler when
+you initialize a <code>PerlScalar</code> using a string literal that contains a single
+Unicode scalar value.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">unicodeScalarLiteral</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L377-L379">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFT30extendedGraphemeClusterLiteralSS_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(extendedGraphemeClusterLiteral:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFT30extendedGraphemeClusterLiteralSS_S0_">init(extendedGraphemeClusterLiteral:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates an instance initialized to the given extended grapheme cluster
+literal.</p>
+
+<p>Don&rsquo;t call this initializer directly. It may be used by the compiler when
+you initialize a <code>PerlScalar</code> using a string literal containing a single
+extended grapheme cluster.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">extendedGraphemeClusterLiteral</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L389-L391">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFT13stringLiteralSS_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(stringLiteral:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFT13stringLiteralSS_S0_">init(stringLiteral:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates an instance initialized to the given string value.</p>
+
+<p>Don&rsquo;t call this initializer directly. It is used by the compiler when you
+initialize a <code>PerlScalar</code> using a string literal. For example:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">sv</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="s">"My World"</span>
+</code></pre>
+
+<p>This assignment to the <code>sv</code> calls this string literal
+initializer behind the scenes.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">stringLiteral</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L406-L408">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFt12arrayLiteralGSaS0___S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(arrayLiteral:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFt12arrayLiteralGSaS0___S0_">init(arrayLiteral:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a reference to array from the given array literal.</p>
+
+<p>Do not call this initializer directly. It is used by the compiler
+when you use an array literal. Instead, create a new <code>PerlScalar</code> by using an
+array literal as its value. To do this, enclose a comma-separated list of
+values in square brackets. For example:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">mix</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="p">[</span><span class="kc">nil</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="s">"use perl or die"</span><span class="p">]</span>
+</code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span> <span class="p">(</span><span class="n">arrayLiteral</span> <span class="nv">elements</span><span class="p">:</span> <span class="kt">PerlScalar</span><span class="o">...</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>elements</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A variadic list of elements of the new array.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L424-L426">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlScalarcFt17dictionaryLiteralGSaTSSS0____S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(dictionaryLiteral:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlScalarcFt17dictionaryLiteralGSaTSSS0____S0_">init(dictionaryLiteral:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a reference to hash initialized with a dictionary literal.</p>
+
+<p>Do not call this initializer directly. It is called by the compiler to
+handle dictionary literals. To use a dictionary literal as the initial
+value of a <code>PerlScalar</code>, enclose a comma-separated list of key-value pairs
+in square brackets. For example:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">header</span><span class="p">:</span> <span class="kt">PerlScalar</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">"Content-Length"</span><span class="p">:</span> <span class="mi">320</span><span class="p">,</span>
+    <span class="s">"Content-Type"</span><span class="p">:</span> <span class="s">"application/json"</span><span class="p">,</span>
+<span class="p">]</span>
+</code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">dictionaryLiteral</span> <span class="nv">elements</span><span class="p">:</span> <span class="p">(</span><span class="kt">String</span><span class="p">,</span> <span class="kt">PerlScalar</span><span class="p">)</span><span class="o">...</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>elements</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The key-value pairs that will make up the new
+dictionary. Each key in <code>elements</code> must be unique.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Scalar.swift#L446-L448">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2017 <a class="link" href="https://my.mail.ru/" target="_blank" rel="external">Mail.Ru</a>. All rights reserved. (Last updated: 2017-06-02)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.8.2</a>.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

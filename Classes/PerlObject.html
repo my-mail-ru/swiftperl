@@ -1,0 +1,2777 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>PerlObject Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Class/PerlObject" class="dashAnchor"></a>
+    <a title="PerlObject Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">Perl Docs</a></p>
+        <p class="header-right"><a href="https://github.com/my-mail-ru/swiftperl"><img src="../img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">Perl Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        PerlObject Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/PerlArray.html">PerlArray</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlHash.html">PerlHash</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlObject.html">PerlObject</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlScalar.html">PerlScalar</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlScalar/StringUnits.html">– StringUnits</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub.html">PerlSub</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub/Args.html">– Args</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlSub/ReturnValues.html">– ReturnValues</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PerlValue.html">PerlValue</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enums</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/PerlError.html">PerlError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/Array.html">Array</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Bool.html">Bool</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Dictionary.html">Dictionary</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Double.html">Double</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Int.html">Int</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:Sq">Optional</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/UInt.html">UInt</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols.html#/s:P4Perl7AnyPerl">AnyPerl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols.html#/s:P4Perl17PerlBridgedObject">PerlBridgedObject</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/PerlNamedClass.html">PerlNamedClass</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structs</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/PerlInterpreter.html">PerlInterpreter</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>PerlObject</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight"><code><span class="n">open</span> <span class="kd">class</span> <span class="kt">PerlObject</span> <span class="p">:</span> <span class="kt"><a href="../Classes/PerlValue.html">PerlValue</a></span><span class="p">,</span> <span class="kt">PerlScalarConvertible</span></code></pre>
+
+                </div>
+              </div>
+            <p>Provides a safe wrapper for Perl objects (blessed references).
+Performs reference counting on initialization and deinitialization.</p>
+
+<p>Any Perl object of unregistered type will be imported to Swift
+as an instance of this class. To provide clean API to your
+Perl object implement class derived from <code>PerlObject</code>, make it
+conforming to <code><a href="../Protocols/PerlNamedClass.html">PerlNamedClass</a></code> and supply it with methods and
+calculated attributes providing access to Perl methods of your
+object. Use <code>register</code> method on startup to enable automatical
+conversion of Perl objects of class <code>perlClassName</code> to instances
+of your Swift class.</p>
+
+<p>For example:</p>
+<pre class="highlight swift"><code><span class="kd">final</span> <span class="kd">class</span> <span class="kt">URI</span> <span class="p">:</span> <span class="kt">PerlObject</span><span class="p">,</span> <span class="kt">PerlNamedClass</span> <span class="p">{</span>
+    <span class="kd">static</span> <span class="k">let</span> <span class="nv">perlClassName</span> <span class="o">=</span> <span class="s">"URI"</span>
+
+    <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">str</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="p">{</span>
+        <span class="k">try</span> <span class="k">self</span><span class="o">.</span><span class="nf">init</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"new"</span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="n">str</span><span class="p">])</span>
+    <span class="p">}</span>
+
+    <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">str</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">scheme</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="p">{</span>
+        <span class="k">try</span> <span class="k">self</span><span class="o">.</span><span class="nf">init</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"new"</span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="n">str</span><span class="p">,</span> <span class="n">scheme</span><span class="p">])</span>
+    <span class="p">}</span>
+
+    <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">copyOf</span> <span class="nv">uri</span><span class="p">:</span> <span class="kt">URI</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">try!</span> <span class="k">self</span><span class="o">.</span><span class="nf">init</span><span class="p">(</span><span class="n">uri</span><span class="o">.</span><span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"clone"</span><span class="p">)</span> <span class="k">as</span> <span class="kt">PerlScalar</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">var</span> <span class="nv">scheme</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">return</span> <span class="k">try!</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"scheme"</span><span class="p">)</span> <span class="p">}</span>
+    <span class="kd">func</span> <span class="nf">scheme</span><span class="p">(</span><span class="n">_</span> <span class="nv">scheme</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">return</span> <span class="k">try</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"scheme"</span><span class="p">,</span> <span class="n">scheme</span><span class="p">)</span> <span class="p">}</span>
+
+    <span class="k">var</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span>
+        <span class="k">get</span> <span class="p">{</span> <span class="k">return</span> <span class="k">try!</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"path"</span><span class="p">)</span> <span class="p">}</span>
+        <span class="k">set</span> <span class="p">{</span> <span class="k">try!</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"path"</span><span class="p">,</span> <span class="n">newValue</span><span class="p">)</span> <span class="k">as</span> <span class="kt">Void</span> <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">var</span> <span class="nv">asString</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">return</span> <span class="k">try!</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"as_string"</span><span class="p">)</span> <span class="p">}</span>
+
+    <span class="kd">func</span> <span class="nf">abs</span><span class="p">(</span><span class="nv">base</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">return</span> <span class="k">try!</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"abs"</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span> <span class="p">}</span>
+    <span class="kd">func</span> <span class="nf">rel</span><span class="p">(</span><span class="nv">base</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">return</span> <span class="k">try!</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"rel"</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span> <span class="p">}</span>
+
+    <span class="k">var</span> <span class="nv">secure</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">return</span> <span class="k">try!</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"secure"</span><span class="p">)</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObjectcFzT6methodSS4argsGSaGSqPS_21PerlScalarConvertible___4perlVS_15PerlInterpreter_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(method:args:perl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObjectcFzT6methodSS4argsGSaGSqPS_21PerlScalarConvertible___4perlVS_15PerlInterpreter_S0_">init(method:args:perl:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a new object by calling its Perl constructor.</p>
+
+<p>Use this <code>init</code> only to construct instances of
+subclasses conforming to <code><a href="../Protocols/PerlNamedClass.html">PerlNamedClass</a></code>.</p>
+
+<p>The recomended way is to wrap this constructor
+invocations by implementing more concrete initializers
+which hide Perl method calling magic behind.</p>
+
+<p>Let&rsquo;s imagine a class:</p>
+<pre class="highlight swift"><code><span class="kd">final</span> <span class="kd">class</span> <span class="kt">URI</span> <span class="p">:</span> <span class="kt">PerlObject</span><span class="p">,</span> <span class="kt">PerlNamedClass</span> <span class="p">{</span>
+    <span class="kd">static</span> <span class="k">let</span> <span class="nv">perlClassName</span> <span class="o">=</span> <span class="s">"URI"</span>
+
+    <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">str</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="p">{</span>
+        <span class="k">try</span> <span class="k">self</span><span class="o">.</span><span class="nf">init</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="s">"new"</span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="n">str</span><span class="p">])</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>Then Swift expression:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">uri</span> <span class="o">=</span> <span class="kt">URI</span><span class="p">(</span><span class="s">"https://my.mail.ru/music"</span><span class="p">)</span>
+</code></pre>
+
+<p>will be equal to Perl:</p>
+<pre class="highlight perl"><code><span class="k">my</span> <span class="nv">$uri</span> <span class="o">=</span> <span class="nv">URI</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">(</span><span class="s">"https://my.mail.ru/music"</span><span class="p">)</span>
+</code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">perl</span><span class="p">:</span> <span class="kt"><a href="../Structs/PerlInterpreter.html">PerlInterpreter</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">current</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A name of the constuctor. Usually it is <em>new</em>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the constructor.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>perl</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The Perl interpreter.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Object.swift#L98-L116">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObjectcFzCS_10PerlScalarS0_"></a>
+                    <a name="//apple_ref/swift/Method/init(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObjectcFzCS_10PerlScalarS0_">init(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Casts an instance of <code><a href="../Classes/PerlScalar.html">PerlScalar</a></code> to <code>PerlObject</code>.</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    If underlying SV is not an object.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">scalar</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Object.swift#L121-L124">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObjectcFzT3getSS4perlVS_15PerlInterpreter_GSqS0__"></a>
+                    <a name="//apple_ref/swift/Method/init(get:perl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObjectcFzT3getSS4perlVS_15PerlInterpreter_GSqS0__">init(get:perl:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the specified Perl global or package object with the given name (so it won&rsquo;t work on lexical variables).
+If the variable does not exist then <code>nil</code> is returned.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">?(</span><span class="k">get</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">perl</span><span class="p">:</span> <span class="kt"><a href="../Structs/PerlInterpreter.html">PerlInterpreter</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">current</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Object.swift#L128-L131">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC4Perl10PerlObject16debugDescriptionSS"></a>
+                    <a name="//apple_ref/swift/Property/debugDescription" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC4Perl10PerlObject16debugDescriptionSS">debugDescription</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A textual representation of the SV, suitable for debugging.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">override</span> <span class="k">var</span> <span class="nv">debugDescription</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Object.swift#L144-L148">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFC4Perl10PerlObject8registeruRxS0_xS_14PerlNamedClassrFTMx2asSS_T_"></a>
+                    <a name="//apple_ref/swift/Method/register(_:as:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC4Perl10PerlObject8registeruRxS0_xS_14PerlNamedClassrFTMx2asSS_T_">register(_:as:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Registers class <code>swiftClass</code> as a counterpart of Perl&rsquo;s class with name <code>classname</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="n">register</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">swiftClass</span><span class="p">:</span> <span class="kt">T</span><span class="o">.</span><span class="k">Type</span><span class="p">,</span> <span class="k">as</span> <span class="nv">classname</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">PerlObject</span><span class="p">,</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/PerlNamedClass.html">PerlNamedClass</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Object.swift#L157-L159">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObjectcFT14noincUncheckedVS_15UnsafeSvContext_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(noincUnchecked:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObjectcFT14noincUncheckedVS_15UnsafeSvContext_S0_">init(noincUnchecked:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">required</span> <span class="nf">init</span><span class="p">(</span><span class="n">noincUnchecked</span> <span class="nv">svc</span><span class="p">:</span> <span class="kt">UnsafeSvContext</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Object.swift#L162-L164">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObjectcFT12incUncheckedVS_15UnsafeSvContext_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(incUnchecked:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObjectcFT12incUncheckedVS_15UnsafeSvContext_S0_">init(incUnchecked:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">required</span> <span class="nf">init</span><span class="p">(</span><span class="n">incUnchecked</span> <span class="nv">svc</span><span class="p">:</span> <span class="kt">UnsafeSvContext</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Object.swift#L167-L169">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4callFzT6methodSS4argsGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub11VoidContext_T_"></a>
+                    <a name="//apple_ref/swift/Method/call(method:args:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4callFzT6methodSS4argsGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub11VoidContext_T_">call(method:args:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">VoidContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">void</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2165-L2167">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4callFzT6methodCS_10PerlScalar4argsGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub11VoidContext_T_"></a>
+                    <a name="//apple_ref/swift/Method/call(method:args:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4callFzT6methodCS_10PerlScalar4argsGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub11VoidContext_T_">call(method:args:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">VoidContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">void</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2180-L2182">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4callFzT6methodSSGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub11VoidContext_T_"></a>
+                    <a name="//apple_ref/swift/Method/call(method:_:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4callFzT6methodSSGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub11VoidContext_T_">call(method:_:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">_</span> <span class="nv">args</span><span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">?</span><span class="o">...</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">VoidContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">void</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2195-L2197">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4callFzT6methodCS_10PerlScalarGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub11VoidContext_T_"></a>
+                    <a name="//apple_ref/swift/Method/call(method:_:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4callFzT6methodCS_10PerlScalarGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub11VoidContext_T_">call(method:_:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">,</span> <span class="n">_</span> <span class="nv">args</span><span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">?</span><span class="o">...</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">VoidContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">void</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2210-L2212">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSS4argsGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_x"></a>
+                    <a name="//apple_ref/swift/Method/call(method:args:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSS4argsGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_x">call(method:args:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ScalarContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">scalar</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2225-L2227">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalar4argsGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_x"></a>
+                    <a name="//apple_ref/swift/Method/call(method:args:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalar4argsGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_x">call(method:args:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ScalarContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">scalar</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2240-L2242">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSSGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_x"></a>
+                    <a name="//apple_ref/swift/Method/call(method:_:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSSGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_x">call(method:_:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">_</span> <span class="nv">args</span><span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">?</span><span class="o">...</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ScalarContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">scalar</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2255-L2257">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalarGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_x"></a>
+                    <a name="//apple_ref/swift/Method/call(method:_:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalarGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_x">call(method:_:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">,</span> <span class="n">_</span> <span class="nv">args</span><span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">?</span><span class="o">...</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ScalarContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">scalar</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2270-L2272">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSS4argsGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_GSqx_"></a>
+                    <a name="//apple_ref/swift/Method/call(method:args:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSS4argsGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_GSqx_">call(method:args:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ScalarContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">scalar</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2285-L2287">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalar4argsGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_GSqx_"></a>
+                    <a name="//apple_ref/swift/Method/call(method:args:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalar4argsGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_GSqx_">call(method:args:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ScalarContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">scalar</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2300-L2302">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSSGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_GSqx_"></a>
+                    <a name="//apple_ref/swift/Method/call(method:_:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSSGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_GSqx_">call(method:_:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">_</span> <span class="nv">args</span><span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">?</span><span class="o">...</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ScalarContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">scalar</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2315-L2317">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalarGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_GSqx_"></a>
+                    <a name="//apple_ref/swift/Method/call(method:_:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalarGSaGSqPS1____7contextOCS_7PerlSub13ScalarContext_GSqx_">call(method:_:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">,</span> <span class="n">_</span> <span class="nv">args</span><span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">?</span><span class="o">...</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ScalarContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">scalar</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2330-L2332">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSS4argsGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_x"></a>
+                    <a name="//apple_ref/swift/Method/call(method:args:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSS4argsGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_x">call(method:args:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2345-L2347">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalar4argsGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_x"></a>
+                    <a name="//apple_ref/swift/Method/call(method:args:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalar4argsGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_x">call(method:args:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2360-L2362">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSSGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_x"></a>
+                    <a name="//apple_ref/swift/Method/call(method:_:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSSGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_x">call(method:_:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">_</span> <span class="nv">args</span><span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">?</span><span class="o">...</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2375-L2377">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalarGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_x"></a>
+                    <a name="//apple_ref/swift/Method/call(method:_:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalarGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_x">call(method:_:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">,</span> <span class="n">_</span> <span class="nv">args</span><span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">?</span><span class="o">...</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2390-L2392">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSS4argsGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_GSqx_"></a>
+                    <a name="//apple_ref/swift/Method/call(method:args:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSS4argsGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_GSqx_">call(method:args:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2405-L2407">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalar4argsGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_GSqx_"></a>
+                    <a name="//apple_ref/swift/Method/call(method:args:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalar4argsGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_GSqx_">call(method:args:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2420-L2422">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSSGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_GSqx_"></a>
+                    <a name="//apple_ref/swift/Method/call(method:_:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodSSGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_GSqx_">call(method:_:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">_</span> <span class="nv">args</span><span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">?</span><span class="o">...</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2435-L2437">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalarGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_GSqx_"></a>
+                    <a name="//apple_ref/swift/Method/call(method:_:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4calluRxS_21PerlScalarConvertiblerFzT6methodCS_10PerlScalarGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_GSqx_">call(method:_:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">,</span> <span class="n">_</span> <span class="nv">args</span><span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">?</span><span class="o">...</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">R</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2450-L2452">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4callu0_RxS_21PerlScalarConvertible_S1_rFzT6methodSS4argsGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_Txq__"></a>
+                    <a name="//apple_ref/swift/Method/call(method:args:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4callu0_RxS_21PerlScalarConvertible_S1_rFzT6methodSS4argsGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_Txq__">call(method:args:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R0</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">,</span> <span class="kt">R1</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="kt">R0</span><span class="p">,</span> <span class="kt">R1</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2465-L2467">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4callu0_RxS_21PerlScalarConvertible_S1_rFzT6methodCS_10PerlScalar4argsGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_Txq__"></a>
+                    <a name="//apple_ref/swift/Method/call(method:args:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4callu0_RxS_21PerlScalarConvertible_S1_rFzT6methodCS_10PerlScalar4argsGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_Txq__">call(method:args:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R0</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">,</span> <span class="kt">R1</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="kt">R0</span><span class="p">,</span> <span class="kt">R1</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2480-L2482">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4callu0_RxS_21PerlScalarConvertible_S1_rFzT6methodSSGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_Txq__"></a>
+                    <a name="//apple_ref/swift/Method/call(method:_:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4callu0_RxS_21PerlScalarConvertible_S1_rFzT6methodSSGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_Txq__">call(method:_:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R0</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">,</span> <span class="kt">R1</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">_</span> <span class="nv">args</span><span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">?</span><span class="o">...</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="kt">R0</span><span class="p">,</span> <span class="kt">R1</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2495-L2497">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4callu0_RxS_21PerlScalarConvertible_S1_rFzT6methodCS_10PerlScalarGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_Txq__"></a>
+                    <a name="//apple_ref/swift/Method/call(method:_:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4callu0_RxS_21PerlScalarConvertible_S1_rFzT6methodCS_10PerlScalarGSaGSqPS1____7contextOCS_7PerlSub12ArrayContext_Txq__">call(method:_:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">call</span><span class="o">&lt;</span><span class="kt">R0</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">,</span> <span class="kt">R1</span> <span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">,</span> <span class="n">_</span> <span class="nv">args</span><span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">?</span><span class="o">...</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span> <span class="o">=</span> <span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="kt">R0</span><span class="p">,</span> <span class="kt">R1</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2510-L2512">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4callFzT6methodSS4argsGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub12ArrayContext_CS2_12ReturnValues"></a>
+                    <a name="//apple_ref/swift/Method/call(method:args:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4callFzT6methodSS4argsGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub12ArrayContext_CS2_12ReturnValues">call(method:args:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ReturnValues</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2525-L2527">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4callFzT6methodCS_10PerlScalar4argsGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub12ArrayContext_CS3_12ReturnValues"></a>
+                    <a name="//apple_ref/swift/Method/call(method:args:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4callFzT6methodCS_10PerlScalar4argsGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub12ArrayContext_CS3_12ReturnValues">call(method:args:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">,</span> <span class="nv">args</span><span class="p">:</span> <span class="p">[</span><span class="kt">PerlScalarConvertible</span><span class="p">?],</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ReturnValues</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2540-L2542">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4callFzT6methodSSGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub12ArrayContext_CS2_12ReturnValues"></a>
+                    <a name="//apple_ref/swift/Method/call(method:_:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4callFzT6methodSSGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub12ArrayContext_CS2_12ReturnValues">call(method:_:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">_</span> <span class="nv">args</span><span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">?</span><span class="o">...</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ReturnValues</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2555-L2557">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC4Perl10PerlObject4callFzT6methodCS_10PerlScalarGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub12ArrayContext_CS3_12ReturnValues"></a>
+                    <a name="//apple_ref/swift/Method/call(method:_:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC4Perl10PerlObject4callFzT6methodCS_10PerlScalarGSaGSqPS_21PerlScalarConvertible___7contextOCS_7PerlSub12ArrayContext_CS3_12ReturnValues">call(method:_:context:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Calls the Perl method on the current instance.</p>
+
+<p>The arguments of the call will be automagically converted to mortalized Perl scalar
+values with the lifetime of the scope of this call. The similar thing will
+happen to the Perl return values: they will be destroyed before the call
+returns (but after conversion to Swift values was done).</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">call</span><span class="p">(</span><span class="nv">method</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlScalar.html">PerlScalar</a></span><span class="p">,</span> <span class="n">_</span> <span class="nv">args</span><span class="p">:</span> <span class="kt">PerlScalarConvertible</span><span class="p">?</span><span class="o">...</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ArrayContext</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/PerlSub.html">PerlSub</a></span><span class="o">.</span><span class="kt">ReturnValues</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>method</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the method to call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>args</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Arguments to pass to the Perl method.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Context of the call.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Values returned by the Perl method converted to requested Swift types.</p>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/my-mail-ru/swiftperl/tree/1.0.0/Sources/Perl/Call.swift#L2570-L2572">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2017 <a class="link" href="https://my.mail.ru/" target="_blank" rel="external">Mail.Ru</a>. All rights reserved. (Last updated: 2017-06-02)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.8.2</a>.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>
