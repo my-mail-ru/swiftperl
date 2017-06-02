@@ -131,7 +131,8 @@ PERL_STATIC_INLINE void CPerlMacro_LEAVE(pTHX) {
 
 // SV Reference Counting
 
-/// Returns the value of the object's reference count.
+/// Returns the value of the object's reference count. Exposed
+/// to perl code via Internals::SvREFCNT().
 SWIFT_NAME(SvREFCNT(_:))
 PERL_STATIC_INLINE U32 CPerlMacro_SvREFCNT(SV *_Nonnull sv) {
 	return SvREFCNT(sv);
@@ -287,22 +288,31 @@ PERL_STATIC_INLINE bool CPerlMacro_SvTRUE(pTHX_ SV *_Nullable sv) {
 	return SvTRUE(sv);
 }
 
-/// Coerces the given SV to an integer and returns it.  See @c SvIVx for a
-/// version which guarantees to evaluate @c sv only once.
+/// Coerces the given SV to IV and returns it.  The returned value in many
+/// circumstances will get stored in @c sv's IV slot, but not in all cases.  (Use
+/// @c sv_setiv to make sure it does).
+///
+/// See @c SvIVx for a version which guarantees to evaluate @c sv only once.
 SWIFT_NAME(PerlInterpreter.SvIV(self:_:))
 PERL_STATIC_INLINE IV CPerlMacro_SvIV(pTHX_ SV *_Nonnull sv) {
 	return SvIV(sv);
 }
 
-/// Coerces the given SV to an unsigned integer and returns it.  See @c SvUVx
-/// for a version which guarantees to evaluate @c sv only once.
+/// Coerces the given SV to UV and returns it.  The returned value in many
+/// circumstances will get stored in @c sv's UV slot, but not in all cases.  (Use
+/// @c sv_setuv to make sure it does).
+///
+/// See @c SvUVx for a version which guarantees to evaluate @c sv only once.
 SWIFT_NAME(PerlInterpreter.SvUV(self:_:))
 PERL_STATIC_INLINE UV CPerlMacro_SvUV(pTHX_ SV *_Nonnull sv) {
 	return SvUV(sv);
 }
 
-/// Coerce the given SV to a double and return it.  See @c SvNVx for a version
-/// which guarantees to evaluate @c sv only once.
+/// Coerces the given SV to NV and returns it.  The returned value in many
+/// circumstances will get stored in @c sv's NV slot, but not in all cases.  (Use
+/// @c sv_setnv to make sure it does).
+///
+/// See @c SvNVx for a version which guarantees to evaluate @c sv only once.
 SWIFT_NAME(PerlInterpreter.SvNV(self:_:))
 PERL_STATIC_INLINE NV CPerlMacro_SvNV(pTHX_ SV *_Nonnull sv) {
 	return SvNV(sv);

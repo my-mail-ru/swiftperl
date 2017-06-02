@@ -21,11 +21,13 @@ PERL_STATIC_INLINE void CPerl_av_clear(pTHX_ AV *_Nonnull av) {
 #endif
 
 #ifdef av_delete
-/// Deletes the element indexed by @c key from the array, makes the element mortal,
-/// and returns it.  If @c flags equals @c G_DISCARD, the element is freed and null
-/// is returned.  Perl equivalent: @c my @c $elem @c = @c delete($myarray[$idx]); for the
-/// non-@c G_DISCARD version and a void-context @c delete($myarray[$idx]); for the
-/// @c G_DISCARD version.
+/// Deletes the element indexed by @c key from the array, makes the element
+/// mortal, and returns it.  If @c flags equals @c G_DISCARD, the element is
+/// freed and NULL is returned. NULL is also returned if @c key is out of
+/// range.
+///
+/// Perl equivalent: @c splice(@@myarray, @c $key, @c 1, @c undef) (with the
+/// @c splice in void context if @c G_DISCARD is present).
 SWIFT_NAME(PerlInterpreter.av_delete(self:_:_:_:))
 PERL_STATIC_INLINE SV *_Nullable CPerl_av_delete(pTHX_ AV *_Nonnull av, SSize_t key, I32 flags) {
 	return av_delete(av, key, flags);
@@ -63,7 +65,7 @@ PERL_STATIC_INLINE void CPerl_av_extend(pTHX_ AV *_Nonnull av, SSize_t key) {
 /// See "Understanding the Magic of Tied Hashes and Arrays" in perlguts for
 /// more information on how to use this function on tied arrays.
 ///
-/// The rough perl equivalent is @c $myarray[$idx].
+/// The rough perl equivalent is @c $myarray[$key].
 SWIFT_NAME(PerlInterpreter.av_fetch(self:_:_:_:))
 PERL_STATIC_INLINE SV *_Nullable *_Nullable CPerl_av_fetch(pTHX_ AV *_Nonnull av, SSize_t key, bool lval) {
 	return av_fetch(av, key, lval);
@@ -124,7 +126,7 @@ PERL_STATIC_INLINE SV *_Nonnull CPerl_av_pop(pTHX_ AV *_Nonnull av) {
 /// Pushes an SV (transferring control of one reference count) onto the end of the
 /// array.  The array will grow automatically to accommodate the addition.
 ///
-/// Perl equivalent: @c push @c @@myarray, @c $elem;.
+/// Perl equivalent: @c push @c @@myarray, @c $val;.
 SWIFT_NAME(PerlInterpreter.av_push(self:_:_:))
 PERL_STATIC_INLINE void CPerl_av_push(pTHX_ AV *_Nonnull av, SV *_Nonnull val) {
 	av_push(av, val);
@@ -155,7 +157,7 @@ PERL_STATIC_INLINE SV *_Nonnull CPerl_av_shift(pTHX_ AV *_Nonnull av) {
 /// count of @c val before the call, and decrementing it if the function
 /// returned @c NULL.
 ///
-/// Approximate Perl equivalent: @c $myarray[$key] @c = @c $val;.
+/// Approximate Perl equivalent: @c splice(@@myarray, @c $key, @c 1, @c $val).
 ///
 /// See "Understanding the Magic of Tied Hashes and Arrays" in perlguts for
 /// more information on how to use this function on tied arrays.
@@ -170,6 +172,19 @@ PERL_STATIC_INLINE SV *_Nullable *_Nullable CPerl_av_store(pTHX_ AV *_Nonnull av
 SWIFT_NAME(PerlInterpreter.av_tindex(self:_:))
 PERL_STATIC_INLINE SSize_t CPerl_av_tindex(pTHX_ AV *_Nonnull av) {
 	return av_tindex(av);
+}
+#endif
+
+#ifdef av_top_index
+/// Returns the highest index in the array.  The number of elements in the
+/// array is @c av_top_index(av) @c + @c 1.  Returns -1 if the array is empty.
+///
+/// The Perl equivalent for this is @c $#myarray.
+///
+/// (A slightly shorter form is @c av_tindex.)
+SWIFT_NAME(PerlInterpreter.av_top_index(self:_:))
+PERL_STATIC_INLINE SSize_t CPerl_av_top_index(pTHX_ AV *_Nonnull av) {
+	return av_top_index(av);
 }
 #endif
 
@@ -189,10 +204,9 @@ PERL_STATIC_INLINE void CPerl_av_undef(pTHX_ AV *_Nonnull av) {
 
 #ifdef av_unshift
 /// Unshift the given number of @c undef values onto the beginning of the
-/// array.  The array will grow automatically to accommodate the addition.  You
-/// must then use @c av_store to assign values to these new elements.
+/// array.  The array will grow automatically to accommodate the addition.
 ///
-/// Perl equivalent: @c unshift @c @@myarray, @c ( @c (undef) @c x @c $n @c );
+/// Perl equivalent: @c unshift @c @@myarray, @c ((undef) @c x @c $num);
 SWIFT_NAME(PerlInterpreter.av_unshift(self:_:_:))
 PERL_STATIC_INLINE void CPerl_av_unshift(pTHX_ AV *_Nonnull av, SSize_t num) {
 	av_unshift(av, num);
@@ -300,7 +314,7 @@ PERL_STATIC_INLINE void CPerl_croak_no_modify(void) {
 /// @c croak().  Hence if @c cv is @c &ouch::awk, it would call @c croak as:
 ///
 /// @code
-/// Perl_croak(aTHX_ "Usage: %"SVf"::%"SVf"(%s)", "ouch" "awk",
+/// Perl_croak(aTHX_ "Usage: %" SVf "::%" SVf "(%s)", "ouch" "awk",
 ///                                                     "eee_yow");
 /// @endcode
 SWIFT_NAME(PerlInterpreter.croak_xs_usage(self:_:_:))
@@ -720,8 +734,8 @@ PERL_STATIC_INLINE HE *_Nullable CPerl_hv_fetch_ent(pTHX_ HV *_Nullable hv, SV *
 
 #ifdef hv_iterinit
 /// Prepares a starting point to traverse a hash table.  Returns the number of
-/// keys in the hash (i.e. the same as @c HvUSEDKEYS(hv)).  The return value is
-/// currently only meaningful for hashes without tie magic.
+/// keys in the hash, including placeholders (i.e. the same as @c HvTOTALKEYS(hv)).
+/// The return value is currently only meaningful for hashes without tie magic.
 ///
 /// NOTE: Before version 5.004_65, @c hv_iterinit used to return the number of
 /// hash buckets that happen to be in use.  If you still need that esoteric
@@ -758,8 +772,14 @@ PERL_STATIC_INLINE void CPerl_hv_magic(pTHX_ HV *_Nonnull hv, GV *_Nullable gv, 
 #endif
 
 #ifdef hv_scalar
-/// Evaluates the hash in scalar context and returns the result.  Handles magic
-/// when the hash is tied.
+/// Evaluates the hash in scalar context and returns the result.
+///
+/// When the hash is tied dispatches through to the SCALAR method,
+/// otherwise returns a mortal SV containing the number of keys
+/// in the hash.
+///
+/// Note, prior to 5.25 this function returned what is now
+/// returned by the hv_bucket_ratio() function.
 SWIFT_NAME(PerlInterpreter.hv_scalar(self:_:))
 PERL_STATIC_INLINE SV *_Nonnull CPerl_hv_scalar(pTHX_ HV *_Nonnull hv) {
 	return hv_scalar(hv);
@@ -850,33 +870,145 @@ PERL_STATIC_INLINE U32 CPerl_intro_my(pTHX) {
 #endif
 
 #ifdef is_ascii_string
-/// This is a misleadingly-named synonym for is_invariant_string.
+/// This is a misleadingly-named synonym for is_utf8_invariant_string.
 /// On ASCII-ish platforms, the name isn't misleading: the ASCII-range characters
 /// are exactly the UTF-8 invariants.  But EBCDIC machines have more invariants
-/// than just the ASCII characters, so @c is_invariant_string is preferred.
-SWIFT_NAME(PerlInterpreter.is_ascii_string(self:_:_:))
-PERL_STATIC_INLINE bool CPerl_is_ascii_string(pTHX_ const U8 *_Nonnull s, STRLEN len) {
+/// than just the ASCII characters, so @c is_utf8_invariant_string is preferred.
+SWIFT_NAME(is_ascii_string(_:_:))
+PERL_STATIC_INLINE bool CPerl_is_ascii_string(const U8* _Nonnull const s, const STRLEN len) {
 	return is_ascii_string(s, len);
 }
 #endif
 
+#ifdef is_c9strict_utf8_string
+/// Returns TRUE if the first @c len bytes of string @c s form a valid
+/// UTF-8-encoded string that conforms to
+/// /www.unicode.org/versions/corrigendum9.html in Unicode Corrigendum #9|http:;
+/// otherwise it returns FALSE.  If @c len is 0, it will be calculated using
+/// @c strlen(s) (which means if you use this option, that @c s can't have embedded
+/// @c NUL characters and has to have a terminating @c NUL byte).  Note that all
+/// characters being ASCII constitute 'a valid UTF-8 string'.
+///
+/// This function returns FALSE for strings containing any code points above the
+/// Unicode max of 0x10FFFF or surrogate code points, but accepts non-character
+/// code points per
+/// /www.unicode.org/versions/corrigendum9.html in Corrigendum #9|http:.
+///
+/// See also
+/// @c is_utf8_invariant_string,
+/// @c is_utf8_string,
+/// @c is_utf8_string_flags,
+/// @c is_utf8_string_loc,
+/// @c is_utf8_string_loc_flags,
+/// @c is_utf8_string_loclen,
+/// @c is_utf8_string_loclen_flags,
+/// @c is_utf8_fixed_width_buf_flags,
+/// @c is_utf8_fixed_width_buf_loc_flags,
+/// @c is_utf8_fixed_width_buf_loclen_flags,
+/// @c is_strict_utf8_string,
+/// @c is_strict_utf8_string_loc,
+/// @c is_strict_utf8_string_loclen,
+/// @c is_c9strict_utf8_string_loc,
+/// and
+/// @c is_c9strict_utf8_string_loclen.
+SWIFT_NAME(is_c9strict_utf8_string(_:_:))
+PERL_STATIC_INLINE bool CPerl_is_c9strict_utf8_string(const U8 *_Nonnull s, const STRLEN len) {
+	return is_c9strict_utf8_string(s, len);
+}
+#endif
+
+#ifdef is_c9strict_utf8_string_loc
+/// Like @c is_c9strict_utf8_string but stores the location of the failure (in
+/// the case of "utf8ness failure") or the location @c s+@c len (in the case of
+/// "utf8ness success") in the @c ep pointer.
+///
+/// See also @c is_c9strict_utf8_string_loclen.
+SWIFT_NAME(is_c9strict_utf8_string_loc(_:_:_:))
+PERL_STATIC_INLINE bool CPerl_is_c9strict_utf8_string_loc(const U8 *_Nonnull s, const STRLEN len, const U8 *_Nonnull *_Nonnull ep) {
+	return is_c9strict_utf8_string_loc(s, len, ep);
+}
+#endif
+
+#ifdef is_c9strict_utf8_string_loclen
+/// Like @c is_c9strict_utf8_string but stores the location of the failure (in
+/// the case of "utf8ness failure") or the location @c s+@c len (in the case of
+/// "utf8ness success") in the @c ep pointer, and the number of UTF-8 encoded
+/// characters in the @c el pointer.
+///
+/// See also @c is_c9strict_utf8_string_loc.
+SWIFT_NAME(is_c9strict_utf8_string_loclen(_:_:_:_:))
+PERL_STATIC_INLINE bool CPerl_is_c9strict_utf8_string_loclen(const U8 *_Nonnull s, const STRLEN len, const U8 *_Nullable *_Nullable ep, STRLEN *_Nullable el) {
+	return is_c9strict_utf8_string_loclen(s, len, ep, el);
+}
+#endif
+
 #ifdef is_invariant_string
-/// Returns true iff the first @c len bytes of the string @c s are the same
-/// regardless of the UTF-8 encoding of the string (or UTF-EBCDIC encoding on
-/// EBCDIC machines).  That is, if they are UTF-8 invariant.  On ASCII-ish
-/// machines, all the ASCII characters and only the ASCII characters fit this
-/// definition.  On EBCDIC machines, the ASCII-range characters are invariant, but
-/// so also are the C1 controls and @c \\c? (which isn't in the ASCII range on
-/// EBCDIC).
-///
-/// If @c len is 0, it will be calculated using @c strlen(s), (which means if you
-/// use this option, that @c s can't have embedded @c NUL characters and has to
-/// have a terminating @c NUL byte).
-///
-/// See also is_utf8_string(), is_utf8_string_loclen(), and is_utf8_string_loc().
+/// This is a somewhat misleadingly-named synonym for is_utf8_invariant_string.
+/// @c is_utf8_invariant_string is preferred, as it indicates under what conditions
+/// the string is invariant.
 SWIFT_NAME(is_invariant_string(_:_:))
-PERL_STATIC_INLINE bool CPerl_is_invariant_string(const U8 *_Nonnull s, STRLEN len) {
+PERL_STATIC_INLINE bool CPerl_is_invariant_string(const U8* _Nonnull const s, const STRLEN len) {
 	return is_invariant_string(s, len);
+}
+#endif
+
+#ifdef is_strict_utf8_string
+/// Returns TRUE if the first @c len bytes of string @c s form a valid
+/// UTF-8-encoded string that is fully interchangeable by any application using
+/// Unicode rules; otherwise it returns FALSE.  If @c len is 0, it will be
+/// calculated using @c strlen(s) (which means if you use this option, that @c s
+/// can't have embedded @c NUL characters and has to have a terminating @c NUL
+/// byte).  Note that all characters being ASCII constitute 'a valid UTF-8 string'.
+///
+/// This function returns FALSE for strings containing any
+/// code points above the Unicode max of 0x10FFFF, surrogate code points, or
+/// non-character code points.
+///
+/// See also
+/// @c is_utf8_invariant_string,
+/// @c is_utf8_string,
+/// @c is_utf8_string_flags,
+/// @c is_utf8_string_loc,
+/// @c is_utf8_string_loc_flags,
+/// @c is_utf8_string_loclen,
+/// @c is_utf8_string_loclen_flags,
+/// @c is_utf8_fixed_width_buf_flags,
+/// @c is_utf8_fixed_width_buf_loc_flags,
+/// @c is_utf8_fixed_width_buf_loclen_flags,
+/// @c is_strict_utf8_string_loc,
+/// @c is_strict_utf8_string_loclen,
+/// @c is_c9strict_utf8_string,
+/// @c is_c9strict_utf8_string_loc,
+/// and
+/// @c is_c9strict_utf8_string_loclen.
+SWIFT_NAME(is_strict_utf8_string(_:_:))
+PERL_STATIC_INLINE bool CPerl_is_strict_utf8_string(const U8 *_Nonnull s, const STRLEN len) {
+	return is_strict_utf8_string(s, len);
+}
+#endif
+
+#ifdef is_strict_utf8_string_loc
+/// Like @c is_strict_utf8_string but stores the location of the failure (in the
+/// case of "utf8ness failure") or the location @c s+@c len (in the case of
+/// "utf8ness success") in the @c ep pointer.
+///
+/// See also @c is_strict_utf8_string_loclen.
+SWIFT_NAME(is_strict_utf8_string_loc(_:_:_:))
+PERL_STATIC_INLINE bool CPerl_is_strict_utf8_string_loc(const U8 *_Nonnull s, const STRLEN len, const U8 *_Nonnull *_Nonnull ep) {
+	return is_strict_utf8_string_loc(s, len, ep);
+}
+#endif
+
+#ifdef is_strict_utf8_string_loclen
+/// Like @c is_strict_utf8_string but stores the location of the failure (in the
+/// case of "utf8ness failure") or the location @c s+@c len (in the case of
+/// "utf8ness success") in the @c ep pointer, and the number of UTF-8
+/// encoded characters in the @c el pointer.
+///
+/// See also @c is_strict_utf8_string_loc.
+SWIFT_NAME(is_strict_utf8_string_loclen(_:_:_:_:))
+PERL_STATIC_INLINE bool CPerl_is_strict_utf8_string_loclen(const U8 *_Nonnull s, const STRLEN len, const U8 *_Nullable *_Nullable ep, STRLEN *_Nullable el) {
+	return is_strict_utf8_string_loclen(s, len, ep, el);
 }
 #endif
 
@@ -888,42 +1020,243 @@ PERL_STATIC_INLINE STRLEN CPerl_is_utf8_char_buf(const U8 *_Nonnull buf, const U
 }
 #endif
 
-#ifdef is_utf8_string
-/// Returns true if the first @c len bytes of string @c s form a valid
-/// UTF-8 string, false otherwise.  If @c len is 0, it will be calculated
-/// using @c strlen(s) (which means if you use this option, that @c s can't have
-/// embedded @c NUL characters and has to have a terminating @c NUL byte).  Note
-/// that all characters being ASCII constitute 'a valid UTF-8 string'.
+#ifdef is_utf8_fixed_width_buf_flags
+/// Returns TRUE if the fixed-width buffer starting at @c s with length @c len
+/// is entirely valid UTF-8, subject to the restrictions given by @c flags;
+/// otherwise it returns FALSE.
 ///
-/// See also is_invariant_string(), is_utf8_string_loclen(), and is_utf8_string_loc().
+/// If @c flags is 0, any well-formed UTF-8, as extended by Perl, is accepted
+/// without restriction.  If the final few bytes of the buffer do not form a
+/// complete code point, this will return TRUE anyway, provided that
+/// @c is_utf8_valid_partial_char_flags returns TRUE for them.
+///
+/// If @c flags in non-zero, it can be any combination of the
+/// @c UTF8_DISALLOW_@i @c foo flags accepted by @c utf8n_to_uvchr, and with the
+/// same meanings.
+///
+/// This function differs from @c is_utf8_string_flags only in that the latter
+/// returns FALSE if the final few bytes of the string don't form a complete code
+/// point.
+SWIFT_NAME(is_utf8_fixed_width_buf_flags(_:_:_:))
+PERL_STATIC_INLINE bool CPerl_is_utf8_fixed_width_buf_flags(const U8 * _Nonnull const s, const STRLEN len, const U32 flags) {
+	return is_utf8_fixed_width_buf_flags(s, len, flags);
+}
+#endif
+
+#ifdef is_utf8_fixed_width_buf_loc_flags
+/// Like @c is_utf8_fixed_width_buf_flags but stores the location of the
+/// failure in the @c ep pointer.  If the function returns TRUE, @c *ep will point
+/// to the beginning of any partial character at the end of the buffer; if there is
+/// no partial character @c *ep will contain @c s+@c len.
+///
+/// See also @c is_utf8_fixed_width_buf_loclen_flags.
+SWIFT_NAME(is_utf8_fixed_width_buf_loc_flags(_:_:_:_:))
+PERL_STATIC_INLINE bool CPerl_is_utf8_fixed_width_buf_loc_flags(const U8 * _Nonnull const s, const STRLEN len, const U8 *_Nullable *_Nullable ep, const U32 flags) {
+	return is_utf8_fixed_width_buf_loc_flags(s, len, ep, flags);
+}
+#endif
+
+#ifdef is_utf8_fixed_width_buf_loclen_flags
+/// Like @c is_utf8_fixed_width_buf_loc_flags but stores the number of
+/// complete, valid characters found in the @c el pointer.
+SWIFT_NAME(is_utf8_fixed_width_buf_loclen_flags(_:_:_:_:_:))
+PERL_STATIC_INLINE bool CPerl_is_utf8_fixed_width_buf_loclen_flags(const U8 * _Nonnull const s, const STRLEN len, const U8 *_Nullable *_Nullable ep, STRLEN *_Nullable el, const U32 flags) {
+	return is_utf8_fixed_width_buf_loclen_flags(s, len, ep, el, flags);
+}
+#endif
+
+#ifdef is_utf8_invariant_string
+/// Returns TRUE if the first @c len bytes of the string @c s are the same
+/// regardless of the UTF-8 encoding of the string (or UTF-EBCDIC encoding on
+/// EBCDIC machines); otherwise it returns FALSE.  That is, it returns TRUE if they
+/// are UTF-8 invariant.  On ASCII-ish machines, all the ASCII characters and only
+/// the ASCII characters fit this definition.  On EBCDIC machines, the ASCII-range
+/// characters are invariant, but so also are the C1 controls.
+///
+/// If @c len is 0, it will be calculated using @c strlen(s), (which means if you
+/// use this option, that @c s can't have embedded @c NUL characters and has to
+/// have a terminating @c NUL byte).
+///
+/// See also
+/// @c is_utf8_string,
+/// @c is_utf8_string_flags,
+/// @c is_utf8_string_loc,
+/// @c is_utf8_string_loc_flags,
+/// @c is_utf8_string_loclen,
+/// @c is_utf8_string_loclen_flags,
+/// @c is_utf8_fixed_width_buf_flags,
+/// @c is_utf8_fixed_width_buf_loc_flags,
+/// @c is_utf8_fixed_width_buf_loclen_flags,
+/// @c is_strict_utf8_string,
+/// @c is_strict_utf8_string_loc,
+/// @c is_strict_utf8_string_loclen,
+/// @c is_c9strict_utf8_string,
+/// @c is_c9strict_utf8_string_loc,
+/// and
+/// @c is_c9strict_utf8_string_loclen.
+SWIFT_NAME(is_utf8_invariant_string(_:_:))
+PERL_STATIC_INLINE bool CPerl_is_utf8_invariant_string(const U8* _Nonnull const s, STRLEN const len) {
+	return is_utf8_invariant_string(s, len);
+}
+#endif
+
+#ifdef is_utf8_string
+/// Returns TRUE if the first @c len bytes of string @c s form a valid
+/// Perl-extended-UTF-8 string; returns FALSE otherwise.  If @c len is 0, it will
+/// be calculated using @c strlen(s) (which means if you use this option, that @c s
+/// can't have embedded @c NUL characters and has to have a terminating @c NUL
+/// byte).  Note that all characters being ASCII constitute 'a valid UTF-8 string'.
+///
+/// This function considers Perl's extended UTF-8 to be valid.  That means that
+/// code points above Unicode, surrogates, and non-character code points are
+/// considered valid by this function.  Use @c is_strict_utf8_string,
+/// @c is_c9strict_utf8_string, or @c is_utf8_string_flags to restrict what
+/// code points are considered valid.
+///
+/// See also
+/// @c is_utf8_invariant_string,
+/// @c is_utf8_string_loc,
+/// @c is_utf8_string_loclen,
+/// @c is_utf8_fixed_width_buf_flags,
+/// @c is_utf8_fixed_width_buf_loc_flags,
+/// @c is_utf8_fixed_width_buf_loclen_flags,
 SWIFT_NAME(PerlInterpreter.is_utf8_string(self:_:_:))
-PERL_STATIC_INLINE bool CPerl_is_utf8_string(pTHX_ const U8 *_Nonnull s, STRLEN len) {
+PERL_STATIC_INLINE bool CPerl_is_utf8_string(pTHX_ const U8 *_Nonnull s, const STRLEN len) {
 	return is_utf8_string(s, len);
 }
 #endif
 
-#ifdef is_utf8_string_loc
-/// Like is_utf8_string but stores the location of the failure (in the
-/// case of "utf8ness failure") or the location @c s+@c len (in the case of
-/// "utf8ness success") in the @c ep.
+#ifdef is_utf8_string_flags
+/// Returns TRUE if the first @c len bytes of string @c s form a valid
+/// UTF-8 string, subject to the restrictions imposed by @c flags;
+/// returns FALSE otherwise.  If @c len is 0, it will be calculated
+/// using @c strlen(s) (which means if you use this option, that @c s can't have
+/// embedded @c NUL characters and has to have a terminating @c NUL byte).  Note
+/// that all characters being ASCII constitute 'a valid UTF-8 string'.
 ///
-/// See also is_utf8_string_loclen() and is_utf8_string().
+/// If @c flags is 0, this gives the same results as @c is_utf8_string; if
+/// @c flags is @c UTF8_DISALLOW_ILLEGAL_INTERCHANGE, this gives the same results
+/// as @c is_strict_utf8_string; and if @c flags is
+/// @c UTF8_DISALLOW_ILLEGAL_C9_INTERCHANGE, this gives the same results as
+/// @c is_c9strict_utf8_string.  Otherwise @c flags may be any
+/// combination of the @c UTF8_DISALLOW_@i @c foo flags understood by
+/// @c utf8n_to_uvchr, with the same meanings.
+///
+/// See also
+/// @c is_utf8_invariant_string,
+/// @c is_utf8_string,
+/// @c is_utf8_string_loc,
+/// @c is_utf8_string_loc_flags,
+/// @c is_utf8_string_loclen,
+/// @c is_utf8_string_loclen_flags,
+/// @c is_utf8_fixed_width_buf_flags,
+/// @c is_utf8_fixed_width_buf_loc_flags,
+/// @c is_utf8_fixed_width_buf_loclen_flags,
+/// @c is_strict_utf8_string,
+/// @c is_strict_utf8_string_loc,
+/// @c is_strict_utf8_string_loclen,
+/// @c is_c9strict_utf8_string,
+/// @c is_c9strict_utf8_string_loc,
+/// and
+/// @c is_c9strict_utf8_string_loclen.
+SWIFT_NAME(is_utf8_string_flags(_:_:_:))
+PERL_STATIC_INLINE bool CPerl_is_utf8_string_flags(const U8 *_Nonnull s, const STRLEN len, const U32 flags) {
+	return is_utf8_string_flags(s, len, flags);
+}
+#endif
+
+#ifdef is_utf8_string_loc
+/// Like @c is_utf8_string but stores the location of the failure (in the
+/// case of "utf8ness failure") or the location @c s+@c len (in the case of
+/// "utf8ness success") in the @c ep pointer.
+///
+/// See also @c is_utf8_string_loclen.
 SWIFT_NAME(PerlInterpreter.is_utf8_string_loc(self:_:_:_:))
-PERL_STATIC_INLINE bool CPerl_is_utf8_string_loc(pTHX_ const U8 *_Nonnull s, STRLEN len, const U8 *_Nullable *_Nullable ep) {
+PERL_STATIC_INLINE bool CPerl_is_utf8_string_loc(pTHX_ const U8 *_Nonnull s, const STRLEN len, const U8 *_Nonnull *_Nonnull ep) {
 	return is_utf8_string_loc(s, len, ep);
 }
 #endif
 
-#ifdef is_utf8_string_loclen
-/// Like is_utf8_string() but stores the location of the failure (in the
+#ifdef is_utf8_string_loc_flags
+/// Like @c is_utf8_string_flags but stores the location of the failure (in the
 /// case of "utf8ness failure") or the location @c s+@c len (in the case of
-/// "utf8ness success") in the @c ep, and the number of UTF-8
-/// encoded characters in the @c el.
+/// "utf8ness success") in the @c ep pointer.
 ///
-/// See also is_utf8_string_loc() and is_utf8_string().
+/// See also @c is_utf8_string_loclen_flags.
+SWIFT_NAME(is_utf8_string_loc_flags(_:_:_:_:))
+PERL_STATIC_INLINE bool CPerl_is_utf8_string_loc_flags(const U8 *_Nonnull s, const STRLEN len, const U8 *_Nonnull *_Nonnull ep, const U32 flags) {
+	return is_utf8_string_loc_flags(s, len, ep, flags);
+}
+#endif
+
+#ifdef is_utf8_string_loclen
+/// Like @c is_utf8_string but stores the location of the failure (in the
+/// case of "utf8ness failure") or the location @c s+@c len (in the case of
+/// "utf8ness success") in the @c ep pointer, and the number of UTF-8
+/// encoded characters in the @c el pointer.
+///
+/// See also @c is_utf8_string_loc.
 SWIFT_NAME(PerlInterpreter.is_utf8_string_loclen(self:_:_:_:_:))
-PERL_STATIC_INLINE bool CPerl_is_utf8_string_loclen(pTHX_ const U8 *_Nonnull s, STRLEN len, const U8 *_Nullable *_Nullable ep, STRLEN *_Nullable el) {
+PERL_STATIC_INLINE bool CPerl_is_utf8_string_loclen(pTHX_ const U8 *_Nonnull s, const STRLEN len, const U8 *_Nullable *_Nullable ep, STRLEN *_Nullable el) {
 	return is_utf8_string_loclen(s, len, ep, el);
+}
+#endif
+
+#ifdef is_utf8_string_loclen_flags
+/// Like @c is_utf8_string_flags but stores the location of the failure (in the
+/// case of "utf8ness failure") or the location @c s+@c len (in the case of
+/// "utf8ness success") in the @c ep pointer, and the number of UTF-8
+/// encoded characters in the @c el pointer.
+///
+/// See also @c is_utf8_string_loc_flags.
+SWIFT_NAME(is_utf8_string_loclen_flags(_:_:_:_:_:))
+PERL_STATIC_INLINE bool CPerl_is_utf8_string_loclen_flags(const U8 *_Nonnull s, const STRLEN len, const U8 *_Nullable *_Nullable ep, STRLEN *_Nullable el, const U32 flags) {
+	return is_utf8_string_loclen_flags(s, len, ep, el, flags);
+}
+#endif
+
+#ifdef is_utf8_valid_partial_char
+/// Returns 0 if the sequence of bytes starting at @c s and looking no further than
+/// @c e @c - @c 1 is the UTF-8 encoding, as extended by Perl, for one or more code
+/// points.  Otherwise, it returns 1 if there exists at least one non-empty
+/// sequence of bytes that when appended to sequence @c s, starting at position
+/// @c e causes the entire sequence to be the well-formed UTF-8 of some code point;
+/// otherwise returns 0.
+///
+/// In other words this returns TRUE if @c s points to a partial UTF-8-encoded code
+/// point.
+///
+/// This is useful when a fixed-length buffer is being tested for being well-formed
+/// UTF-8, but the final few bytes in it don't comprise a full character; that is,
+/// it is split somewhere in the middle of the final code point's UTF-8
+/// representation.  (Presumably when the buffer is refreshed with the next chunk
+/// of data, the new first bytes will complete the partial code point.)   This
+/// function is used to verify that the final bytes in the current buffer are in
+/// fact the legal beginning of some code point, so that if they aren't, the
+/// failure can be signalled without having to wait for the next read.
+SWIFT_NAME(is_utf8_valid_partial_char(_:_:))
+PERL_STATIC_INLINE bool CPerl_is_utf8_valid_partial_char(const U8 * _Nonnull const s, const U8 * _Nonnull const e) {
+	return is_utf8_valid_partial_char(s, e);
+}
+#endif
+
+#ifdef is_utf8_valid_partial_char_flags
+/// Like @c is_utf8_valid_partial_char, it returns a boolean giving whether
+/// or not the input is a valid UTF-8 encoded partial character, but it takes an
+/// extra parameter, @c flags, which can further restrict which code points are
+/// considered valid.
+///
+/// If @c flags is 0, this behaves identically to
+/// @c is_utf8_valid_partial_char.  Otherwise @c flags can be any combination
+/// of the @c UTF8_DISALLOW_@i @c foo flags accepted by @c utf8n_to_uvchr.  If
+/// there is any sequence of bytes that can complete the input partial character in
+/// such a way that a non-prohibited character is formed, the function returns
+/// TRUE; otherwise FALSE.  Non character code points cannot be determined based on
+/// partial character input.  But many  of the other possible excluded types can be
+/// determined from just the first one or two bytes.
+SWIFT_NAME(is_utf8_valid_partial_char_flags(_:_:_:))
+PERL_STATIC_INLINE bool CPerl_is_utf8_valid_partial_char_flags(const U8 * _Nonnull const s, const U8 * _Nonnull const e, const U32 flags) {
+	return is_utf8_valid_partial_char_flags(s, e, flags);
 }
 #endif
 
@@ -1225,6 +1558,15 @@ PERL_STATIC_INLINE int CPerl_nothreadhook(pTHX) {
 }
 #endif
 
+#ifdef op_class
+/// Given an op, determine what type of struct it has been allocated as.
+/// Returns one of the OPclass enums, such as OPclass_LISTOP.
+SWIFT_NAME(PerlInterpreter.op_class(self:_:))
+PERL_STATIC_INLINE OPclass CPerl_op_class(pTHX_ const OP *_Nullable o) {
+	return op_class(o);
+}
+#endif
+
 #ifdef op_free
 /// Free an op.  Only use this when an op is no longer linked to from any
 /// optree.
@@ -1430,11 +1772,7 @@ PERL_STATIC_INLINE void CPerl_setdefout(pTHX_ GV* _Nonnull gv) {
 #endif
 
 #ifdef sortsv
-/// Sort an array.  Here is an example:
-///
-/// @code
-/// sortsv(AvARRAY(av), av_top_index(av)+1, Perl_sv_cmp_locale);
-/// @endcode
+/// In-place sort an array of SV pointers with the given comparison routine.
 ///
 /// Currently this always uses mergesort.  See @c sortsv_flags for a more
 /// flexible routine.
@@ -1445,7 +1783,8 @@ PERL_STATIC_INLINE void CPerl_sortsv(pTHX_ SV*_Nullable * _Nullable array, size_
 #endif
 
 #ifdef sortsv_flags
-/// Sort an array, with various options.
+/// In-place sort an array of SV pointers with the given comparison routine,
+/// with various SORTf_* flag options.
 SWIFT_NAME(PerlInterpreter.sortsv_flags(self:_:_:_:_:))
 PERL_STATIC_INLINE void CPerl_sortsv_flags(pTHX_ SV*_Nullable * _Nullable array, size_t num_elts, SVCOMPARE_t _Nonnull cmp, U32 flags) {
 	sortsv_flags(array, num_elts, cmp, flags);
@@ -1921,7 +2260,7 @@ PERL_STATIC_INLINE void CPerl_sv_insert(pTHX_ SV *_Nonnull const bigstr, const S
 /// Same as @c sv_insert, but the extra @c flags are passed to the
 /// @c SvPV_force_flags that applies to @c bigstr.
 SWIFT_NAME(PerlInterpreter.sv_insert_flags(self:_:_:_:_:_:_:))
-PERL_STATIC_INLINE void CPerl_sv_insert_flags(pTHX_ SV *_Nonnull const bigstr, const STRLEN offset, const STRLEN len, const char *_Nonnull const little, const STRLEN littlelen, const U32 flags) {
+PERL_STATIC_INLINE void CPerl_sv_insert_flags(pTHX_ SV *_Nonnull const bigstr, const STRLEN offset, const STRLEN len, const char *_Nonnull little, const STRLEN littlelen, const U32 flags) {
 	sv_insert_flags(bigstr, offset, len, little, littlelen, flags);
 }
 #endif
@@ -2019,6 +2358,18 @@ PERL_STATIC_INLINE MAGIC  *_Nonnull CPerl_sv_magicext(pTHX_ SV *_Nonnull const s
 SWIFT_NAME(PerlInterpreter.sv_nosharing(self:_:))
 PERL_STATIC_INLINE void CPerl_sv_nosharing(pTHX_ SV *_Nullable sv) {
 	sv_nosharing(sv);
+}
+#endif
+
+#ifdef sv_nounlocking
+/// Dummy routine which "unlocks" an SV when there is no locking module present.
+/// Exists to avoid test for a @c NULL function pointer and because it could
+/// potentially warn under some level of strict-ness.
+///
+/// "Superseded" by @c sv_nosharing().
+SWIFT_NAME(PerlInterpreter.sv_nounlocking(self:_:))
+PERL_STATIC_INLINE void CPerl_sv_nounlocking(pTHX_ SV *_Nullable sv) {
+	sv_nounlocking(sv);
 }
 #endif
 
@@ -2125,6 +2476,20 @@ PERL_STATIC_INLINE void CPerl_sv_reset(pTHX_ const char* _Nonnull s, HV *_Nullab
 }
 #endif
 
+#ifdef sv_set_undef
+/// Equivalent to @c sv_setsv(sv, @c &PL_sv_undef), but more efficient.
+/// Doesn't handle set magic.
+///
+/// The perl equivalent is @c $sv @c = @c undef;. Note that it doesn't free any string
+/// buffer, unlike @c undef @c $sv.
+///
+/// Introduced in perl 5.26.0.
+SWIFT_NAME(PerlInterpreter.sv_set_undef(self:_:))
+PERL_STATIC_INLINE void CPerl_sv_set_undef(pTHX_ SV *_Nonnull sv) {
+	sv_set_undef(sv);
+}
+#endif
+
 #ifdef sv_setiv
 /// Copies an integer into the given SV, upgrading first if necessary.
 /// Does not handle 'set' magic.  See also @c sv_setiv_mg.
@@ -2161,7 +2526,7 @@ PERL_STATIC_INLINE void CPerl_sv_setnv_mg(pTHX_ SV *_Nonnull const sv, const NV 
 
 #ifdef sv_setpv
 /// Copies a string into an SV.  The string must be terminated with a @c NUL
-/// character.
+/// character, and not contain embeded @c NUL's.
 /// Does not handle 'set' magic.  See @c sv_setpv_mg.
 SWIFT_NAME(PerlInterpreter.sv_setpv(self:_:_:))
 PERL_STATIC_INLINE void CPerl_sv_setpv(pTHX_ SV *_Nonnull const sv, const char *_Nullable const ptr) {
@@ -2480,11 +2845,11 @@ PERL_STATIC_INLINE void CPerl_sv_usepvn_mg(pTHX_ SV *_Nonnull sv, char *_Nullabl
 #endif
 
 #ifdef sv_utf8_decode
-/// If the PV of the SV is an octet sequence in UTF-8
+/// If the PV of the SV is an octet sequence in Perl's extended UTF-8
 /// and contains a multiple-byte character, the @c SvUTF8 flag is turned on
 /// so that it looks like a character.  If the PV contains only single-byte
 /// characters, the @c SvUTF8 flag stays off.
-/// Scans PV for validity and returns false if the PV is invalid UTF-8.
+/// Scans PV for validity and returns FALSE if the PV is invalid UTF-8.
 SWIFT_NAME(PerlInterpreter.sv_utf8_decode(self:_:))
 PERL_STATIC_INLINE bool CPerl_sv_utf8_decode(pTHX_ SV *_Nonnull const sv) {
 	return sv_utf8_decode(sv);
@@ -2559,7 +2924,7 @@ PERL_STATIC_INLINE UV CPerl_sv_uv(pTHX_ SV* _Nonnull sv) {
 
 #ifdef sv_vcatpvf
 /// Processes its arguments like @c sv_catpvfn called with a non-null C-style
-/// variable argument list, and appends the formatted
+/// variable argument list, and appends the formatted output
 /// to an SV.  Does not handle 'set' magic.  See @c sv_vcatpvf_mg.
 ///
 /// Usually used via its frontend @c sv_catpvf.
@@ -2632,38 +2997,6 @@ PERL_STATIC_INLINE void CPerl_sync_locale(pTHX) {
 }
 #endif
 
-#ifdef to_utf8_fold
-/// Instead use toFOLD_utf8.
-SWIFT_NAME(PerlInterpreter.to_utf8_fold(self:_:_:_:))
-PERL_STATIC_INLINE UV CPerl_to_utf8_fold(pTHX_ const U8 *_Nonnull p, U8* _Nonnull ustrp, STRLEN *_Nullable lenp) {
-	return to_utf8_fold(p, ustrp, lenp);
-}
-#endif
-
-#ifdef to_utf8_lower
-/// Instead use toLOWER_utf8.
-SWIFT_NAME(PerlInterpreter.to_utf8_lower(self:_:_:_:))
-PERL_STATIC_INLINE UV CPerl_to_utf8_lower(pTHX_ const U8 *_Nonnull p, U8* _Nonnull ustrp, STRLEN *_Nullable lenp) {
-	return to_utf8_lower(p, ustrp, lenp);
-}
-#endif
-
-#ifdef to_utf8_title
-/// Instead use toTITLE_utf8.
-SWIFT_NAME(PerlInterpreter.to_utf8_title(self:_:_:_:))
-PERL_STATIC_INLINE UV CPerl_to_utf8_title(pTHX_ const U8 *_Nonnull p, U8* _Nonnull ustrp, STRLEN *_Nullable lenp) {
-	return to_utf8_title(p, ustrp, lenp);
-}
-#endif
-
-#ifdef to_utf8_upper
-/// Instead use toUPPER_utf8.
-SWIFT_NAME(PerlInterpreter.to_utf8_upper(self:_:_:_:))
-PERL_STATIC_INLINE UV CPerl_to_utf8_upper(pTHX_ const U8 *_Nonnull p, U8* _Nonnull ustrp, STRLEN *_Nullable lenp) {
-	return to_utf8_upper(p, ustrp, lenp);
-}
-#endif
-
 #ifdef unpack_str
 /// The engine implementing @c unpack() Perl function.  Note: parameters @c strbeg,
 /// @c new_s and @c ocnt are not used.  This call should not be used, use
@@ -2718,119 +3051,90 @@ PERL_STATIC_INLINE STRLEN CPerl_utf8_length(pTHX_ const U8* _Nonnull s, const U8
 }
 #endif
 
-#ifdef utf8_to_uvchr_buf
-/// Returns the native code point of the first character in the string @c s which
-/// is assumed to be in UTF-8 encoding; @c send points to 1 beyond the end of @c s.
-/// @c *retlen will be set to the length, in bytes, of that character.
-///
-/// If @c s does not point to a well-formed UTF-8 character and UTF8 warnings are
-/// enabled, zero is returned and @c *retlen is set (if @c retlen isn't
-/// @c NULL) to -1.  If those warnings are off, the computed value, if well-defined
-/// (or the Unicode REPLACEMENT CHARACTER if not), is silently returned, and
-/// @c *retlen is set (if @c retlen isn't @c NULL) so that (@c s + @c *retlen) is
-/// the next possible position in @c s that could begin a non-malformed character.
-/// See utf8n_to_uvchr for details on when the REPLACEMENT CHARACTER is
-/// returned.
-///
-/// Code points above the platform's @c IV_MAX will raise a deprecation warning,
-/// unless those are turned off.
-SWIFT_NAME(PerlInterpreter.utf8_to_uvchr_buf(self:_:_:_:))
-PERL_STATIC_INLINE UV CPerl_utf8_to_uvchr_buf(pTHX_ const U8 *_Nonnull s, const U8 *_Nonnull send, STRLEN *_Nullable retlen) {
-	return utf8_to_uvchr_buf(s, send, retlen);
-}
-#endif
-
-#ifdef utf8n_to_uvchr
+#ifdef utf8n_to_uvchr_error
 /// THIS FUNCTION SHOULD BE USED IN ONLY VERY SPECIALIZED CIRCUMSTANCES.
 /// Most code should use utf8_to_uvchr_buf() rather than call this directly.
 ///
-/// Bottom level UTF-8 decode routine.
-/// Returns the native code point value of the first character in the string @c s,
-/// which is assumed to be in UTF-8 (or UTF-EBCDIC) encoding, and no longer than
-/// @c curlen bytes; @c *retlen (if @c retlen isn't NULL) will be set to
-/// the length, in bytes, of that character.
+/// This function is for code that needs to know what the precise malformation(s)
+/// are when an error is found.
 ///
-/// The value of @c flags determines the behavior when @c s does not point to a
-/// well-formed UTF-8 character.  If @c flags is 0, when a malformation is found,
-/// zero is returned and @c *retlen is set so that (@c s + @c *retlen) is the
-/// next possible position in @c s that could begin a non-malformed character.
-/// Also, if UTF-8 warnings haven't been lexically disabled, a warning is raised.
+/// It is like @c utf8n_to_uvchr but it takes an extra parameter placed after
+/// all the others, @c errors.  If this parameter is 0, this function behaves
+/// identically to @c utf8n_to_uvchr.  Otherwise, @c errors should be a pointer
+/// to a @c U32 variable, which this function sets to indicate any errors found.
+/// Upon return, if @c *errors is 0, there were no errors found.  Otherwise,
+/// @c *errors is the bit-wise @c OR of the bits described in the list below.  Some
+/// of these bits will be set if a malformation is found, even if the input
+/// @c flags parameter indicates that the given malformation is allowed; those
+/// exceptions are noted:
 ///
-/// Various ALLOW flags can be set in @c flags to allow (and not warn on)
-/// individual types of malformations, such as the sequence being overlong (that
-/// is, when there is a shorter sequence that can express the same code point;
-/// overlong sequences are expressly forbidden in the UTF-8 standard due to
-/// potential security issues).  Another malformation example is the first byte of
-/// a character not being a legal first byte.  See utf8.h for the list of such
-/// flags.  For allowed 0 length strings, this function returns 0; for allowed
-/// overlong sequences, the computed code point is returned; for all other allowed
-/// malformations, the Unicode REPLACEMENT CHARACTER is returned, as these have no
-/// determinable reasonable value.
+/// =over 4
 ///
-/// The @c UTF8_CHECK_ONLY flag overrides the behavior when a non-allowed (by other
-/// flags) malformation is found.  If this flag is set, the routine assumes that
-/// the caller will raise a warning, and this function will silently just set
-/// @c retlen to @c -1 (cast to @c STRLEN) and return zero.
+/// =item @c UTF8_GOT_ABOVE_31_BIT
 ///
-/// Note that this API requires disambiguation between successful decoding a @c NUL
-/// character, and an error return (unless the @c UTF8_CHECK_ONLY flag is set), as
-/// in both cases, 0 is returned.  To disambiguate, upon a zero return, see if the
-/// first byte of @c s is 0 as well.  If so, the input was a @c NUL; if not, the
-/// input had an error.
+/// The code point represented by the input UTF-8 sequence occupies more than 31
+/// bits.
+/// This bit is set only if the input @c flags parameter contains either the
+/// @c UTF8_DISALLOW_ABOVE_31_BIT or the @c UTF8_WARN_ABOVE_31_BIT flags.
 ///
-/// Certain code points are considered problematic.  These are Unicode surrogates,
-/// Unicode non-characters, and code points above the Unicode maximum of 0x10FFFF.
-/// By default these are considered regular code points, but certain situations
-/// warrant special handling for them.  If @c flags contains
-/// @c UTF8_DISALLOW_ILLEGAL_INTERCHANGE, all three classes are treated as
-/// malformations and handled as such.  The flags @c UTF8_DISALLOW_SURROGATE,
-/// @c UTF8_DISALLOW_NONCHAR, and @c UTF8_DISALLOW_SUPER (meaning above the legal
-/// Unicode maximum) can be set to disallow these categories individually.
+/// =item @c UTF8_GOT_CONTINUATION
 ///
-/// The flags @c UTF8_WARN_ILLEGAL_INTERCHANGE, @c UTF8_WARN_SURROGATE,
-/// @c UTF8_WARN_NONCHAR, and @c UTF8_WARN_SUPER will cause warning messages to be
-/// raised for their respective categories, but otherwise the code points are
-/// considered valid (not malformations).  To get a category to both be treated as
-/// a malformation and raise a warning, specify both the WARN and DISALLOW flags.
-/// (But note that warnings are not raised if lexically disabled nor if
-/// @c UTF8_CHECK_ONLY is also specified.)
+/// The input sequence was malformed in that the first byte was a a UTF-8
+/// continuation byte.
 ///
-/// It is now deprecated to have very high code points (above @c IV_MAX on the
-/// platforms) and this function will raise a deprecation warning for these (unless
-/// such warnings are turned off).  This value, is typically 0x7FFF_FFFF (2**31 -1)
-/// in a 32-bit word.
+/// =item @c UTF8_GOT_EMPTY
 ///
-/// Code points above 0x7FFF_FFFF (2**31 - 1) were never specified in any standard,
-/// so using them is more problematic than other above-Unicode code points.  Perl
-/// invented an extension to UTF-8 to represent the ones above 2**36-1, so it is
-/// likely that non-Perl languages will not be able to read files that contain
-/// these that written by the perl interpreter; nor would Perl understand files
-/// written by something that uses a different extension.  For these reasons, there
-/// is a separate set of flags that can warn and/or disallow these extremely high
-/// code points, even if other above-Unicode ones are accepted.  These are the
-/// @c UTF8_WARN_ABOVE_31_BIT and @c UTF8_DISALLOW_ABOVE_31_BIT flags.  These
-/// are entirely independent from the deprecation warning for code points above
-/// @c IV_MAX.  On 32-bit machines, it will eventually be forbidden to have any
-/// code point that needs more than 31 bits to represent.  When that happens,
-/// effectively the @c UTF8_DISALLOW_ABOVE_31_BIT flag will always be set on
-/// 32-bit machines.  (Of course @c UTF8_DISALLOW_SUPER will treat all
-/// above-Unicode code points, including these, as malformations; and
-/// @c UTF8_WARN_SUPER warns on these.)
+/// The input @c curlen parameter was 0.
 ///
-/// On EBCDIC platforms starting in Perl v5.24, the Perl extension for representing
-/// extremely high code points kicks in at 0x3FFF_FFFF (2**30 -1), which is lower
-/// than on ASCII.  Prior to that, code points 2**31 and higher were simply
-/// unrepresentable, and a different, incompatible method was used to represent
-/// code points between 2**30 and 2**31 - 1.  The flags @c UTF8_WARN_ABOVE_31_BIT
-/// and @c UTF8_DISALLOW_ABOVE_31_BIT have the same function as on ASCII
-/// platforms, warning and disallowing 2**31 and higher.
+/// =item @c UTF8_GOT_LONG
 ///
-/// All other code points corresponding to Unicode characters, including private
-/// use and those yet to be assigned, are never considered malformed and never
-/// warn.
-SWIFT_NAME(PerlInterpreter.utf8n_to_uvchr(self:_:_:_:_:))
-PERL_STATIC_INLINE UV CPerl_utf8n_to_uvchr(pTHX_ const U8 *_Nonnull s, STRLEN curlen, STRLEN *_Nullable retlen, U32 flags) {
-	return utf8n_to_uvchr(s, curlen, retlen, flags);
+/// The input sequence was malformed in that there is some other sequence that
+/// evaluates to the same code point, but that sequence is shorter than this one.
+///
+/// =item @c UTF8_GOT_NONCHAR
+///
+/// The code point represented by the input UTF-8 sequence is for a Unicode
+/// non-character code point.
+/// This bit is set only if the input @c flags parameter contains either the
+/// @c UTF8_DISALLOW_NONCHAR or the @c UTF8_WARN_NONCHAR flags.
+///
+/// =item @c UTF8_GOT_NON_CONTINUATION
+///
+/// The input sequence was malformed in that a non-continuation type byte was found
+/// in a position where only a continuation type one should be.
+///
+/// =item @c UTF8_GOT_OVERFLOW
+///
+/// The input sequence was malformed in that it is for a code point that is not
+/// representable in the number of bits available in a UV on the current platform.
+///
+/// =item @c UTF8_GOT_SHORT
+///
+/// The input sequence was malformed in that @c curlen is smaller than required for
+/// a complete sequence.  In other words, the input is for a partial character
+/// sequence.
+///
+/// =item @c UTF8_GOT_SUPER
+///
+/// The input sequence was malformed in that it is for a non-Unicode code point;
+/// that is, one above the legal Unicode maximum.
+/// This bit is set only if the input @c flags parameter contains either the
+/// @c UTF8_DISALLOW_SUPER or the @c UTF8_WARN_SUPER flags.
+///
+/// =item @c UTF8_GOT_SURROGATE
+///
+/// The input sequence was malformed in that it is for a -Unicode UTF-16 surrogate
+/// code point.
+/// This bit is set only if the input @c flags parameter contains either the
+/// @c UTF8_DISALLOW_SURROGATE or the @c UTF8_WARN_SURROGATE flags.
+///
+/// =back
+///
+/// To do your own error handling, call this function with the @c UTF8_CHECK_ONLY
+/// flag to suppress any warnings, and then examine the @c *errors return.
+SWIFT_NAME(PerlInterpreter.utf8n_to_uvchr_error(self:_:_:_:_:_:))
+PERL_STATIC_INLINE UV CPerl_utf8n_to_uvchr_error(pTHX_ const U8 *_Nonnull s, STRLEN curlen, STRLEN *_Nullable retlen, const U32 flags, U32 * _Nullable errors) {
+	return utf8n_to_uvchr_error(s, curlen, retlen, flags, errors);
 }
 #endif
 
@@ -2981,21 +3285,9 @@ PERL_STATIC_INLINE void CPerl_wrap_op_checker(pTHX_ Optype opcode, Perl_check_t 
 }
 #endif
 
+#if !(defined(HAS_MEMMEM))
+#endif
 #if !(defined(HAS_SIGACTION) && defined(SA_SIGINFO))
-#endif
-#if !(defined(NO_MATHOMS))
-#ifdef sv_nounlocking
-/// Dummy routine which "unlocks" an SV when there is no locking module present.
-/// Exists to avoid test for a @c NULL function pointer and because it could
-/// potentially warn under some level of strict-ness.
-///
-/// "Superseded" by @c sv_nosharing().
-SWIFT_NAME(PerlInterpreter.sv_nounlocking(self:_:))
-PERL_STATIC_INLINE void CPerl_sv_nounlocking(pTHX_ SV *_Nullable sv) {
-	sv_nounlocking(sv);
-}
-#endif
-
 #endif
 #if !(defined(PERL_GLOBAL_STRUCT_PRIVATE))
 #  if defined(PERL_IMPLICIT_CONTEXT)
@@ -3022,19 +3314,6 @@ PERL_STATIC_INLINE void CPerl_sv_nounlocking(pTHX_ SV *_Nullable sv) {
 #if !defined(PERL_IMPLICIT_SYS)
 #endif
 #if !defined(PERL_NO_INLINE_FUNCTIONS)
-#ifdef av_top_index
-/// Returns the highest index in the array.  The number of elements in the
-/// array is @c av_top_index(av) @c + @c 1.  Returns -1 if the array is empty.
-///
-/// The Perl equivalent for this is @c $#myarray.
-///
-/// (A slightly shorter form is @c av_tindex.)
-SWIFT_NAME(PerlInterpreter.av_top_index(self:_:))
-PERL_STATIC_INLINE SSize_t CPerl_av_top_index(pTHX_ AV *_Nonnull av) {
-	return av_top_index(av);
-}
-#endif
-
 #endif
 #if !defined(SPRINTF_RETURNS_STRLEN)
 #endif
@@ -3051,6 +3330,8 @@ PERL_STATIC_INLINE void CPerl_pad_setsv(pTHX_ PADOFFSET po, SV* _Nonnull sv) {
 #  if defined(USE_LOCALE)     && (defined(PERL_IN_LOCALE_C) || defined (PERL_EXT_POSIX))
 #  endif
 #endif
+#if defined(HAS_MEMMEM)
+#endif
 #if defined(HAS_SIGACTION) && defined(SA_SIGINFO)
 #endif
 #if defined(HAVE_INTERP_INTERN)
@@ -3058,20 +3339,6 @@ PERL_STATIC_INLINE void CPerl_pad_setsv(pTHX_ PADOFFSET po, SV* _Nonnull sv) {
 #  endif
 #endif
 #if defined(MYMALLOC)
-#endif
-#if defined(NO_MATHOMS)
-#ifdef sv_nounlocking
-/// Dummy routine which "unlocks" an SV when there is no locking module present.
-/// Exists to avoid test for a @c NULL function pointer and because it could
-/// potentially warn under some level of strict-ness.
-///
-/// "Superseded" by @c sv_nosharing().
-SWIFT_NAME(PerlInterpreter.sv_nounlocking(self:_:))
-PERL_STATIC_INLINE void CPerl_sv_nounlocking(pTHX_ SV *_Nullable sv) {
-	sv_nounlocking(sv);
-}
-#endif
-
 #endif
 #if defined(PERL_DONT_CREATE_GVSV)
 #endif
@@ -3086,10 +3353,6 @@ PERL_STATIC_INLINE void CPerl_sv_nounlocking(pTHX_ SV *_Nullable sv) {
 #if defined(PERL_IMPLICIT_SYS)
 #  if defined(USE_ITHREADS)
 #  endif
-#endif
-#if defined(PERL_IN_REGCOMP_C) || defined(PERL_IN_PERL_C) || defined(PERL_IN_UTF8_C)
-#endif
-#if defined(PERL_IN_REGCOMP_C) || defined(PERL_IN_REGEXEC_C)
 #endif
 #if defined(PERL_OP_PARENT)
 #endif

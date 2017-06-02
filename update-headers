@@ -119,7 +119,8 @@ my %force_bool = (
 );
 
 my %fix = (
-	perl_parse => sub { $_[2][1] =~ s/ / _Nullable / },
+	perl_parse => sub { $_[2][1] =~ s/^/NULLOK / },
+	sv_dump    => sub { $_[2][0] =~ s/NULLOK/NN/ },
 );
 
 my ($embed, $core, $ext, $api) = setup_embed("$path/");
