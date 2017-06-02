@@ -14,7 +14,7 @@ let package = Package(
 		Target(name: "Perl"),
 	],
 	dependencies: [
-		.Package(url: "https://github.com/my-mail-ru/swift-CPerl.git", versions: Version(0, 1, 1)..<Version(0, .max, .max)),
+		.Package(url: "https://github.com/my-mail-ru/swift-CPerl.git", versions: Version(1, 0, 0)..<Version(1, .max, .max)),
 	]
 )
 
