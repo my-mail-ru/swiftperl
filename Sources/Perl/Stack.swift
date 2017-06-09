@@ -65,8 +65,22 @@ struct UnsafeXSubStack : UnsafeStack {
 		return try Optional<T>(_fromUnsafeSvContextCopy: UnsafeSvContext(sv: args[index], perl: perl))
 	}
 
-	@_specialize(Bool) @_specialize(Int) @_specialize(UInt) @_specialize(Double) @_specialize(String) @_specialize(PerlScalar)
+#if swift(>=3.2)
+	@_specialize(where T == Bool) @_specialize(where T == Int) @_specialize(where T == UInt)
+	@_specialize(where T == Double) @_specialize(where T == String) @_specialize(where T == PerlScalar)
 	func fetchTail<T : PerlScalarConvertible>(startingAt index: Int) throws -> [T] {
+		return try _fetchTail(startingAt: index)
+	}
+#else
+	@_specialize(Bool) @_specialize(Int) @_specialize(UInt)
+	@_specialize(Double) @_specialize(String) @_specialize(PerlScalar)
+	func fetchTail<T : PerlScalarConvertible>(startingAt index: Int) throws -> [T] {
+		return try _fetchTail(startingAt: index)
+	}
+#endif
+
+	@_transparent
+	func _fetchTail<T : PerlScalarConvertible>(startingAt index: Int) throws -> [T] {
 		guard index < args.count else { return [] }
 		var tail: [T] = []
 		tail.reserveCapacity(args.count - index)
@@ -76,8 +90,22 @@ struct UnsafeXSubStack : UnsafeStack {
 		return tail
 	}
 
-	@_specialize(Bool) @_specialize(Int) @_specialize(UInt) @_specialize(Double) @_specialize(String) @_specialize(PerlScalar)
+#if swift(>=3.2)
+	@_specialize(where T == Bool) @_specialize(where T == Int) @_specialize(where T == UInt)
+	@_specialize(where T == Double) @_specialize(where T == String) @_specialize(where T == PerlScalar)
 	func fetchTail<T : PerlScalarConvertible>(startingAt index: Int) throws -> [String: T] {
+		return try _fetchTail(startingAt: index)
+	}
+#else
+	@_specialize(Bool) @_specialize(Int) @_specialize(UInt)
+	@_specialize(Double) @_specialize(String) @_specialize(PerlScalar)
+	func fetchTail<T : PerlScalarConvertible>(startingAt index: Int) throws -> [String: T] {
+		return try _fetchTail(startingAt: index)
+	}
+#endif
+
+	@_transparent
+	func _fetchTail<T : PerlScalarConvertible>(startingAt index: Int) throws -> [String: T] {
 		guard index < args.count else { return [:] }
 		var tail: [String: T] = [:]
 		var i = args[index..<args.count].makeIterator()

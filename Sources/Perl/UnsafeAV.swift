@@ -62,14 +62,14 @@ extension UnsafeAvContext {
 }
 
 extension UnsafeAvContext : RandomAccessCollection {
-	typealias Element = UnsafeSvContext
+	typealias Element = UnsafeSvContext?
 	typealias Index = Int
 	typealias Indices = CountableRange<Int>
 
 	var startIndex: Index { return 0 }
 	var endIndex: Index { return perl.pointee.av_len(av) + 1 }
 
-	subscript(i: Index) -> Element? {
+	subscript(i: Index) -> UnsafeSvContext? {
 		get {
 			return fetch(i)
 		}
@@ -86,11 +86,11 @@ extension UnsafeAvContext : RandomAccessCollection {
 		extend(to: capacity)
 	}
 
-	func append(_ svc: Element) {
+	func append(_ svc: UnsafeSvContext) {
 		perl.pointee.av_push(av, svc.sv)
 	}
 
-	func removeFirst() -> Element {
+	func removeFirst() -> UnsafeSvContext {
 		return UnsafeSvContext(sv: perl.pointee.av_shift(av), perl: perl)
 	}
 }
