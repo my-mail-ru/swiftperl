@@ -19,9 +19,15 @@ let packageDir: String = {
 	return parts.joined(separator: "/")
 }()
 
+#if swift(>=3.2)
+let pkgConfig = "libperl"
+#else
+let pkgConfig = "../../.." + packageDir + "libperl"
+#endif
+
 let package = Package(
 	name: "CPerl",
-	pkgConfig: "../../.." + packageDir + "libperl"
+	pkgConfig: pkgConfig
 )
 
 func env(_ name: String) -> String? {

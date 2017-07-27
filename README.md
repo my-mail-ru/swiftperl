@@ -6,3 +6,7 @@
 
 Low-level Swift bindings for Perl.
 For safe swifty end-user API, see [swiftperl](https://github.com/my-mail-ru/swiftperl).
+
+*When using this module with swift4 compiler on macOS either add the module's directory
+to `PKG_CONFIG_PATH` environment variable or run `./prepare` and copy generated file
+`libperl.pc` to `/usr/local/lib/pkgconfig/`.*
