@@ -99,7 +99,7 @@ public final class PerlSub : PerlValue {
 	public override var debugDescription: String {
 		let deparse: PerlObject = try! unsafeSvContext.perl.eval("use B::Deparse; B::Deparse->new('-sCi0')")
 		var text: String = try! deparse.call(method: "coderef2text", self)
-		text = text.characters.split { $0 == "\n" } .map(String.init).joined(separator: " ")
+		text = text.split { $0 == "\n" } .map(String.init).joined(separator: " ")
 		if let file = file {
 			text += " at \(file)"
 		}

@@ -51,9 +51,9 @@ open class PerlObject : PerlValue, PerlScalarConvertible {
 		guard svc.isObject else {
 			throw PerlError.notObject(fromUnsafeSvContext(noinc: svc))
 		}
-		if let named = type(of: self) as? PerlNamedClass.Type {
+		if let named = Swift.type(of: self) as? PerlNamedClass.Type {
 			guard svc.isDerived(from: named.perlClassName) else {
-				throw PerlError.unexpectedObjectType(fromUnsafeSvContext(noinc: svc), want: type(of: self))
+				throw PerlError.unexpectedObjectType(fromUnsafeSvContext(noinc: svc), want: Swift.type(of: self))
 			}
 		}
 		self.init(noincUnchecked: svc)
@@ -96,7 +96,7 @@ open class PerlObject : PerlValue, PerlScalarConvertible {
 	/// - Parameter args: Arguments to pass to the constructor.
 	/// - Parameter perl: The Perl interpreter.
 	public convenience init(method: String, args: [PerlScalarConvertible?], perl: PerlInterpreter = .current) throws {
-		guard let named = type(of: self) as? PerlNamedClass.Type else {
+		guard let named = Swift.type(of: self) as? PerlNamedClass.Type else {
 			fatalError("PerlObject.init(method:args:perl) is only supported for subclasses conforming to PerlNamedClass")
 		}
 		perl.enterScope()
@@ -110,7 +110,7 @@ open class PerlObject : PerlValue, PerlScalarConvertible {
 			throw PerlError.notObject(fromUnsafeSvContext(inc: svc))
 		}
 		guard svc.isDerived(from: classname) else {
-			throw PerlError.unexpectedObjectType(fromUnsafeSvContext(inc: svc), want: type(of: self))
+			throw PerlError.unexpectedObjectType(fromUnsafeSvContext(inc: svc), want: Swift.type(of: self))
 		}
 		self.init(incUnchecked: svc)
 	}
@@ -144,7 +144,7 @@ open class PerlObject : PerlValue, PerlScalarConvertible {
 	public override var debugDescription: String {
 		var rvDesc = ""
 		debugPrint(referent, terminator: "", to: &rvDesc)
-		return "\(type(of: self))(\(perlClassName), rv=\(rvDesc))"
+		return "\(Swift.type(of: self))(\(perlClassName), rv=\(rvDesc))"
 	}
 
 	static func derivedClass(for classname: String) -> PerlObject.Type {
@@ -172,15 +172,15 @@ open class PerlObject : PerlValue, PerlScalarConvertible {
 		guard let classname = svc.classname else {
 			throw PerlError.notObject(Perl.fromUnsafeSvContext(noinc: svc))
 		}
-		if let nc = type(of: self) as? PerlNamedClass.Type, nc.perlClassName == classname {
+		if let nc = Swift.type(of: self) as? PerlNamedClass.Type, nc.perlClassName == classname {
 			self.init(noincUnchecked: svc)
 		} else {
 			let derivedClass = PerlObject.derivedClass(for: classname)
-			if derivedClass == type(of: self) {
+			if derivedClass == Swift.type(of: self) {
 				self.init(noincUnchecked: svc)
 			} else {
-				guard isStrictSubclass(derivedClass, of: type(of: self)) else {
-					throw PerlError.unexpectedObjectType(Perl.fromUnsafeSvContext(noinc: svc), want: type(of: self))
+				guard isStrictSubclass(derivedClass, of: Swift.type(of: self)) else {
+					throw PerlError.unexpectedObjectType(Perl.fromUnsafeSvContext(noinc: svc), want: Swift.type(of: self))
 				}
 				self.init(as: derivedClass, noinc: svc)
 			}

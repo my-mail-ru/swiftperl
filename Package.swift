@@ -1,3 +1,4 @@
+// swift-tools-version:4.0
 import PackageDescription
 
 #if os(Linux) || os(FreeBSD) || os(PS4) || os(Android) || CYGWIN
@@ -10,20 +11,23 @@ let buildBenchmark = false
 
 let package = Package(
 	name: "Perl",
-	targets: [
-		Target(name: "Perl"),
+	products: [
+		.library(name: "Perl", targets: ["Perl"]),
 	],
 	dependencies: [
-		.Package(url: "https://github.com/my-mail-ru/swift-CPerl.git", versions: Version(1, 0, 0)..<Version(1, .max, .max)),
+		.package(url: "https://github.com/my-mail-ru/swift-CPerl.git", from: "1.0.1"),
+	],
+	targets: [
+		.target(name: "Perl"),
+		.testTarget(name: "PerlTests", dependencies: ["Perl"]),
 	]
 )
 
 if buildBenchmark {
-	package.targets.append(Target(name: "swiftperl-benchmark", dependencies: [.Target(name: "Perl")]))
-	package.dependencies.append(.Package(url: "https://github.com/my-mail-ru/swift-Benchmark.git", majorVersion: 0))
-} else {
-	package.exclude.append("Sources/swiftperl-benchmark")
+	package.targets.append(.target(name: "swiftperl-benchmark", dependencies: ["Perl", "Benchmark"]))
+	package.dependencies.append(.package(url: "https://github.com/my-mail-ru/swift-Benchmark.git", from: "0.3.1"))
 }
+
 
 func env(_ name: String) -> String? {
 	guard let value = getenv(name) else { return nil }
@@ -34,7 +38,7 @@ let tmpdir = env("TMPDIR") ?? env("TEMP") ?? env("TMP") ?? "/tmp/"
 
 let me = CommandLine.arguments[0]
 if me[me.startIndex..<min(me.endIndex, tmpdir.endIndex)] != tmpdir {
-	var parts = me.characters.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
+	var parts = me.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
 	parts[parts.endIndex - 1] = "prepare"
 	let command = parts.joined(separator: "/")
 
