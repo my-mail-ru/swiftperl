@@ -28,7 +28,11 @@ module CPerl [system] {
 }
 EOF
 
-write_file("$root/libperl.pc", <<EOF);
+-d '.build' or mkdir '.build'
+	or die "Failed to mkdir .build: $!";
+-d '.build/pkgconfig' or mkdir '.build/pkgconfig'
+	or die "Failed to mkdir .build/pkgconfig: $!";
+write_file(".build/pkgconfig/perl.pc", <<EOF);
 Cflags: -I$archlib/CORE
 Libs: -L$archlib/CORE -lperl
 EOF

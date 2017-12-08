@@ -1,3 +1,4 @@
+// swift-tools-version:4.0
 import PackageDescription
 
 #if os(Linux) || os(FreeBSD) || os(PS4) || os(Android) || CYGWIN
@@ -14,20 +15,14 @@ var environ: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?> { return _NSGetE
 
 let packageDir: String = {
 	let me = CommandLine.arguments[0]
-	var parts = me.characters.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
+	var parts = me.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
 	parts[parts.endIndex - 1] = ""
 	return parts.joined(separator: "/")
 }()
 
-#if swift(>=3.2)
-let pkgConfig = "libperl"
-#else
-let pkgConfig = "../../.." + packageDir + "libperl"
-#endif
-
 let package = Package(
 	name: "CPerl",
-	pkgConfig: pkgConfig
+	pkgConfig: "perl"
 )
 
 func env(_ name: String) -> String? {
