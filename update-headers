@@ -91,6 +91,7 @@ my %retval_nullable = (
 # Backward compatibility fix
 my %force_context = map { $_ => 1 } qw/
 	croak_xs_usage
+	croak_no_modify
 	cv_const_sv
 	is_utf8_string
 	is_utf8_string_loc

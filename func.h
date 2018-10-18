@@ -297,8 +297,8 @@ PERL_STATIC_INLINE I32 CPerl_call_sv(pTHX_ SV* _Nonnull sv, VOL I32 flags) {
 /// Exactly equivalent to @c Perl_croak(aTHX_ @c "%s", @c PL_no_modify), but generates
 /// terser object code than using @c Perl_croak.  Less code used on exception code
 /// paths reduces CPU cache pressure.
-SWIFT_NAME(croak_no_modify())
-PERL_STATIC_INLINE void CPerl_croak_no_modify(void) {
+SWIFT_NAME(PerlInterpreter.croak_no_modify(self:))
+PERL_STATIC_INLINE void CPerl_croak_no_modify(pTHX) {
 	croak_no_modify();
 }
 #endif
