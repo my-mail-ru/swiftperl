@@ -8,7 +8,7 @@ protocol UnsafeStack {
 
 extension UnsafeStack {
 	fileprivate func pushTo<C : Collection>(sp: inout UnsafeMutablePointer<UnsafeSvPointer>, from source: C)
-		where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int {
+		where C.Iterator.Element == UnsafeSvPointer {
 		if !source.isEmpty {
 			sp = perl.pointee.EXTEND(sp, source.count)
 			for sv in source {
@@ -37,7 +37,7 @@ struct UnsafeXSubStack : UnsafeStack {
 	}
 
 	func xsReturn<C : Collection>(_ result: C)
-		where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int {
+		where C.Iterator.Element == UnsafeSvPointer {
 		var sp = perl.pointee.PL_stack_base + Int(ax)
 		pushTo(sp: &sp, from: result)
 	}
@@ -121,7 +121,7 @@ struct UnsafeCallStack : UnsafeStack {
 	let perl: PerlInterpreter
 
 	init<C : Collection>(perl: PerlInterpreter, args: C)
-		where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int {
+		where C.Iterator.Element == UnsafeSvPointer {
 		self.perl = perl
 		var sp = perl.pointee.PL_stack_sp
 		perl.pointee.PUSHMARK(sp)

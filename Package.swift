@@ -1,4 +1,4 @@
-// swift-tools-version:4.0
+// swift-tools-version:5.0
 import PackageDescription
 
 #if os(Linux) || os(FreeBSD) || os(PS4) || os(Android) || CYGWIN
