@@ -2,11 +2,14 @@
 
 use strict;
 use warnings;
+use Config;
 use FindBin;
 
 my $root = $FindBin::Bin;
 
 expand_gyb();
+write_modulemap();
+write_pkgconfig();
 
 sub expand_gyb {
 	unless (-d ".build/gyb") {
@@ -27,6 +30,50 @@ sub expand_gyb {
 	}
 }
 
+sub write_modulemap {
+	my $archlib = $Config{archlib};
+	my $perl = 'perl';
+	if ($Config{osname} ne 'darwin' && system('swiftc -o /dev/null -Xlinker -lperl - </dev/null 2>/dev/null') != 0) {
+		die "Cannot find libperl.so\n" unless -f "$archlib/CORE/libperl.so";
+		$perl = "perl -Xlinker -rpath=$archlib/CORE -Xlinker -L$archlib/CORE";
+	}
+
+	if ($Config{osname} eq 'darwin' && ! -f "$archlib/CORE/perl.h") {
+		my $sdk_path = `xcrun --show-sdk-path`;
+		chomp $sdk_path;
+		$archlib = $sdk_path . $archlib;
+	}
+
+	write_file("$root/Sources/CPerl/module.modulemap", <<EOF);
+module CPerl [system] {
+	header "shim.h"
+	header "$archlib/CORE/EXTERN.h"
+	header "$archlib/CORE/perl.h"
+	header "$archlib/CORE/XSUB.h"
+	header "custom.h"
+	header "macro.h"
+	header "func.h"
+	link "$perl"
+	use SwiftGlibc
+}
+EOF
+}
+
+sub write_pkgconfig {
+	return unless $Config{osname} eq 'darwin';
+	my $sdk_path = `xcrun --show-sdk-path`;
+	chomp $sdk_path;
+	my $archlib = $Config{archlib};
+	-d '.build' or mkdir '.build'
+		or die "Failed to mkdir .build: $!";
+	-d '.build/pkgconfig' or mkdir '.build/pkgconfig'
+		or die "Failed to mkdir .build/pkgconfig: $!";
+	write_file(".build/pkgconfig/perl.pc", <<EOF);
+Cflags: -I$sdk_path$archlib/CORE
+Libs: -L$archlib/CORE -lperl
+EOF
+}
+
 sub commit_file {
 	my ($filename) = @_;
 	if (system("cmp -s $filename.tmp $filename") == 0) {
@@ -35,4 +82,13 @@ sub commit_file {
 		rename "$filename.tmp", $filename or die $!;
 	}
 	return;
+}
+
+sub write_file {
+	my ($filename, $content) = @_;
+	open my $file, '>', "$filename.tmp"
+		or die "Cannot write $filename.tmp\n";
+	print $file $content;
+	close $file;
+	commit_file($filename);
 }

@@ -1,6 +1,6 @@
 # Swift and Perl Interoperability
 
-![Swift: 4.0](https://img.shields.io/badge/Swift-4.0-orange.svg)
+![Swift: 5.0](https://img.shields.io/badge/Swift-5.0-orange.svg)
 ![OS: Linux | macOS](https://img.shields.io/badge/OS-Linux%20%7C%20macOS-brightgreen.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
@@ -10,7 +10,7 @@ though running Perl Interpreter in Swift environment is also possible.
 
 ## Prerequisites
 
-* Swift 4.0
+* Swift 5.0
 * Perl 5 (>=5.10)
 
 ## Getting Started
@@ -18,7 +18,7 @@ though running Perl Interpreter in Swift environment is also possible.
 ### Linux
 
 ```sh
-swift test -Xcc -D_GNU_SOURCE
+swift test
 ```
 
 ### macOS
