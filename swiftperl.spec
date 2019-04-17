@@ -9,10 +9,10 @@ URL:           https://github.com/my-mail-ru/%{name}
 Source0:       https://github.com/my-mail-ru/%{name}/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires: swift >= 4
-BuildRequires: swift-packaging >= 0.9
-BuildRequires: swiftpm(https://github.com/my-mail-ru/swift-CPerl.git) >= 1.0.1
+BuildRequires: swift >= 5
+BuildRequires: swift-packaging >= 0.10
 
+%undefine _missing_build_ids_terminate_build
 %swift_find_provides_and_requires
 
 %description
@@ -25,7 +25,6 @@ in Swift environment is also possible.
 
 %prep
 %setup -q
-%swift_patch_package
 
 
 %build
@@ -36,6 +35,8 @@ in Swift environment is also possible.
 rm -rf %{buildroot}
 %swift_install
 %swift_install_devel
+mkdir -p %{buildroot}%{swift_clangmoduleroot}/CPerl/
+cp Sources/CPerl/{module.modulemap,*.h} %{buildroot}%{swift_clangmoduleroot}/CPerl/
 
 
 %clean
@@ -64,3 +65,4 @@ in Swift environment is also possible.
 %defattr(-,root,root,-)
 %{swift_moduledir}/*.swiftmodule
 %{swift_moduledir}/*.swiftdoc
+%{swift_clangmoduleroot}/CPerl

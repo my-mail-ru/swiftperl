@@ -47,7 +47,7 @@ import CPerl
 /// }
 /// ```
 open class PerlObject : PerlValue, PerlScalarConvertible {
-	convenience init(noinc svc: UnsafeSvContext) throws {
+	public required convenience init(noinc svc: UnsafeSvContext) throws {
 		guard svc.isObject else {
 			throw PerlError.notObject(fromUnsafeSvContext(noinc: svc))
 		}
@@ -158,16 +158,6 @@ open class PerlObject : PerlValue, PerlScalarConvertible {
 		classMapping[classname] = swiftClass
 	}
 
-	// Workaround for https://bugs.swift.org/browse/SR-5056
-	public required init(noincUnchecked svc: UnsafeSvContext) {
-		super.init(noincUnchecked: svc)
-	}
-
-	// Workaround for https://bugs.swift.org/browse/SR-5056
-	public required init(incUnchecked svc: UnsafeSvContext) {
-		super.init(incUnchecked: svc)
-	}
-
 	private convenience init(_fromUnsafeSvContextNoinc svc: UnsafeSvContext) throws {
 		guard let classname = svc.classname else {
 			throw PerlError.notObject(Perl.fromUnsafeSvContext(noinc: svc))
@@ -204,8 +194,8 @@ open class PerlObject : PerlValue, PerlScalarConvertible {
 
 // Dirty hack to initialize instance of another class (subclass).
 extension PerlScalarConvertible where Self : PerlObject {
-	init(as derivedClass: Self.Type, noinc svc: UnsafeSvContext) {
-		self = derivedClass.init(noincUnchecked: svc)
+	init(as derivedClass: PerlObject.Type, noinc svc: UnsafeSvContext) {
+		self = derivedClass.init(noincUnchecked: svc) as! Self
 	}
 }
 

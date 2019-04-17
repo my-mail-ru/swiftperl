@@ -1,10 +1,12 @@
-// swift-tools-version:4.0
+// swift-tools-version:5.0
 import PackageDescription
 
 #if os(Linux) || os(FreeBSD) || os(PS4) || os(Android) || CYGWIN
 import Glibc
+let pkgConfig = false
 #elseif os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
 import Darwin
+let pkgConfig = true
 #endif
 
 let buildBenchmark = false
@@ -12,13 +14,12 @@ let buildBenchmark = false
 let package = Package(
 	name: "Perl",
 	products: [
+		.library(name: "CPerl", targets: ["CPerl"]),
 		.library(name: "Perl", targets: ["Perl"]),
 	],
-	dependencies: [
-		.package(url: "https://github.com/my-mail-ru/swift-CPerl.git", from: "1.0.1"),
-	],
 	targets: [
-		.target(name: "Perl"),
+		.systemLibrary(name: "CPerl", pkgConfig: pkgConfig ? "perl" : nil),
+		.target(name: "Perl", dependencies: ["CPerl"]),
 		.testTarget(name: "PerlTests", dependencies: ["Perl"]),
 	]
 )

@@ -30,7 +30,7 @@ import CPerl
 /// let hashref: PerlScalar = ["type": "string", "value": 10]
 /// ```
 public final class PerlScalar : PerlValue {
-	convenience init(noinc svc: UnsafeSvContext) throws {
+	required convenience init(noinc svc: UnsafeSvContext) throws {
 		guard svc.type.rawValue < SVt_PVAV.rawValue else {
 			throw PerlError.unexpectedValueType(fromUnsafeSvContext(noinc: svc), want: PerlScalar.self)
 		}
@@ -285,12 +285,13 @@ public final class PerlScalar : PerlValue {
 }
 
 extension PerlScalar : Equatable, Hashable {
-	/// The hash value of the stringified form of the scalar.
+	/// Hashes the essential components of this value by feeding them into the
+	/// given hasher.
 	///
-	/// Hash values are not guaranteed to be equal across different executions of
-	/// your program. Do not save hash values to use during a future execution.
-	public var hashValue: Int {
-		return withUnsafeSvContext { Int($0.hash) }
+	/// - Parameter hasher: The hasher to use when combining the components
+	///   of this instance.
+	public func hash(into hasher: inout Hasher) {
+		withUnsafeSvContext { hasher.combine($0.hash) }
 	}
 
 	/// Returns a Boolean value indicating whether two scalars stringify to identical strings.

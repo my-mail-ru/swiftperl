@@ -24,8 +24,8 @@ struct UnsafeCvContext {
 		svt_free: {
 			(perl, sv, magic) in
 			let bodyPointer = UnsafeMutableRawPointer(sv!).assumingMemoryBound(to: CV.self).pointee.bodyPointer
-			bodyPointer.deinitialize()
-			bodyPointer.deallocate(capacity: 1)
+			bodyPointer.deinitialize(count: 1)
+			bodyPointer.deallocate()
 			return 0
 		},
 		svt_copy: nil,

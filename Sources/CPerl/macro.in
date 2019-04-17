@@ -1,0 +1,92 @@
+// Interpreter
+
+n|void|PERL_SYS_INIT3|int *_Nonnull argc|char *_Nullable *_Nonnull *_Nonnull argv|char *_Nullable *_Nonnull *_Nonnull env
+n|void|PERL_SYS_TERM|
+nP|PerlInterpreter *_Nonnull|PERL_GET_INTERP|
+n|void|PERL_SET_INTERP|PerlInterpreter *_Nonnull p
+nP|PerlInterpreter *_Nonnull|PERL_GET_THX|
+n|void|PERL_SET_THX|PerlInterpreter *_Nonnull p
+g|SV *_Nonnull|ERRSV|
+|SV *_Nonnull|boolSV|bool b
+
+// Stack Manipulation Macros
+
+g|SV *_Nonnull *_Nonnull|PL_stack_base|
+g|SV *_Nonnull *_Nonnull|PL_stack_sp|
+s|void|PL_stack_sp|SV *_Nonnull *_Nonnull sp
+C|SV *_Nonnull *_Nonnull|EXTEND|SV *_Nonnull *_Nonnull sp|SSize_t nitems
+	EXTEND(sp, nitems);
+	return sp;
+}
+|void|PUSHMARK|SV *_Nonnull *_Nonnull sp
+P|I32|POPMARK|
+g|I32|TOPMARK|
+
+// Callback Functions
+
+P|void|SAVETMPS|
+P|void|FREETMPS|
+P|void|ENTER|
+P|void|LEAVE|
+
+// SV Reference Counting
+
+n|U32|SvREFCNT|SV *_Nonnull sv
+n|SV *_Nullable|SvREFCNT_inc|SV *_Nullable sv
+n|SV *_Nonnull|SvREFCNT_inc_NN|SV *_Nonnull sv
+|void|SvREFCNT_dec|SV *_Nullable sv
+C|void|SvREFCNT_dec_NN|SV *_Nonnull sv
+#ifdef SvREFCNT_dec_NN
+	return SvREFCNT_dec_NN(sv);
+#else
+	return SvREFCNT_dec(sv);
+#endif
+}
+
+// SV
+
+|SV *_Nonnull|newRV_inc|SV *_Nonnull const sv
+n|svtype|SvTYPE|SV *_Nonnull sv
+n|bool|SvOK|SV *_Nonnull sv
+n|bool|SvIOK|SV *_Nonnull sv
+n|bool|SvIOK_UV|SV *_Nonnull sv
+n|bool|SvIOK_notUV|SV *_Nonnull sv
+n|bool|SvIsUV|SV *_Nonnull sv
+n|bool|SvNOK|SV *_Nonnull sv
+n|bool|SvNIOK|SV *_Nonnull sv
+n|bool|SvROK|SV *_Nonnull sv
+n|bool|SvPOK|SV *_Nonnull sv
+n|bool|SvUTF8|SV *_Nonnull sv
+n|void|SvUTF8_on|SV *_Nonnull sv
+n|void|SvUTF8_off|SV *_Nonnull sv
+n|SV *_Nullable|SvRV|SV *_Nonnull sv
+|bool|SvTRUE|SV *_Nullable sv
+|IV|SvIV|SV *_Nonnull sv
+|UV|SvUV|SV *_Nonnull sv
+|NV|SvNV|SV *_Nonnull sv
+C|char *_Nullable|SvPV|SV *_Nonnull sv|STRLEN *_Nonnull len
+	return SvPV(sv, *len);
+}
+
+// AV
+
+// HV
+
+C|char *_Nonnull|HePV|HE *_Nonnull he|STRLEN *_Nonnull len
+	return HePV(he, *len);
+}
+n|SV *_Nonnull|HeVAL|HE *_Nonnull he
+n|char *_Nullable|HvNAME|HV *_Nonnull stash
+
+// CV
+
+nC|ANY *_Nonnull|CvXSUBANY|CV *_Nonnull cv
+	return &CvXSUBANY(cv);
+}
+|GV *_Nullable|CvGV|CV *_Nonnull cv
+n|char *_Nullable|CvFILE|CV *_Nonnull cv
+
+// GV
+
+n|HV *_Nullable|GvSTASH|GV *_Nonnull gv
+n|char *_Nonnull|GvNAME|GV *_Nonnull gv

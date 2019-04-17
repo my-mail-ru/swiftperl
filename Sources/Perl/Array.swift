@@ -51,7 +51,7 @@ public final class PerlArray : PerlValue {
 		self.init(incUnchecked: UnsafeSvContext(rebind: avc))
 	}
 
-	convenience init(noinc svc: UnsafeSvContext) throws {
+	required convenience init(noinc svc: UnsafeSvContext) throws {
 		guard svc.type == SVt_PVAV else {
 			throw PerlError.unexpectedValueType(fromUnsafeSvContext(noinc: svc), want: PerlArray.self)
 		}

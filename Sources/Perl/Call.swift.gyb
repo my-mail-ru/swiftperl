@@ -19,7 +19,7 @@ extension PerlSub {
 
 extension PerlInterpreter {
 	func unsafeCall<C : Collection>(sv: UnsafeSvPointer, args: C, flags: Int32) throws -> UnsafeStackBufferPointer
-		where C.Iterator.Element == UnsafeSvPointer, C.IndexDistance == Int {
+		where C.Iterator.Element == UnsafeSvPointer {
 		let stack = UnsafeCallStack(perl: self, args: args)
 		let count = pointee.call_sv(sv, G_EVAL|flags)
 		let result = stack.popReturned(count: Int(count))

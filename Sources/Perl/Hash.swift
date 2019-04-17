@@ -54,7 +54,7 @@ public final class PerlHash : PerlValue {
 		self.init(incUnchecked: UnsafeSvContext(rebind: hvc))
 	}
 
-	convenience init(noinc svc: UnsafeSvContext) throws {
+	required convenience init(noinc svc: UnsafeSvContext) throws {
 		guard svc.type == SVt_PVHV else {
 			throw PerlError.unexpectedValueType(fromUnsafeSvContext(noinc: svc), want: PerlHash.self)
 		}

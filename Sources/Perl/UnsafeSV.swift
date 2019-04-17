@@ -120,11 +120,15 @@ public struct UnsafeSvContext {
 	}
 
 	func set(_ value: String) {
-		value.withCStringWithLength { perl.pointee.sv_setpvn(sv, $0, $1) }
-		if value._core.isASCII {
-			SvUTF8_off(sv)
-		} else {
-			SvUTF8_on(sv)
+		let count = value.count
+		value.withCStringWithLength {
+			perl.pointee.sv_setpvn(sv, $0, $1)
+
+			if $1 == count {
+				SvUTF8_off(sv)
+			} else {
+				SvUTF8_on(sv)
+			}
 		}
 	}
 
@@ -155,8 +159,11 @@ extension PerlInterpreter {
 	}
 
 	func newSV(_ v: String, mortal: Bool = false) -> UnsafeSvPointer {
-		let flags = (v._core.isASCII ? 0 : SVf_UTF8) | (mortal ? SVs_TEMP : 0)
-		return v.withCStringWithLength { pointee.newSVpvn_flags($0, $1, UInt32(flags)) }
+		let count = v.count
+		return v.withCStringWithLength {
+			let flags = ($1 == count ? 0 : SVf_UTF8) | (mortal ? SVs_TEMP : 0)
+			return pointee.newSVpvn_flags($0, $1, UInt32(flags))
+		}
 	}
 
 	func newSV(_ v: AnyObject, isa: String) -> UnsafeSvPointer {
